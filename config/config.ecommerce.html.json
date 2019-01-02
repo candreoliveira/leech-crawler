@@ -1,0 +1,44 @@
+{
+  "database": {
+    "development": {
+      "host": "localhost",
+      "port": 5432,
+      "name": "crawler",
+      "user": "crawl",
+      "password": "crawl"
+    }
+  },
+  "websites": [
+    {
+      "type": "html",
+      "name": "americanas",
+      "domain": "https://www.americanas.com.br",
+      "dependency": {
+        "category": {
+          "hasMany": "item",
+          "through": "url",
+          "type": "headless"
+        }
+      },
+      "pages": [
+        {
+          "rootUrl": "/categoria/informatica/notebook",
+          "name": "category",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": ".card-product-url",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": ".card-product-name",
+              "newKey": "name",
+              "method": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

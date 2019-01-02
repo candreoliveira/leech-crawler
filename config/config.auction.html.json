@@ -1,0 +1,72 @@
+{
+  "database": {
+    "development": {
+      "host": "localhost",
+      "port": 5432,
+      "name": "crawler",
+      "user": "crawl",
+      "password": "crawl"
+    }
+  },
+  "websites": [
+    {
+      "type": "html",
+      "name": "leilaovip",
+      "domain": "https://www.leilaovip.com.br/",
+      "dependency": {},
+      "pages": [
+        {
+          "name": "item",
+          "data": [
+            {
+              "selector": "#ContentPlaceHolder1_btnLance1",
+              "newKey": "price",
+              "method": "text"
+            },
+            {
+              "selector": "#ContentPlaceHolder1_lblDescricaoImovel",
+              "newKey": "description",
+              "method": "text"
+            },
+            {
+              "selector": "#ContentPlaceHolder1_dvLeiloes",
+              "newKey": "other",
+              "method": "text"
+            },
+            {
+              "selector": "[data-u='image']",
+              "newKey": "image",
+              "attr": "src",
+              "list": true
+            },
+            {
+              "selector": "#ContentPlaceHolder1_lblEndereco",
+              "newKey": "address",
+              "method": "text"
+            },
+            {
+              "selector": "#ContentPlaceHolder1_lblCidade",
+              "newKey": "city",
+              "method": "text"
+            },
+            {
+              "selector": "#ContentPlaceHolder1_lblEstado",
+              "newKey": "state",
+              "method": "text"
+            },
+            {
+              "selector": "#ContentPlaceHolder1_lblCate",
+              "newKey": "category",
+              "method": "text"
+            },
+            {
+              "selector": "#ContentPlaceHolder1_lblDataleilao",
+              "newKey": "date",
+              "method": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

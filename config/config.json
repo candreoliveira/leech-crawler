@@ -1,0 +1,277 @@
+{
+  "remote": {
+    "url": "http://alfred-v1.b2w.io/wp-json/api/v1/settings_sanguessuga"
+  },
+  "database": {
+    "development": {
+      "host": "localhost",
+      "port": 5432,
+      "name": "crawler",
+      "user": "crawl",
+      "password": "crawl"
+    }
+  },
+  "websites": [
+    {
+      "type": "html",
+      "name": "mercadolivre",
+      "domain": "https://www.mercadolivre.com.br",
+      "dependency": {
+        "sitemap": {
+          "hasMany": "department",
+          "through": "url"
+        },
+        "department": {
+          "hasMany": "category",
+          "through": "url",
+          "add": {
+            "(https|http)\\://(www\\.)?mercadolivre\\.com\\.br/moda(/)?": [
+              "https://roupas.mercadolivre.com.br/"
+            ],
+            "(https|http)\\://(www\\.)?mercadolivre\\.com\\.br/imoveis(/)?": [
+              "https://imoveis.mercadolivre.com.br/"
+            ],
+            "(https|http)\\://(www\\.)?mercadolivre\\.com\\.br/veiculos(/)?": [
+              "https://veiculos.mercadolivre.com.br/"
+            ]
+          }
+        },
+        "category": {
+          "hasMany": "item",
+          "through": "url"
+        }
+      },
+      "pages": [
+        {
+          "rootUrl": "/categories.html",
+          "name": "sitemap",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": ".categories h2 a",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": ".categories h2 a",
+              "newKey": "title",
+              "method": "text"
+            }
+          ]
+        },
+        {
+          "name": "department",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": "h2.category a",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": "h2.category a",
+              "newKey": "title",
+              "method": "text"
+            }
+          ]
+        },
+        {
+          "name": "category",
+          "nextPages": [
+            {
+              "selector": ".andes-pagination__button:not(.andes-pagination__button--current) a",
+              "attr": "href"
+            },
+            {
+              "selector": ".modal-content .actions a",
+              "attr": "href"
+            }
+          ],
+          "data": [
+            {
+              "selector": [".item__image a"],
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": ".item__title .main-title",
+              "newKey": "title",
+              "method": "text"
+            },
+            {
+              "selector": ".item__image img",
+              "newKey": "image",
+              "attr": "src"
+            }
+          ]
+        },
+        {
+          "name": "item",
+          "data": [
+            {
+              "selector": ".item-title__primary",
+              "newKey": "name",
+              "method": "text"
+            },
+            {
+              "selector": ".item-description__text",
+              "newKey": "description",
+              "method": "text"
+            },
+            {
+              "join": ["label", "value"],
+              "newKey": "attributes",
+              "list": true
+            },
+            {
+              "selector": ".gallery-image-container img",
+              "newKey": "image",
+              "attr": "src",
+              "list": true
+            },
+            {
+              "selector": ".specs-item strong",
+              "newKey": "label",
+              "method": "text"
+            },
+            {
+              "selector": ".specs-item span",
+              "newKey": "value",
+              "method": "text"
+            },
+            {
+              "selector": ".item-price .price-tag-symbol",
+              "newKey": "price",
+              "attr": "content"
+            },
+            {
+              "method": "text",
+              "selector": ".vip-title-info .item-conditions",
+              "newKey": "itemsSold",
+              "list": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "html",
+      "name": "magazineluiza",
+      "domain": "https://www.magazineluiza.com.br",
+      "dependency": {
+        "sitemap": {
+          "hasMany": "department",
+          "through": "url"
+        },
+        "department": {
+          "hasMany": "category",
+          "through": "url"
+        },
+        "category": {
+          "hasMany": "item",
+          "through": "url"
+        }
+      },
+      "pages": [
+        {
+          "rootUrl": "/",
+          "name": "sitemap",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": ".container-departament-footer li a",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": ".container-departament-footer li a",
+              "newKey": "title",
+              "method": "text"
+            }
+          ]
+        },
+        {
+          "name": "department",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": [
+                "[data-filter-type='subcategories'] a",
+                ".type-category a"
+              ],
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": [
+                "[data-filter-type='subcategories'] a",
+                ".type-category a"
+              ],
+              "newKey": "title",
+              "method": "text"
+            }
+          ]
+        },
+        {
+          "name": "category",
+          "nextPages": [
+            {
+              "selector": ".css-1a9p55p:not(.css-197gxuo):not(:first-child):not(:last-child) a",
+              "method": "text",
+              "param": "page"
+            }
+          ],
+          "data": [
+            {
+              "selector": "[role='main'] [itemtype='http://schema.org/Product'] [name='linkToProduct']",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": "[role='main'] [itemtype='http://schema.org/Product'] [name='linkToProduct'] h3",
+              "newKey": "title",
+              "attr": "title"
+            }
+          ]
+        },
+        {
+          "name": "item",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": "h1",
+              "newKey": "name",
+              "method": "text"
+            },
+            {
+              "selector": ".description .description__container-text",
+              "newKey": "description",
+              "method": "text"
+            },
+            {
+              "selector": ".description__box .description__information-box-left",
+              "newKey": "label",
+              "method": "text"
+            },
+            {
+              "selector": ".description__box .description__information-box-right",
+              "newKey": "value",
+              "method": "text"
+            },
+            {
+              "join": ["label", "value"],
+              "newKey": "attributes",
+              "list": true
+            },
+            {
+              "selector": ".showcase-product__big-img",
+              "newKey": "image",
+              "attr": "src",
+              "list": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

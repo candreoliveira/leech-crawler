@@ -1,0 +1,74 @@
+{
+  "database": {
+    "development": {
+      "host": "localhost",
+      "port": 5432,
+      "name": "crawler",
+      "user": "crawl",
+      "password": "crawl"
+    }
+  },
+  "websites": [
+    {
+      "type": "headless",
+      "name": "leilaovip",
+      "domain": "https://www.leilaovip.com.br/",
+      "dependency": {
+        "auction": {
+          "hasMany": "lot",
+          "through": "url",
+          "type": "headless"
+        },
+        "lot": {
+          "hasMany": "item",
+          "through": "url"
+        }
+      },
+      "pages": [
+        {
+          "rootUrl": "home",
+          "name": "auction",
+          "nextPages": [
+            {
+              "selector": ".rl_leilao_pagination li:not(.active):not(:last-child) a",
+              "attr": "href"
+            }
+          ],
+          "data": [
+            {
+              "selector": ".btn-leilao:not(.hidden) a.rl_leilao_link",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": ".btn-leilao:not(.hidden) a.rl_leilao_link .rl_leilaoTipo",
+              "newKey": "type",
+              "method": "text"
+            },
+            {
+              "selector": ".btn-leilao:not(.hidden) a.rl_leilao_link .rl_leiloeiro",
+              "newKey": "auctioneer",
+              "method": "text"
+            }
+          ]
+        },
+        {
+          "name": "lot",
+          "nextPages": [
+            {
+              "selector": ".rl_leilao_pagination li:not(.active):not(:last-child) a",
+              "attr": "href"
+            }
+          ],
+          "data": [
+            {
+              "selector": ".row:not(.hidden) .btn-leilao a",
+              "newKey": "url",
+              "attr": "href"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

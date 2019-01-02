@@ -1,0 +1,29 @@
+{
+  "database": {
+    "development": {
+      "host": "localhost",
+      "port": 5432,
+      "name": "crawler",
+      "user": "crawl",
+      "password": "crawl"
+    }
+  },
+  "websites": [{
+    "type": "headless",
+    "name": "americanas",
+    "domain": "https://www.americanas.com.br",
+    "pages": [{
+      "name": "item",
+      "nextPages": null,
+      "preprocess": [{
+        "type": "file",
+        "path": "/Users/carlos.baptista/Projects/crawler/src/parser/html/preprocess.headless.js"
+      }],
+      "data": [{
+        "selector": ".product-name",
+        "newKey": "name",
+        "method": "text"
+      }]
+    }]
+  }]
+}
