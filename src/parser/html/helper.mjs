@@ -202,6 +202,10 @@ const parseDataWithSelector = ($, domain, array, logger) => {
     if (element.list && output[element.newKey]) {
       output[element.newKey] = [output[element.newKey]];
     }
+
+    if (element.int && output[element.newKey]) {
+      output[element.newKey] = output[element.newKey].match(/\d+(?:(?:\.|\,)(?:\d*))?/) || "";
+    }
   });
 
   return output;
