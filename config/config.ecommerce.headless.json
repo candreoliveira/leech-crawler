@@ -5,25 +5,61 @@
       "port": 5432,
       "name": "crawler",
       "user": "crawl",
-      "password": "crawl"
+      "password": "crawl1234"
     }
   },
-  "websites": [{
-    "type": "headless",
-    "name": "americanas",
-    "domain": "https://www.americanas.com.br",
-    "pages": [{
-      "name": "item",
-      "nextPages": null,
-      "preprocess": [{
-        "type": "file",
-        "path": "/Users/carlos.baptista/Projects/crawler/src/parser/html/preprocess.headless.js"
-      }],
-      "data": [{
-        "selector": ".product-name",
-        "newKey": "name",
-        "method": "text"
-      }]
-    }]
-  }]
+  "websites": [
+    {
+      "type": "headless",
+      "name": "americanas",
+      "domain": "https://www.americanas.com.br",
+      "pages": [
+        {
+          "name": "item",
+          "nextPages": null,
+          "preprocess": [
+            {
+              "type": "file",
+              "path": "/home/carlosandre/Projects/crawler/src/parser/html/preprocess.headless.js"
+            }
+          ],
+          "data": [
+            {
+              "selector": ".product-name",
+              "newKey": "name",
+              "method": "text"
+            },
+            {
+              "selector": [
+                "#crawlerScriptResult .zipcode table tbody td:nth-child(1) > span > div > svg use",
+                "#crawlerScriptResult .zipcode table tbody td:nth-child(1) > span"
+              ],
+              "newKey": "delivery",
+              "attr": "href",
+              "method": "text"
+            },
+            {
+              "selector": "#crawlerScriptResult .zipcode table tbody td:nth-child(2) > span",
+              "newKey": "shipping",
+              "method": "text"
+            },
+            {
+              "selector": "#crawlerScriptResult .zipcode table tbody td:nth-child(3) > span",
+              "newKey": "time",
+              "method": "text"
+            },
+            {
+              "join": [
+                "delivery",
+                "shipping",
+                "time"
+              ],
+              "newKey": "freight",
+              "list": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

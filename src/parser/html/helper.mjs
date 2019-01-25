@@ -63,7 +63,6 @@ const parseDataWithZipJoinList = (previousParsedPage, pageDataWithJoin) => {
   if (pageDataWithJoin.length === 0) return previousParsedPage;
 
   let output = previousParsedPage;
-
   pageDataWithJoin.forEach(curr => {
     if (Array.isArray(curr.join) && curr.join.length > 1 && curr.list) {
       const values = curr.join.map(key => {
@@ -126,6 +125,65 @@ const parseDataWithJoin = (previousParsedPage, array) => {
   });
 };
 
+const getValueFromSelector = ($, element, selector, domain) => {
+  let output = null;
+  let gotData = false;
+  selector = Array.isArray(selector) ? selector : [selector];
+
+  // Is a method text?
+  if (selector && element.method === "text") {
+    gotData = true;
+    output = selector.map((e, i) => {
+      return htmlToText.fromString($(e).html(), {
+        linkHrefBaseUrl: domain,
+        wordwrap: false,
+        ignoreImage: true
+      });
+    });
+
+    // Is a method?
+  } else if (selector && element.method) {
+    gotData = true;
+    output = selector.map((e, i) => {
+      return $(e)[element.method]();
+    });
+  }
+
+  // Attr is string?
+  if (selector && typeof element.attr === "string") {
+    gotData = true;
+    output = selector.map((e, i) => {
+      if (output && output[i]) {
+        return output[i];
+      }
+
+      return $(e).attr(element.attr);
+    });
+
+    // Attr is array?
+  } else if (selector && Array.isArray(element.attr)) {
+    gotData = true;
+    output = selector.map((e, i) => {
+      if (output && output[i]) {
+        return output[i];
+      }
+
+      return element.attr.reduce((accumulate, current) => {
+        return $(accumulate).attr(current);
+      }, e);
+    });
+  }
+
+  // Default
+  if (selector && !gotData) {
+    output = selector.map((e, i) => {
+      return e;
+    });
+  }
+
+  return output;
+};
+
 const parseDataWithSelector = ($, domain, array, logger) => {
   let output = {};
 
@@ -136,57 +194,49 @@ const parseDataWithSelector = ($, domain, array, logger) => {
         `[HTML] Error parsing config: ${element} is not an object.`
       );
 
-    let selector = [];
+    let selector = [], selectors = [];
+    const niw = {};
 
     if (Array.isArray(element.selector)) {
       for (let i = 0; i < element.selector.length; i++) {
         const tmp = Array.from($(element.selector[i]));
-        if (tmp.length > 0) {
+        selectors.push(tmp);
+        if (tmp.length > selector.length) {
           selector = tmp;
-          break;
         }
       }
+
+      // selector = selector.map((s, i) => {
+      //   return selectors.reduce((acc, curr) => {
+      //     if (curr[i]) {
+      //       return acc || getValueFromSelector($, element, curr[i]);
+      //     }
+
+      //     return acc;
+      //   }, s);
+      // });
+
+      let values = [];
+      for (let i = 0; i < selector.length; i++) {
+        // This value can be empty or null
+        let value = getValueFromSelector($, element, selector[i], domain)[0];
+
+        // Get the value from any selector to prevent the empty value above
+        for (let j = 0; j < selectors.length; j++) {
+          if (selectors[j][i]) {
+            value = value || getValueFromSelector($, element, selectors[j][i], domain)[0];
+          }
+        }
+
+        values.push(value);
+      }
+
+      niw[element.newKey] = values;
+      output = { ...output, ...niw };
     } else {
       selector = Array.from($(element.selector));
-    }
-
-    output[element.newKey] = null;
-
-    // Is a method text?
-    if (selector && element.method === "text") {
-      output[element.newKey] = selector.map((e, i) => {
-        return htmlToText.fromString($(e).html(), {
-          linkHrefBaseUrl: domain,
-          wordwrap: false,
-          ignoreImage: true
-        });
-      });
-
-      // Is a method?
-    } else if (selector && element.method) {
-      output[element.newKey] = selector.map((e, i) => {
-        return $(e)[element.method]();
-      });
-
-      // Attr is string?
-    } else if (selector && typeof element.attr === "string") {
-      output[element.newKey] = selector.map((e, i) => {
-        return $(e).attr(element.attr);
-      });
-
-      // Attr is array?
-    } else if (selector && Array.isArray(element.attr)) {
-      output[element.newKey] = selector.map((e, i) => {
-        return element.attr.reduce((accumulate, current) => {
-          return $(accumulate).attr(current);
-        }, e);
-      });
-
-      // Default
-    } else if (selector) {
-      output[element.newKey] = selector.map((e, i) => {
-        return e;
-      });
+      niw[element.newKey] = getValueFromSelector($, element, selector, domain);
+      output = { ...output, ...niw };
     }
 
     // Update url/link to fullUrl
@@ -203,7 +253,7 @@ const parseDataWithSelector = ($, domain, array, logger) => {
       output[element.newKey] = [output[element.newKey]];
     }
 
-    if (element.int && output[element.newKey]) {
+    if (element.number && output[element.newKey]) {
       output[element.newKey] = output[element.newKey].match(/\d+(?:(?:\.|\,)(?:\d*))?/) || "";
     }
   });

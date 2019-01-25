@@ -31,23 +31,19 @@
     action === "click" ? submit.click() : submit.submit();
   };
 
-  const isOnDOM = query => {
-    return !!window.document.querySelector(query);
-  };
-
   const getFreightResponse = (freightResultSelector, freightErrorSelector) => {
     return new Promise((resolve, reject) => {
       let retries = 0;
       const interval = setInterval(() => {
-        if (isOnDOM(freightResultSelector)) {
+        if (!!window.document.querySelector(freightResultSelector)) {
           clearInterval(interval);
           resolve(true);
-        } else if (
-          isOnDOM(freightErrorSelector) ||
-          (!isOnDom(freightResultSelector) && retries >= 50)
-        ) {
+        } else if (!!window.document.querySelector(freightErrorSelector)) {
           clearInterval(interval);
-          reject(false);
+          resolve(false);
+        } else if (!window.document.querySelector(freightResultSelector) && retries >= 50) {
+          clearInterval(interval);
+          resolve(false);
         } else {
           ++retries;
         }
@@ -70,24 +66,31 @@
     const node = window.document.querySelector(freightResultSelector);
     const cloneWrapper = window.document.createElement("div");
     cloneWrapper.setAttribute("id", zipcode);
+    cloneWrapper.setAttribute("class", "zipcode");
     const clone = node.cloneNode(true);
     cloneWrapper.appendChild(clone);
     scriptResult.appendChild(cloneWrapper);
   };
 
-  const start = (zipcodes, inputFreight, submitFreight) => {
+  const start = (zipcodes, inputFreight, submitFreight, freightResultSelector, freightErrorSelector, crawlerScriptResult) => {
     const input = window.document.querySelector(inputFreight);
     const submit = window.document.querySelector(submitFreight);
 
-    return zipcodes.map((zipcode, i) => {
+    return zipcodes.map(zipcode => {
       calulateFreight(zipcode, input, submit);
       return new Promise(async (resolve, reject) => {
+        const msg = "ERROR WAITING FOR FREIGHT RESULT " + zipcode;
         try {
-          await getFreightResponse(".freight-result", ".freight-feedback-error");
-          writeResult(zipcode, ".freight-result");
+          const ret = await getFreightResponse(freightResultSelector, freightErrorSelector);
+
+          if (ret) {
+            writeResult(zipcode, freightResultSelector, crawlerScriptResult);
+          } else {
+            console.error(msg);
+          }
+
           resolve(zipcode);
         } catch (e) {
-          const msg = "ERROR WAITING FOR FREIGHT RESULT " + zipcode;
           console.error(msg);
           reject(msg);
         }
@@ -98,6 +101,9 @@
   return start(
     ["24240-660"],
     "#input-freight-product",
-    "#bt-freight-product"
+    "#bt-freight-product",
+    ".card-freight table",
+    "#freight-feedback-error",
+    "crawlerScriptResult"
   );
 })();

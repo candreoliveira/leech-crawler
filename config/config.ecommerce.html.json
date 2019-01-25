@@ -27,14 +27,9 @@
           "nextPages": null,
           "data": [
             {
-              "selector": ".card-product-url",
+              "selector": ".product-grid-item a",
               "newKey": "url",
               "attr": "href"
-            },
-            {
-              "selector": ".card-product-name",
-              "newKey": "name",
-              "method": "text"
             }
           ]
         }

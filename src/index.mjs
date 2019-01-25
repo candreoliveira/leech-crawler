@@ -1,40 +1,18 @@
-import {
-  Database
-} from "./db/database.mjs";
-import {
-  Crawler
-} from "./bot/crawler.mjs";
-import {
-  Rss
-} from "./parser/rss/rss.mjs";
-import {
-  Html
-} from "./parser/html/html.mjs";
-import {
-  Headless
-} from "./parser/html/headless.mjs";
+import { Database } from "./db/database.mjs";
+import { Crawler } from "./bot/crawler.mjs";
+import { Rss } from "./parser/rss/rss.mjs";
+import { Html } from "./parser/html/html.mjs";
+import { Headless } from "./parser/html/headless.mjs";
 import {
   getUrl,
   getStacktrace
 } from "./parser/helper.mjs";
-import {
-  log as l
-} from "./log/log.mjs";
-import {
-  default as colors
-} from "colors";
-import {
-  default as yargs
-} from "yargs";
-import {
-  default as dotenv
-} from "dotenv";
-import {
-  default as r2
-} from "r2";
-import {
-  default as path
-} from "path";
+import { log as l } from "./log/log.mjs";
+import { default as colors } from "colors";
+import { default as yargs } from "yargs";
+import { default as dotenv } from "dotenv";
+import { default as r2 } from "r2";
+import { default as path } from "path";
 import fs from "fs";
 
 dotenv.config();
@@ -154,7 +132,7 @@ const getRemoteConfig = async config => {
   if (config && config.remote && config.remote.url) {
     try {
       return await r2(config.remote.url).json;
-    } catch (e) {}
+    } catch (e) { }
   }
   return null;
 };
@@ -192,9 +170,9 @@ const start = async () => {
   websites
     .filter(
       v =>
-      v.type === yargs.argv.type &&
-      ((websitesArg.length > 0 && websitesArg.indexOf(v.name) > -1) ||
-        websitesArg.length === 0)
+        v.type === yargs.argv.type &&
+        ((websitesArg.length > 0 && websitesArg.indexOf(v.name) > -1) ||
+          websitesArg.length === 0)
     )
     .forEach(w => {
       pagesArg.forEach(p => {
