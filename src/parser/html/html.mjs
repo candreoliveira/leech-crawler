@@ -34,9 +34,9 @@ const defaultCb = ({ instance, parg, domain, uri, resolve, reject }) => (
     // Return an array of array of items
     let result = instance.config.pages;
 
-    if(!$) {
+    if (!$) {
 
-      result = [[{'statusCode': res.statusCode, 'pageUrl': uri.href}]]
+      result = [[{ 'statusCode': res.statusCode, 'pageUrl': uri.href }]]
 
     } else {
 
@@ -113,7 +113,7 @@ class Html extends Parser {
     });
   }
 
-  async close() {}
+  async close() { }
 
   async reader(parg, urls) {
     if (!urls) return;

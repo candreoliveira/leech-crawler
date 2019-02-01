@@ -1,6 +1,6 @@
 {
   "remote": {
-    "url": "http://alfred-v1.b2w.io/wp-json/api/v1/settings_sanguessuga"
+    "url2": "http://alfred-v1.b2w.io/wp-json/api/v1/settings_sanguessuga"
   },
   "database": {
     "development": {
@@ -89,7 +89,9 @@
           ],
           "data": [
             {
-              "selector": [".item__image a"],
+              "selector": [
+                ".item__image a"
+              ],
               "newKey": "url",
               "attr": "href"
             },
@@ -119,7 +121,10 @@
               "method": "text"
             },
             {
-              "join": ["label", "value"],
+              "join": [
+                "label",
+                "value"
+              ],
               "newKey": "attributes",
               "list": true
             },
@@ -259,7 +264,10 @@
               "method": "text"
             },
             {
-              "join": ["label", "value"],
+              "join": [
+                "label",
+                "value"
+              ],
               "newKey": "attributes",
               "list": true
             },
@@ -268,6 +276,164 @@
               "newKey": "image",
               "attr": "src",
               "list": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "html",
+      "name": "netshoes",
+      "domain": "https://www.netshoes.com.br",
+      "dependency": {
+        "department": {
+          "hasMany": "item",
+          "through": "url"
+        }
+      },
+      "pages": [
+        {
+          "rootUrl": "/suplementos",
+          "name": "department",
+          "nextPages": [
+            {
+              "selector": ".andes-pagination__button:not(.andes-pagination__button--current) a",
+              "attr": "href"
+            },
+            {
+              "selector": ".modal-content .actions a",
+              "attr": "href"
+            }
+          ],
+          "data": [
+            {
+              "selector": ".container-departament-footer li a",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": ".container-departament-footer li a",
+              "newKey": "title",
+              "method": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "html",
+      "name": "vitacost",
+      "domain": "https://www.vitacost.com",
+      "parserOptions": {
+        "headers": {
+          "Connection": "keep-alive",
+          "Accept-Language": "en-US,en;q=0.5",
+          "Accept": "*/*"
+        }
+      },
+      "dependency": {
+        "sitemap": {
+          "hasMany": "category",
+          "through": "url"
+        },
+        "category": {
+          "hasMany": "item",
+          "through": "url"
+        }
+      },
+      "pages": [
+        {
+          "rootUrl": "/productresults.aspx?N=6&allCategories=true",
+          "name": "sitemap",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": "#guidedNavigation div.guided-nav__section-content:nth-child(2) li a",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": "#guidedNavigation div.guided-nav__section-content:nth-child(2) li a",
+              "newKey": "title",
+              "method": "text"
+            }
+          ]
+        },
+        {
+          "name": "category",
+          "nextPages": [
+            {
+              "selector": ".srListingNav .srListingNavPages > a[href]",
+              "attr": "href"
+            }
+          ],
+          "data": [
+            {
+              "selector": ".product-block .pb-description a",
+              "newKey": "title",
+              "method": "text"
+            },
+            {
+              "selector": ".product-block .pb-image a",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": ".product-block .pb-img",
+              "newKey": "image",
+              "attr": "href"
+            }
+          ]
+        },
+        {
+          "name": "item",
+          "data": [
+            {
+              "name": "item",
+              "data": [
+                {
+                  "newKey": "categories",
+                  "selector": "h3.bcs.cf > a",
+                  "method": "text",
+                  "list": true
+                },
+                {
+                  "newKey": "name",
+                  "selector": "h1",
+                  "method": "text"
+                },
+                {
+                  "newKey": "sku",
+                  "selector": "#pdTitleBlock ul.link-line > li:nth-child(2)",
+                  "method": "text"
+                },
+                {
+                  "newKey": "shippingWight",
+                  "selector": "#pdTitleBlock ul.link-line > li:nth-child(3)",
+                  "method": "text"
+                },
+                {
+                  "newKey": "servings",
+                  "selector": "#pdTitleBlock ul.link-line > li:nth-child(4)",
+                  "method": "text"
+                },
+                {
+                  "newKey": "price",
+                  "selector": "li#pdpSubPrice > .pOurPrice",
+                  "method": "text"
+                },
+                {
+                  "newKey": "rating",
+                  "selector": ".bv-rating span",
+                  "method": "text"
+                },
+                {
+                  "newKey": "flavor",
+                  "selector": "#Flavor1.pgDD > option",
+                  "method": "text",
+                  "list": true
+                }
+              ]
             }
           ]
         }
