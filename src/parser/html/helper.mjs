@@ -254,7 +254,12 @@ const parseDataWithSelector = ($, domain, array, logger) => {
     }
 
     if (element.number && output[element.newKey]) {
-      output[element.newKey] = output[element.newKey].match(/\d+(?:(?:\.|\,)(?:\d*))?/) || "";
+      output[element.newKey] = output[element.newKey].map(u => {
+        let tmp = u.match(/\d+(?:(?:\.|\,)(?:\d*))?/);
+        u = u ? u[0] : "";
+
+        return u;
+      });
     }
   });
 
