@@ -256,9 +256,8 @@ const parseDataWithSelector = ($, domain, array, logger) => {
     if (element.number && output[element.newKey]) {
       output[element.newKey] = output[element.newKey].map(u => {
         let tmp = u.match(/\d+(?:(?:\.|\,)(?:\d*))?/);
-        u = u ? u[0] : "";
-
-        return u;
+        tmp = tmp ? tmp[0] : "";
+        return tmp;
       });
     }
   });
