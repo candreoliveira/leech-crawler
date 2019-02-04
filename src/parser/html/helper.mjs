@@ -281,10 +281,63 @@ const parseDataWithZip = previousParsedPage => {
     });
 };
 
+const appendData = (out, data) => {
+  return out.map(element => {
+    return { ...element, ...data };
+  });
+}
+
+const parsePage = ($, domain, href, page, pageData, logger) => {
+  // Parse data
+  let out = parseDataWithSelector(
+    $,
+    domain,
+    pageData.filter(e => !!e.selector),
+    logger
+  );
+
+  // zip join list
+  out = parseDataWithZipJoinList(out, pageData.filter(e => !!e.join));
+
+  // zip array of selectors
+  out = parseDataWithZip(out);
+
+  // Adjust the "Join" case
+  out = parseDataWithJoin(out, pageData.filter(e => !!e.join));
+
+  // Set pageUrl and website
+  out = appendData(out, {
+    pageUrl: href,
+    website: page
+  });
+
+  return out;
+}
+
+const parser = ($, domain, uri, parg, configPages, configName, logger) => {
+  // Return an array of array of items
+  let filteredPages = configPages;
+
+  if (parg) {
+    filteredPages = filteredPages.filter(e => e.name === parg);
+  }
+
+  return {
+    result: filteredPages.map(page => {
+      return parsePage($, domain, uri.href, configName, page.data, logger);
+    }),
+    nextPages: filteredPages.map(page => {
+      return getNextPages($, uri, page.nextPages);
+    })
+  };
+}
+
 export {
   parseDataWithSelector,
   parseDataWithZipJoinList,
   parseDataWithZip,
   parseDataWithJoin,
-  getNextPages
+  getNextPages,
+  parsePage,
+  parser
 };

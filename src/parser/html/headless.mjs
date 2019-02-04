@@ -1,11 +1,7 @@
 import { Parser } from "../parser.mjs";
 import { log as l } from "../../log/log.mjs";
 import {
-  parseDataWithSelector,
-  parseDataWithZipJoinList,
-  parseDataWithZip,
-  parseDataWithJoin,
-  getNextPages
+  parser
 } from "./helper.mjs";
 import { default as Crawler } from "headless-chrome-crawler";
 import { default as cheerio } from "cheerio";
@@ -25,59 +21,29 @@ const exposeFunction = ({
     nextPages: []
   };
 
-
   if (!$) {
     const err = `[HEADLESS] Error parsing website: without $.`;
     instance.log("ERROR", err);
+
     reject(err);
   } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
-    // Return an array of array of items
-    let result = instance.config.pages;
+    const parsedPage = parser($, domain, uri, parg, instance.config.pages, instance.config.name, instance.log);
 
-    if (parg) {
-      result = result.filter(v => v.name === parg);
-    }
-
-    result = result.map(page => {
-      // Parse data
-      let out = parseDataWithSelector(
-        $,
-        domain,
-        page.data.filter(e => !!e.selector),
-        instance.log
-      );
-
-      // zip join list
-      out = parseDataWithZipJoinList(out, page.data.filter(e => !!e.join));
-
-      // zip array of selectors
-      out = parseDataWithZip(out);
-
-      // Adjust the "Join" case
-      out = parseDataWithJoin(out, page.data.filter(e => !!e.join));
-
-      // Set pageUrl
-      out.map(element => {
-        element["pageUrl"] = uri.href;
-        return element;
-      });
-
-      // Add next pages
-      output.nextPages = output.nextPages.concat(
-        getNextPages($, uri, page.nextPages)
-      );
-
-      return out;
+    // Save all nextPages on output
+    parsedPage.forEach(pages => {
+      output.nextPages.concat(pages);
     });
 
     instance.log(
       "INFO",
-      `[HEADLESS] Completing parsing ${result.length} page(s)...`
+      `[HEADLESS] Completing parsing ${parsedPage.result.length} page(s) ${uri}...`
     );
-    output.yield = result;
+
+    output.yield = parsedPage.result;
   }
 
   output.nextPages = output.nextPages.length === 0 ? null : output.nextPages;
+
   resolve(output);
   return output;
 };
@@ -106,7 +72,7 @@ class Headless extends Parser {
       devtools: false,
 >>>>>>> 4096d80... remove alfred
       obeyRobotsTxt: false,
-      maxConnections: 50,
+      maxConnections: 20,
       userAgent: userAgent("rotate", this.args.website),
       jQuery: true,
       retryCount: 10,

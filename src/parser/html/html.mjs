@@ -1,11 +1,7 @@
 import { Parser } from "../parser.mjs";
 import { log as l } from "../../log/log.mjs";
 import {
-  parseDataWithSelector,
-  parseDataWithZipJoinList,
-  parseDataWithZip,
-  parseDataWithJoin,
-  getNextPages
+  parser
 } from "./helper.mjs";
 import Crawler from "crawler";
 import URL from "url";
@@ -18,6 +14,7 @@ const defaultCb = ({ instance, parg, domain, uri, resolve, reject }) => (
 ) => {
   const resLog = `[HTML] Get ${uri}: ${res.statusCode}.`;
   instance.log("DEBUG", resLog);
+
   const $ = res.$;
   let output = {
     yield: null,
@@ -29,61 +26,27 @@ const defaultCb = ({ instance, parg, domain, uri, resolve, reject }) => (
     instance.log("ERROR", err);
     reject(err);
 
+  } else if (!$) {
+    output.yield = [[{ 'statusCode': res.statusCode, 'pageUrl': uri.href }]];
+
+    instance.log(
+      "ERROR",
+      `[HTML] [HEADLESS] Error parsing website ${uri}: without $.`
+    );
   } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
+    const parsedPage = parser($, domain, uri, parg, instance.config.pages, instance.config.name, instance.log);
 
-    // Return an array of array of items
-    let result = instance.config.pages;
-
-    if (!$) {
-
-      result = [[{ 'statusCode': res.statusCode, 'pageUrl': uri.href }]]
-
-    } else {
-
-      if (parg) {
-        result = result.filter(v => v.name === parg);
-      }
-
-      result = result.map(page => {
-        // Parse data
-        let out = parseDataWithSelector(
-          $,
-          domain,
-          page.data.filter(e => !!e.selector),
-          instance.log
-        );
-
-        // zip join list
-        out = parseDataWithZipJoinList(out, page.data.filter(e => !!e.join));
-
-        // zip array of selectors
-        out = parseDataWithZip(out);
-
-        // Adjust the "Join" case
-        out = parseDataWithJoin(out, page.data.filter(e => !!e.join));
-
-        // Set pageUrl
-        out.map(element => {
-          element["pageUrl"] = uri.href;
-          element["website"] = instance.config.name;
-          return element;
-        });
-
-        // Add next pages
-        output.nextPages = output.nextPages.concat(
-          getNextPages($, uri, page.nextPages)
-        );
-
-        return out;
-      });
-
-    }
+    // Save all nextPages on output
+    parsedPage.forEach(pages => {
+      output.nextPages.concat(pages);
+    });
 
     instance.log(
       "INFO",
-      `[HTML] Completing parsing ${uri} page(s)...`
+      `[HTML] Completing parsing ${result.length} page(s) ${uri}...`
     );
-    output.yield = result;
+
+    output.yield = parsedPage.result;
   }
 
   output.nextPages = output.nextPages.length === 0 ? null : output.nextPages;
