@@ -282,63 +282,28 @@
       ]
     },
     {
-      "type": "html",
-      "name": "netshoes",
-      "domain": "https://www.netshoes.com.br",
-      "dependency": {
-        "department": {
-          "hasMany": "item",
-          "through": "url"
-        }
-      },
-      "pages": [
-        {
-          "rootUrl": "/suplementos",
-          "name": "department",
-          "nextPages": [
-            {
-              "selector": ".andes-pagination__button:not(.andes-pagination__button--current) a",
-              "attr": "href"
-            },
-            {
-              "selector": ".modal-content .actions a",
-              "attr": "href"
-            }
-          ],
-          "data": [
-            {
-              "selector": ".container-departament-footer li a",
-              "newKey": "url",
-              "attr": "href"
-            },
-            {
-              "selector": ".container-departament-footer li a",
-              "newKey": "title",
-              "method": "text"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "html",
+      "type": "headless",
       "name": "vitacost",
       "domain": "https://www.vitacost.com",
       "parserOptions": {
         "headers": {
           "Connection": "keep-alive",
           "Accept-Language": "en-US,en;q=0.5",
-          "Accept": "*/*"
-        }
+          "Accept": "*/*",
+          "Accept-Encoding": "identity"
+        },
+        "executablePath": "/usr/bin/chromium-browser"
       },
       "dependency": {
         "sitemap": {
           "hasMany": "category",
-          "through": "url"
+          "through": "url",
+          "type": "headless"
         },
         "category": {
           "hasMany": "item",
-          "through": "url"
+          "through": "url",
+          "type": "headless"
         }
       },
       "pages": [
@@ -400,12 +365,12 @@
               "method": "text"
             },
             {
-              "newKey": "sku",
+              "newKey": "isbn",
               "selector": "#pdTitleBlock ul.link-line > li:nth-child(2)",
               "method": "text"
             },
             {
-              "newKey": "shippingWight",
+              "newKey": "weight",
               "selector": "#pdTitleBlock ul.link-line > li:nth-child(3)",
               "method": "text"
             },
@@ -417,7 +382,8 @@
             {
               "newKey": "price",
               "selector": "li#pdpSubPrice > .pOurPrice",
-              "method": "text"
+              "method": "text",
+              "number": true
             },
             {
               "newKey": "rating",
