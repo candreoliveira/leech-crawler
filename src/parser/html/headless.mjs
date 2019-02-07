@@ -63,14 +63,8 @@ class Headless extends Parser {
         "--disable-setuid-sandbox",
         "--ignore-certificate-errors"
       ],
-<<<<<<< HEAD
-      headless: false,
-      devtools: true,
-=======
-      executablePath: '/usr/bin/chromium-browser',
       headless: true,
       devtools: false,
->>>>>>> 4096d80... remove alfred
       obeyRobotsTxt: false,
       maxConnections: 20,
       userAgent: userAgent("rotate", this.args.website),
