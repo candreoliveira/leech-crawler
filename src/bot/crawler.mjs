@@ -375,12 +375,26 @@ class Crawler {
       };
     }
 
-    return this.db.Page.update({
-      processedAt: null,
-      startedAt: null
-    },
-      query
-    );
+    const count = await this.db.Page.count({
+      where: {
+        ...query,
+        processedAt: {
+          [this.db.op.eq]: null
+        }
+      }
+    });
+
+    if (count == 0) {
+      return this.db.Page.update({
+        processedAt: null,
+        startedAt: null
+      },
+        query
+      );
+    }
+
+    // Do nothing
+    return;
   }
 
   async close() {
