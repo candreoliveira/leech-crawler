@@ -292,7 +292,7 @@
           "Accept": "*/*",
           "Accept-Encoding": "identity"
         },
-        "executablePath": "/usr/bin/chromium-browser"
+        "executablePath": "/usr/bin/google-chrome-stable"
       },
       "dependency": {
         "sitemap": {

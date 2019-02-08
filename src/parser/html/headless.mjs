@@ -30,7 +30,7 @@ const exposeFunction = ({
     const parsedPage = parser($, domain, uri, parg, instance.config.pages, instance.config.name, instance.log);
 
     // Save all nextPages on output
-    parsedPage.forEach(pages => {
+    parsedPage.nextPages.forEach(pages => {
       output.nextPages.concat(pages);
     });
 

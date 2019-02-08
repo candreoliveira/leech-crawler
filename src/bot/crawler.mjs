@@ -377,8 +377,11 @@ class Crawler {
 
     const count = await this.db.Page.count({
       where: {
-        ...query,
+        ...query.where,
         processedAt: {
+          [this.db.op.eq]: null
+        },
+        startedAt: {
           [this.db.op.eq]: null
         }
       }
