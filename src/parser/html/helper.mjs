@@ -181,6 +181,23 @@ const getValueFromSelector = ($, element, selector, domain) => {
     });
   }
 
+  // Replace
+  if (element.replace && element.replace.pattern && (element.replace.new || element.replace.new === "")) {
+    const regex = new RegExp(element.replace.pattern, (element.replace.options || ""));
+
+    // Replace all values
+    output = output.map(e => {
+      return e.replace(regex, element.replace.new);
+    });
+  }
+
+  // Trim
+  if (element.trim) {
+    output = output.map(e => {
+      return e.trim();
+    });
+  }
+
   return output;
 };
 
@@ -205,16 +222,6 @@ const parseDataWithSelector = ($, domain, array, logger) => {
           selector = tmp;
         }
       }
-
-      // selector = selector.map((s, i) => {
-      //   return selectors.reduce((acc, curr) => {
-      //     if (curr[i]) {
-      //       return acc || getValueFromSelector($, element, curr[i]);
-      //     }
-
-      //     return acc;
-      //   }, s);
-      // });
 
       let values = [];
       for (let i = 0; i < selector.length; i++) {
@@ -256,8 +263,11 @@ const parseDataWithSelector = ($, domain, array, logger) => {
     if (element.number && output[element.newKey]) {
       output[element.newKey] = output[element.newKey].map(u => {
         let tmp = u.match(/\d+(?:(?:\.|\,)(?:\d*))?/);
-        tmp = tmp ? tmp[0] : "";
-        return tmp;
+        if (tmp) {
+          tmp = Number(tmp[0].replace(",", "."));
+        }
+
+        return tmp || "";
       });
     }
   });

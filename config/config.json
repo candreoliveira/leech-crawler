@@ -320,7 +320,13 @@
             {
               "selector": "#guidedNavigation div.guided-nav__section-content:nth-child(2) li a",
               "newKey": "title",
-              "method": "text"
+              "method": "text",
+              "replace": {
+                "pattern": "\\(\\d+\\)$",
+                "options": "i",
+                "new": ""
+              },
+              "trim": true
             }
           ]
         },
@@ -372,7 +378,12 @@
             {
               "newKey": "weight",
               "selector": "#pdTitleBlock ul.link-line > li:nth-child(3)",
-              "method": "text"
+              "method": "text",
+              "replace": {
+                "pattern": "Shipping Weight\\:",
+                "options": "i",
+                "new": ""
+              }
             },
             {
               "newKey": "servings",
@@ -388,7 +399,8 @@
             {
               "newKey": "rating",
               "selector": ".bv-rating span",
-              "method": "text"
+              "method": "text",
+              "number": true
             },
             {
               "newKey": "flavor",
