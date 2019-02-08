@@ -38,7 +38,7 @@ const log = levelConfig => (level, ...strings) => {
     (config === "debug" &&
       ["ERROR", "WARN", "INFO", "VERBOSE", "DEBUG"].indexOf(level) > -1)
   ) {
-    print(level, strings);
+    print(level, strings.map(s => "\n" + s));
   }
 };
 
