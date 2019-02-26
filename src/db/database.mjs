@@ -107,6 +107,114 @@ class Database {
   async sync(params) {
     return await this.sequelize.sync(params);
   }
+
+  async findAllPages(params) {
+    const r = await this.Page.findAll({
+      where: {
+        name: params.name,
+        type: params.type,
+        website: params.website,
+        processedAt: {
+          [this.db.op.eq]: params.processedAt
+        },
+        startedAt: {
+          [this.db.op.eq]: params.startedAt
+        }
+      },
+      limit: params.limit
+    });
+    return r.map(i => i.dataValues);
+  }
+
+  async findOnePageByUrl(url) {
+    const r = await this.Page.findOne({
+      where: {
+        url: url
+      }
+    });
+    return r.dataValues;
+  }
+
+  async findOneItemByUrl(url) {
+    const r = await this.Item.findOne({
+      where: {
+        "data.url": url
+      }
+    });
+    return r.dataValues;
+  }
+
+  async restartPages(params) {
+    return this.db.Page.update({
+      processedAt: params.processedAt,
+      startedAt: params.startedAt
+    },
+      {
+        where: {
+          website: {
+            [this.db.op.eq]: params.website
+          },
+          name: {
+            [this.db.op.eq]: params.name
+          }
+        }
+      }
+    );
+  }
+
+  async countPages(params) {
+    const r = await this.Page.count({
+      where: {
+        website: {
+          [this.db.op.eq]: params.website
+        },
+        name: {
+          [this.db.op.eq]: params.name
+        },
+        processedAt: {
+          [this.db.op.eq]: params.processedAt
+        },
+        startedAt: {
+          [this.db.op.eq]: params.startedAt
+        }
+      }
+    });
+    return r.dataValues;
+  }
+
+  async countItems(params) {
+    const r = await this.Item.count({
+      where: {
+        website: {
+          [this.db.op.eq]: params.website
+        },
+        name: {
+          [this.db.op.eq]: params.name
+        },
+        processedAt: {
+          [this.db.op.eq]: params.processedAt
+        },
+        startedAt: {
+          [this.db.op.eq]: params.startedAt
+        }
+      }
+    });
+    return r.dataValues;
+  }
+
+  async upsertItem(doc) {
+    const r = await this.Item.upsert(doc, {
+      returning: true
+    });
+    return r[0].dataValues;
+  }
+
+  async upsertPage(doc) {
+    const r = await this.Page.upsert(doc, {
+      returning: true
+    });
+    return r[0].dataValues;
+  }
 }
 
 export {

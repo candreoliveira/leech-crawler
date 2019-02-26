@@ -29,21 +29,14 @@ class Crawler {
   async getNextPages(count = 0) {
     if (count < 50) {
       try {
-        const result = await this.db.Page.findAll({
-          where: {
-            name: this.name,
-            type: this.type,
-            website: this.website,
-            processedAt: {
-              [this.db.op.eq]: null
-            },
-            startedAt: {
-              [this.db.op.eq]: null
-            }
-          },
+        return await this.db.findAllPages({
+          name: this.name,
+          type: this.type,
+          website: this.website,
+          processedAt: null,
+          startedAt: null,
           limit: 10
         });
-        return result.map(i => i.dataValues);
       } catch (err) {
         this.log(
           "WARN",
@@ -60,17 +53,10 @@ class Crawler {
     }
   }
 
-  async getObject(coll, key, url, dataValues = true, count = 0) {
+  async getObject(coll, url, count = 0) {
     if (count < 50) {
       try {
-        const query = {};
-        query[key] = url;
-
-        const result = await this.db[coll].findOne({
-          where: query
-        });
-
-        return dataValues && result ? result.dataValues : result;
+        return await this.db[`findOne${coll}ByUrl`](url);
       } catch (err) {
         this.log(
           "WARN",
@@ -78,7 +64,7 @@ class Crawler {
         );
 
         await sleep(500);
-        return await this.getObject(coll, key, url, dataValues, ++count);
+        return await this.getObject(coll, url, ++count);
       }
     } else {
       this.sendError(
@@ -87,12 +73,12 @@ class Crawler {
     }
   }
 
-  async getPage(url, dataValues = true) {
-    return await this.getObject("Page", "url", url, dataValues);
+  async getPage(url) {
+    return await this.getObject("Page", url);
   }
 
-  async getItem(url, dataValues = true) {
-    return await this.getObject("Item", "data.url", url, dataValues);
+  async getItem(url) {
+    return await this.getObject("Item", url);
   }
 
   async tryToGetPage(url, count = 0) {
@@ -157,7 +143,7 @@ class Crawler {
     }
   }
 
-  async upsertObject(doc, coll, options = {}, count = 0) {
+  async upsertObject(doc, coll, count = 0) {
     if (count < 50) {
       if (!doc.serial) {
         doc = {
@@ -167,12 +153,7 @@ class Crawler {
       }
 
       try {
-        const result = await this.db[coll].upsert(doc, {
-          returning: true,
-          ...options
-        });
-
-        return result[0].dataValues;
+        return await this.db[`upsert${coll}`](doc);
       } catch (err) {
         this.log(
           "WARN",
@@ -181,7 +162,7 @@ class Crawler {
           } #${count} ${getStacktrace(err)} ${getPrettyJson(doc)}.`
         );
 
-        return await this.upsertObject(doc, coll, options, ++count);
+        return await this.upsertObject(doc, coll, ++count);
       }
     } else {
       this.sendError(
@@ -362,38 +343,20 @@ class Crawler {
   }
 
   async restartProccess(website, page) {
-    const query = {};
-
-    if (website) {
-      query.where = {
-        website: {
-          [this.db.op.eq]: website
-        },
-        name: {
-          [this.db.op.eq]: page
-        }
-      };
-    }
-
-    const count = await this.db.Page.count({
-      where: {
-        ...query.where,
-        processedAt: {
-          [this.db.op.eq]: null
-        },
-        startedAt: {
-          [this.db.op.eq]: null
-        }
-      }
+    const count = await this.db.countPages({
+      website,
+      name: page,
+      processedAt: null,
+      startedAt: null
     });
 
     if (count == 0) {
-      return this.db.Page.update({
+      return this.db.restartPages({
         processedAt: null,
-        startedAt: null
-      },
-        query
-      );
+        startedAt: null,
+        website,
+        name: page
+      });
     }
 
     // Do nothing
