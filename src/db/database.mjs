@@ -1,9 +1,13 @@
 import {
   default as Sequelize
 } from "sequelize";
+import {
+  default as postgres
+} from "./postgres.mjs";
 
 class Database {
-  constructor(config, env) {
+  constructor(config, env, engine = "postgres") {
+    this.engine = engine;
     this.config = config;
     this.op = Sequelize.Op;
     this.sequelize = new Sequelize(
@@ -102,118 +106,30 @@ class Database {
 
     this.Item = Item;
     this.Page = Page;
-  }
 
-  async sync(params) {
-    return await this.sequelize.sync(params);
-  }
-
-  async findAllPages(params) {
-    const r = await this.Page.findAll({
-      where: {
-        name: params.name,
-        type: params.type,
-        website: params.website,
-        processedAt: {
-          [this.db.op.eq]: params.processedAt
-        },
-        startedAt: {
-          [this.db.op.eq]: params.startedAt
-        }
-      },
-      limit: params.limit
-    });
-    return r.map(i => i.dataValues);
-  }
-
-  async findOnePageByUrl(url) {
-    const r = await this.Page.findOne({
-      where: {
-        url: url
-      }
-    });
-    return r.dataValues;
-  }
-
-  async findOneItemByUrl(url) {
-    const r = await this.Item.findOne({
-      where: {
-        "data.url": url
-      }
-    });
-    return r.dataValues;
-  }
-
-  async restartPages(params) {
-    return this.db.Page.update({
-      processedAt: params.processedAt,
-      startedAt: params.startedAt
-    },
-      {
-        where: {
-          website: {
-            [this.db.op.eq]: params.website
-          },
-          name: {
-            [this.db.op.eq]: params.name
-          }
-        }
-      }
-    );
-  }
-
-  async countPages(params) {
-    const r = await this.Page.count({
-      where: {
-        website: {
-          [this.db.op.eq]: params.website
-        },
-        name: {
-          [this.db.op.eq]: params.name
-        },
-        processedAt: {
-          [this.db.op.eq]: params.processedAt
-        },
-        startedAt: {
-          [this.db.op.eq]: params.startedAt
-        }
-      }
-    });
-    return r.dataValues;
-  }
-
-  async countItems(params) {
-    const r = await this.Item.count({
-      where: {
-        website: {
-          [this.db.op.eq]: params.website
-        },
-        name: {
-          [this.db.op.eq]: params.name
-        },
-        processedAt: {
-          [this.db.op.eq]: params.processedAt
-        },
-        startedAt: {
-          [this.db.op.eq]: params.startedAt
-        }
-      }
-    });
-    return r.dataValues;
-  }
-
-  async upsertItem(doc) {
-    const r = await this.Item.upsert(doc, {
-      returning: true
-    });
-    return r[0].dataValues;
-  }
-
-  async upsertPage(doc) {
-    const r = await this.Page.upsert(doc, {
-      returning: true
-    });
-    return r[0].dataValues;
+    switch (engine) {
+      case "postgres":
+        this.sync = postgres.sync(this.sequelize);
+        this.findAllPages = postgres.findAllPages(this.Page, this.op);
+        this.findOnePageByUrl = postgres.findOnePageByUrl(this.Page);
+        this.findOneItemByUrl = postgres.findOneItemByUrl(this.Item);
+        this.restartPages = postgres.restartPages(this.Page, this.op);
+        this.countPages = postgres.countPages(this.Page, this.op);
+        this.countItems = postgres.countItems(this.Item, this.op);
+        this.upsertItem = postgres.upsertItem(this.Item);
+        this.upsertPage = postgres.upsertPage(this.Page);
+        break;
+      default:
+        this.sync = postgres.sync(this.sequelize);
+        this.findAllPages = postgres.findAllPages(this.Page, this.op);
+        this.findOnePageByUrl = postgres.findOnePageByUrl(this.Page);
+        this.findOneItemByUrl = postgres.findOneItemByUrl(this.Item);
+        this.restartPages = postgres.restartPages(this.Page, this.op);
+        this.countPages = postgres.countPages(this.Page, this.op);
+        this.countItems = postgres.countItems(this.Item, this.op);
+        this.upsertItem = postgres.upsertItem(this.Item);
+        this.upsertPage = postgres.upsertPage(this.Page);
+    }
   }
 }
 
