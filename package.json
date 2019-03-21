@@ -20,6 +20,7 @@
     "headless-chrome-crawler": "git://github.com/candreoliveira/headless-chrome-crawler.git#master",
     "html-to-text": "^4.0.0",
     "jsdom": "^11.12.0",
+    "kue": "^0.11.6",
     "normalize-url": "^3.3.0",
     "pg": "^7.5.0",
     "pg-hstore": "^2.3.2",

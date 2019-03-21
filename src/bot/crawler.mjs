@@ -29,7 +29,7 @@ class Crawler {
   async getNextPages(count = 0) {
     if (count < 50) {
       try {
-        return await this.db.findAllPages({
+        return await this.db.findPages({
           name: this.name,
           type: this.type,
           website: this.website,

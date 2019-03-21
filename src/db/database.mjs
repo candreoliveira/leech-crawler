@@ -4,11 +4,15 @@ import {
 import {
   default as postgres
 } from "./postgres.mjs";
+import {
+  default as mongo
+} from "./mongo.mjs";
 
 class Database {
   constructor(config, env, engine = "postgres") {
     this.engine = engine;
     this.config = config;
+
     this.op = Sequelize.Op;
     this.sequelize = new Sequelize(
       process.env.DB_NAME || config[env].name,
@@ -110,7 +114,7 @@ class Database {
     switch (engine) {
       case "postgres":
         this.sync = postgres.sync(this.sequelize);
-        this.findAllPages = postgres.findAllPages(this.Page, this.op);
+        this.findPages = postgres.findPages(this.Page, this.op);
         this.findOnePageByUrl = postgres.findOnePageByUrl(this.Page);
         this.findOneItemByUrl = postgres.findOneItemByUrl(this.Item);
         this.restartPages = postgres.restartPages(this.Page, this.op);
@@ -121,7 +125,7 @@ class Database {
         break;
       default:
         this.sync = postgres.sync(this.sequelize);
-        this.findAllPages = postgres.findAllPages(this.Page, this.op);
+        this.findPages = postgres.findPages(this.Page, this.op);
         this.findOnePageByUrl = postgres.findOnePageByUrl(this.Page);
         this.findOneItemByUrl = postgres.findOneItemByUrl(this.Item);
         this.restartPages = postgres.restartPages(this.Page, this.op);
