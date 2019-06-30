@@ -3,10 +3,7 @@ import { Crawler } from "./bot/crawler.mjs";
 import { Rss } from "./parser/rss/rss.mjs";
 import { Html } from "./parser/html/html.mjs";
 import { Headless } from "./parser/html/headless.mjs";
-import {
-  getUrl,
-  getStacktrace
-} from "./parser/helper.mjs";
+import { getUrl, getStacktrace } from "./parser/helper.mjs";
 import { log as l } from "./log/log.mjs";
 import { default as colors } from "colors";
 import { default as yargs } from "yargs";
@@ -120,8 +117,7 @@ const run = async cfg => {
 
       runners -= 1;
       if (runners === 0) {
-        cfg.db.sequelize.close();
-        crawl.close();
+        await crawl.close();
         process.exit(0);
       }
     }
@@ -132,7 +128,7 @@ const getRemoteConfig = async config => {
   if (config && config.remote && config.remote.url) {
     try {
       return await r2(config.remote.url).json;
-    } catch (e) { }
+    } catch (e) {}
   }
   return null;
 };
@@ -195,6 +191,4 @@ const start = async () => {
     });
 };
 
-export {
-  start
-};
+export { start };

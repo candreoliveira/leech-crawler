@@ -6,9 +6,7 @@ import {
   getPrettyJson,
   getStacktrace
 } from "../parser/helper.mjs";
-import {
-  log as l
-} from "../log/log.mjs";
+import { log as l } from "../log/log.mjs";
 import sha256 from "sha256";
 
 class Crawler {
@@ -40,7 +38,9 @@ class Crawler {
       } catch (err) {
         this.log(
           "WARN",
-          `[${this.crawl.config.type.toUpperCase()}] Error getting next page ${count} ${getStacktrace(err)}.`
+          `[${this.crawl.config.type.toUpperCase()}] Error getting next page ${count} ${getStacktrace(
+            err
+          )}.`
         );
 
         await sleep(500);
@@ -60,7 +60,9 @@ class Crawler {
       } catch (err) {
         this.log(
           "WARN",
-          `[${this.crawl.config.type.toUpperCase()}] Error getting ${coll} ${getStacktrace(err)}.`
+          `[${this.crawl.config.type.toUpperCase()}] Error getting ${coll} ${getStacktrace(
+            err
+          )}.`
         );
 
         await sleep(500);
@@ -84,7 +86,7 @@ class Crawler {
   async tryToGetPage(url, count = 0) {
     const errorMessage = `[${this.crawl.config.type.toUpperCase()}] Error cant get page ${
       this.crawl.config.name
-      } #${count}`;
+    } #${count}`;
     let page;
 
     if (count > 0) {
@@ -95,7 +97,7 @@ class Crawler {
       this.log(
         "DEBUG",
         `[${this.crawl.config.type.toUpperCase()}] Trying ${
-        this.crawl.config.name
+          this.crawl.config.name
         } #${count} to get next page.`
       );
 
@@ -103,7 +105,9 @@ class Crawler {
         page = await this.getNextPages();
         this.log(
           "DEBUG",
-          `[${this.crawl.config.type.toUpperCase()}] Get ${this.crawl.config.name} #${count} ${getPrettyJson(page)} pages.`
+          `[${this.crawl.config.type.toUpperCase()}] Get ${
+            this.crawl.config.name
+          } #${count} ${getPrettyJson(page)} pages.`
         );
       } catch (err) {
         return this.sendError(`${getStacktrace(err)}.`);
@@ -118,7 +122,7 @@ class Crawler {
       this.log(
         "DEBUG",
         `[${this.crawl.config.type.toUpperCase()}] Trying ${
-        this.crawl.config.name
+          this.crawl.config.name
         } #${count} to get page.`
       );
 
@@ -128,12 +132,13 @@ class Crawler {
         return await this.tryToGetPage(null, ++count);
       }
 
-      page = await this.upsertObject({
-        url: getUrl(this.crawl.config.domain, url),
-        name: this.name,
-        type: this.type,
-        website: this.website
-      },
+      page = await this.upsertObject(
+        {
+          url: getUrl(this.crawl.config.domain, url),
+          name: this.name,
+          type: this.type,
+          website: this.website
+        },
         "Page"
       );
 
@@ -148,7 +153,8 @@ class Crawler {
       if (!doc.serial) {
         doc = {
           ...doc,
-          serial: coll === "Page" ? sha256(doc.url) : sha256(JSON.stringify(doc.data))
+          serial:
+            coll === "Page" ? sha256(doc.url) : sha256(JSON.stringify(doc.data))
         };
       }
 
@@ -158,7 +164,7 @@ class Crawler {
         this.log(
           "WARN",
           `[${this.crawl.config.type.toUpperCase()}] Error on saving object ${
-          this.crawl.config.name
+            this.crawl.config.name
           } #${count} ${getStacktrace(err)} ${getPrettyJson(doc)}.`
         );
 
@@ -167,7 +173,7 @@ class Crawler {
     } else {
       this.sendError(
         `[${this.crawl.config.type.toUpperCase()}] Error on saving object, cant save ${
-        this.crawl.config.name
+          this.crawl.config.name
         } #${count}.`
       );
     }
@@ -185,7 +191,7 @@ class Crawler {
         this.log(
           "WARN",
           `[${this.crawl.config.type.toUpperCase()}] Error on upserting many ${
-          this.crawl.config.name
+            this.crawl.config.name
           } #${count} ${getStacktrace(err)}.`
         );
 
@@ -194,7 +200,7 @@ class Crawler {
     } else {
       this.sendError(
         `[${this.crawl.config.type.toUpperCase()}] Error on upserting many, cant save ${
-        this.crawl.config.name
+          this.crawl.config.name
         } #${count}.`
       );
     }
@@ -216,7 +222,7 @@ class Crawler {
         this.log(
           "VERBOSE",
           `[${this.crawl.config.type.toUpperCase()}] Saving next page(s) ${
-          nextPages[0]
+            nextPages[0]
           }...`
         );
         await this.upsertMany(
@@ -232,7 +238,9 @@ class Crawler {
       } catch (err) {
         this.log(
           "ERROR",
-          `[${this.crawl.config.type.toUpperCase()}] Error saving pages ${getStacktrace(err)}.`
+          `[${this.crawl.config.type.toUpperCase()}] Error saving pages ${getStacktrace(
+            err
+          )}.`
         );
       }
     }
@@ -255,20 +263,22 @@ class Crawler {
       this.log(
         "VERBOSE",
         `[${this.crawl.config.type.toUpperCase()}] ${currentPage.url} ${
-        insertedItems.length
+          insertedItems.length
         } inserted item(s).`
       );
     } catch (err) {
       this.log(
         "WARN",
-        `[${this.crawl.config.type.toUpperCase()}] Error on recovering saving items error ${getStacktrace(err)}, unsetting ${getPrettyJson(
-          currentPage
-        )}.`
+        `[${this.crawl.config.type.toUpperCase()}] Error on recovering saving items error ${getStacktrace(
+          err
+        )}, unsetting ${getPrettyJson(currentPage)}.`
       );
 
       unset(
         [currentPage],
-        `[${this.crawl.config.type.toUpperCase()}] Error on recovering saving items error ${getStacktrace(err)}.`
+        `[${this.crawl.config.type.toUpperCase()}] Error on recovering saving items error ${getStacktrace(
+          err
+        )}.`
       );
     }
   }
@@ -322,15 +332,15 @@ class Crawler {
           this.log(
             "VERBOSE",
             `[${this.crawl.config.type.toUpperCase()}] ${
-            insertedDependencies.length
+              insertedDependencies.length
             } inserted pages(s) dependency.`
           );
         } catch (err) {
           this.log(
             "WARN",
-            `[${this.crawl.config.type.toUpperCase()}] Error saving dependencies ${getStacktrace(err)}, unsetting ${getPrettyJson(
-              currentPage
-            )}.`
+            `[${this.crawl.config.type.toUpperCase()}] Error saving dependencies ${getStacktrace(
+              err
+            )}, unsetting ${getPrettyJson(currentPage)}.`
           );
 
           unset(
@@ -364,6 +374,7 @@ class Crawler {
   }
 
   async close() {
+    await this.db.close();
     return await this.crawl.close();
   }
 
@@ -385,20 +396,17 @@ class Crawler {
     if (count < 50) {
       const pageConfig = find(this.crawl.config.pages, "name", this.name);
       try {
-
         this.log(
           "DEBUG",
-          `[${this.crawl.config.type.toUpperCase()}] Start crawling with uri ${pageConfig.rootUrl || uri} ${
-          this.crawl.config.name
-          } #${count}.`
+          `[${this.crawl.config.type.toUpperCase()}] Start crawling with uri ${pageConfig.rootUrl ||
+            uri} ${this.crawl.config.name} #${count}.`
         );
         pages = await this.tryToGetPage(pageConfig.rootUrl || uri);
       } catch (err) {
         this.log(
           "WARN",
-          `[${this.crawl.config.type.toUpperCase()}] Error on start trying to get page ${pageConfig.rootUrl || uri} ${
-          this.crawl.config.name
-          } #${count} ${getStacktrace(err)}.`
+          `[${this.crawl.config.type.toUpperCase()}] Error on start trying to get page ${pageConfig.rootUrl ||
+            uri} ${this.crawl.config.name} #${count} ${getStacktrace(err)}.`
         );
 
         return await this.start(null, ++count);
@@ -429,7 +437,7 @@ class Crawler {
       this.log(
         "WARN",
         `[${this.crawl.config.type.toUpperCase()}] Error on start saving all atributes ${
-        this.crawl.config.name
+          this.crawl.config.name
         } #${count} ${getStacktrace(err)}.`
       );
 
@@ -450,14 +458,14 @@ class Crawler {
       this.log(
         "WARN",
         `[${this.crawl.config.type.toUpperCase()}] Error on start reading page ${
-        this.crawl.config.name
+          this.crawl.config.name
         } #${count} ${getStacktrace(err)}.`
       );
 
       unset(
         pages,
         `[${this.crawl.config.type.toUpperCase()}] Error on start unseting start after reading page ${
-        this.crawl.config.name
+          this.crawl.config.name
         } #${count} ${getStacktrace(err)}.`
       );
       return await this.start(null, ++count);
@@ -487,14 +495,16 @@ class Crawler {
                   this.log(
                     "WARN",
                     `[${this.crawl.config.type.toUpperCase()}] Error on start getting page, unsetting after read page ${
-                    this.crawl.config.name
-                    } #${count} ${getStacktrace(err)} ${getPrettyJson(currentPage)}.`
+                      this.crawl.config.name
+                    } #${count} ${getStacktrace(err)} ${getPrettyJson(
+                      currentPage
+                    )}.`
                   );
 
                   unset(
                     [currentPage],
                     `[${this.crawl.config.type.toUpperCase()}] Error on start unseting start after read page ${
-                    this.crawl.config.name
+                      this.crawl.config.name
                     } #${count} ${getStacktrace(err)}.`
                   );
 
@@ -514,7 +524,7 @@ class Crawler {
               this.log(
                 "WARN",
                 `[${this.crawl.config.type.toUpperCase()}] Unsetting on start: zero items ${
-                this.crawl.config.name
+                  this.crawl.config.name
                 } #${count} ${getPrettyJson(pages[index])}.`
               );
 
@@ -529,7 +539,7 @@ class Crawler {
           this.log(
             "WARN",
             `[${this.crawl.config.type.toUpperCase()}] Unsetting on start: yield empty ${
-            this.crawl.config.name
+              this.crawl.config.name
             } #${count} ${getPrettyJson(pages)}.`
           );
         }
@@ -538,7 +548,7 @@ class Crawler {
       this.log(
         "WARN",
         `[${this.crawl.config.type.toUpperCase()}] Unsetting on start: result is empty ${
-        this.crawl.config.name
+          this.crawl.config.name
         } #${count} ${getPrettyJson(pages)}.`
       );
     }
@@ -553,6 +563,4 @@ class Crawler {
   }
 }
 
-export {
-  Crawler
-};
+export { Crawler };
