@@ -16,7 +16,22 @@
     {
       "type": "html",
       "name": "test",
+      "retryDelay": 1,
       "domain": "https://www.magazineluiza.com.br",
+      "dependency": {
+        "sitemap": {
+          "hasMany": "department",
+          "through": "url"
+        },
+        "department": {
+          "hasMany": "category",
+          "through": "url"
+        },
+        "category": {
+          "hasMany": "item",
+          "through": "url"
+        }
+      },
       "pages": [
         {
           "rootUrl": "/",
@@ -32,6 +47,87 @@
               "selector": ".container-departament-footer li a",
               "newKey": "title",
               "method": "text"
+            }
+          ]
+        },
+        {
+          "name": "department",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": [
+                "[data-filter-type='subcategories'] a",
+                ".type-category a"
+              ],
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": [
+                "[data-filter-type='subcategories'] a",
+                ".type-category a"
+              ],
+              "newKey": "title",
+              "method": "text"
+            }
+          ]
+        },
+        {
+          "name": "category",
+          "nextPages": [
+            {
+              "selector": ".css-1a9p55p:not(.css-197gxuo):not(:first-child):not(:last-child) a",
+              "method": "text",
+              "param": "page"
+            }
+          ],
+          "data": [
+            {
+              "selector": "[role='main'] [itemtype='http://schema.org/Product'] [name='linkToProduct']",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": "[role='main'] [itemtype='http://schema.org/Product'] [name='linkToProduct'] h3",
+              "newKey": "title",
+              "attr": "title"
+            }
+          ]
+        },
+        {
+          "name": "item",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": "h1",
+              "newKey": "name",
+              "method": "text"
+            },
+            {
+              "selector": ".description .description__container-text",
+              "newKey": "description",
+              "method": "text"
+            },
+            {
+              "selector": ".description__box .description__information-box-left",
+              "newKey": "label",
+              "method": "text"
+            },
+            {
+              "selector": ".description__box .description__information-box-right",
+              "newKey": "value",
+              "method": "text"
+            },
+            {
+              "join": ["label", "value"],
+              "newKey": "attributes",
+              "list": true
+            },
+            {
+              "selector": ".showcase-product__big-img",
+              "newKey": "image",
+              "attr": "src",
+              "list": true
             }
           ]
         }

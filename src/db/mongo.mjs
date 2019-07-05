@@ -19,9 +19,7 @@ const connect = async (config, env) => {
     await client.connect();
     db = client.db(`${process.env.DB_NAME || config[env].name}`);
   } catch (e) {
-    throw new Error(
-      `[${config.type.toUpperCase()}] Can't connect to mongo ${e}.`
-    );
+    throw new Error(`[Mongodb] Can't connect to mongo ${e}.`);
   }
 
   const Page = db.collection("pages");
@@ -37,9 +35,7 @@ const connect = async (config, env) => {
     await Item.createIndex({ serial: 1 }, { unique: true });
     await Item.createIndex({ name: 1 }, { background: true });
   } catch (e) {
-    throw new Error(
-      `[${config.type.toUpperCase()}] Can't create indexes ${e}.`
-    );
+    throw new Error(`[Mongodb] Can't create indexes ${e}.`);
   }
 
   return {
@@ -53,7 +49,7 @@ const connect = async (config, env) => {
 
 const sync = () => {
   return async () => {
-    return await Promise.resolve("Don't need to sync mongodb.");
+    return await Promise.resolve("[Mongodb] Don't need to sync mongodb.");
   };
 };
 
