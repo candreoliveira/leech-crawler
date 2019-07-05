@@ -1,8 +1,8 @@
 class Database {
-  constructor(config, env, engine = "postgres") {
-    this.engine = engine;
+  constructor(config, env) {
     this.config = config;
     this.env = env;
+    this.engine = config[env].engine || "postgres";
   }
 
   async close() {

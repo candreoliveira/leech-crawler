@@ -28,14 +28,14 @@ const connect = async (config, env) => {
   const Item = db.collection("items");
 
   try {
-    Page.createIndex({ serial: 1 }, { unique: true });
-    Page.createIndex(
+    await Page.createIndex({ serial: 1 }, { unique: true });
+    await Page.createIndex(
       { name: 1, type: 1, website: 1, processedAt: 1, startedAt: 1 },
       { background: true }
     );
 
-    Item.createIndex({ serial: 1 }, { unique: true });
-    Item.createIndex({ name: 1 }, { background: true });
+    await Item.createIndex({ serial: 1 }, { unique: true });
+    await Item.createIndex({ name: 1 }, { background: true });
   } catch (e) {
     throw new Error(
       `[${config.type.toUpperCase()}] Can't create indexes ${e}.`
@@ -53,134 +53,85 @@ const connect = async (config, env) => {
 
 const sync = () => {
   return async () => {
-    return await Promise.resolve("Don't need to sync mongo db.");
+    return await Promise.resolve("Don't need to sync mongodb.");
   };
 };
 
-const findPages = (model, op) => {
+const findPages = model => {
   return async params => {
-    const r = await model.findAll({
-      where: {
-        name: params.name,
-        type: params.type,
-        website: params.website,
-        processedAt: {
-          [op.eq]: params.processedAt
+    return await model
+      .find(
+        {
+          name: params.name,
+          type: params.type,
+          website: params.website,
+          processedAt: params.processedAt,
+          startedAt: params.startedAt
         },
-        startedAt: {
-          [op.eq]: params.startedAt
+        {
+          limit: params.limit
         }
-      },
-      limit: params.limit
-    });
-    return r.map(i => i.dataValues);
+      )
+      .toArray();
   };
 };
 
 const findOnePageByUrl = model => {
   return async url => {
-    const r = await model.findOne({
-      where: {
-        url: url
-      }
+    return await model.findOne({
+      url: url
     });
-    return r.dataValues;
   };
 };
 
 const findOneItemByUrl = model => {
   return async url => {
-    const r = await model.findOne({
-      where: {
-        "data.url": url
-      }
+    return await model.findOne({
+      "data.url": url
     });
-    return r.dataValues;
   };
 };
 
-const restartPages = (model, op) => {
+const restartPages = model => {
   return async params => {
-    return model.update(
+    return await model.updateMany(
       {
-        processedAt: params.processedAt,
-        startedAt: params.startedAt
+        website: params.website,
+        name: params.name
       },
       {
-        where: {
-          website: {
-            [op.eq]: params.website
-          },
-          name: {
-            [op.eq]: params.name
-          }
+        $set: {
+          processedAt: params.processedAt,
+          startedAt: params.startedAt
         }
-      }
+      },
+      { upsert: true }
     );
   };
 };
 
-const countPages = (model, op) => {
+const countPages = model => {
   return async params => {
-    const r = await model.count({
-      where: {
-        website: {
-          [op.eq]: params.website
-        },
-        name: {
-          [op.eq]: params.name
-        },
-        processedAt: {
-          [op.eq]: params.processedAt
-        },
-        startedAt: {
-          [op.eq]: params.startedAt
-        }
-      }
+    return await model.countDocuments({
+      website: params.website,
+      name: params.name,
+      processedAt: params.processedAt,
+      startedAt: params.startedAt
     });
-    return r.dataValues;
   };
 };
 
-const countItems = (model, op) => {
-  return async params => {
-    const r = await model.count({
-      where: {
-        website: {
-          [op.eq]: params.website
-        },
-        name: {
-          [op.eq]: params.name
-        },
-        processedAt: {
-          [op.eq]: params.processedAt
-        },
-        startedAt: {
-          [op.eq]: params.startedAt
-        }
-      }
-    });
-    return r.dataValues;
-  };
-};
-
-const upsertItem = model => {
-  return async doc => {
-    const r = await model.upsert(doc, {
-      returning: true
-    });
-    return r[0].dataValues;
-  };
-};
+const countItems = countPages;
 
 const upsertPage = model => {
   return async doc => {
-    const r = await model.upsert(doc, {
-      returning: true
+    return await model.updateOne(doc, {
+      $set: doc
     });
-    return r[0].dataValues;
   };
 };
+
+const upsertItem = upsertPage;
 
 export {
   connect,

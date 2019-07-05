@@ -8,7 +8,8 @@
       "port": 5432,
       "name": "crawler",
       "user": "crawl",
-      "password": "crawl"
+      "password": "crawl",
+      "engine": "mongo"
     }
   },
   "websites": [
@@ -89,9 +90,7 @@
           ],
           "data": [
             {
-              "selector": [
-                ".item__image a"
-              ],
+              "selector": [".item__image a"],
               "newKey": "url",
               "attr": "href"
             },
@@ -121,10 +120,7 @@
               "method": "text"
             },
             {
-              "join": [
-                "label",
-                "value"
-              ],
+              "join": ["label", "value"],
               "newKey": "attributes",
               "list": true
             },
@@ -264,10 +260,7 @@
               "method": "text"
             },
             {
-              "join": [
-                "label",
-                "value"
-              ],
+              "join": ["label", "value"],
               "newKey": "attributes",
               "list": true
             },
