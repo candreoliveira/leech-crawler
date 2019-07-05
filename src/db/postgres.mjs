@@ -123,7 +123,7 @@ const sync = model => {
   };
 };
 
-const findPages = (model, op = Sequelize.op) => {
+const findPages = (model, op = Sequelize.Op) => {
   return async params => {
     const r = await model.findAll({
       where: {
@@ -145,27 +145,25 @@ const findPages = (model, op = Sequelize.op) => {
 
 const findOnePageByUrl = model => {
   return async url => {
-    const r = await model.findOne({
+    return await model.findOne({
       where: {
         url: url
       }
     });
-    return r.dataValues;
   };
 };
 
 const findOneItemByUrl = model => {
   return async url => {
-    const r = await model.findOne({
+    return await model.findOne({
       where: {
         "data.url": url
       }
     });
-    return r.dataValues;
   };
 };
 
-const restartPages = (model, op = Sequelize.op) => {
+const restartPages = (model, op = Sequelize.Op) => {
   return async params => {
     return model.update(
       {
@@ -186,7 +184,7 @@ const restartPages = (model, op = Sequelize.op) => {
   };
 };
 
-const countPages = (model, op = Sequelize.op) => {
+const countPages = (model, op = Sequelize.Op) => {
   return async params => {
     const r = await model.count({
       where: {
@@ -208,7 +206,7 @@ const countPages = (model, op = Sequelize.op) => {
   };
 };
 
-const countItems = (model, op = Sequelize.op) => {
+const countItems = (model, op = Sequelize.Op) => {
   return async params => {
     const r = await model.count({
       where: {

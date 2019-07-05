@@ -9,10 +9,34 @@
       "name": "crawler",
       "user": "crawl",
       "password": "crawl",
-      "engine": "mongo"
+      "engine": "postgres"
     }
   },
   "websites": [
+    {
+      "type": "html",
+      "name": "test",
+      "domain": "https://www.magazineluiza.com.br",
+      "pages": [
+        {
+          "rootUrl": "/",
+          "name": "sitemap",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": ".container-departament-footer li a",
+              "newKey": "url",
+              "attr": "href"
+            },
+            {
+              "selector": ".container-departament-footer li a",
+              "newKey": "title",
+              "method": "text"
+            }
+          ]
+        }
+      ]
+    },
     {
       "type": "html",
       "name": "mercadolivre",

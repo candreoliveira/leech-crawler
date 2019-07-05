@@ -6,11 +6,11 @@ class Database {
   }
 
   async close() {
-    return await this.dbcli.close();
+    return await this.dbcli.client.close();
   }
 
   async init() {
-    switch (engine) {
+    switch (this.engine) {
       case "postgres":
         this.db = await import("./postgres.mjs");
         this.dbcli = await this.db.connect(this.config, this.env);

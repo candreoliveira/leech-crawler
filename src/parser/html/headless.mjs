@@ -1,8 +1,6 @@
 import { Parser } from "../parser.mjs";
 import { log as l } from "../../log/log.mjs";
-import {
-  parser
-} from "./helper.mjs";
+import { parser } from "./helper.mjs";
 import { default as Crawler } from "headless-chrome-crawler";
 import { default as cheerio } from "cheerio";
 import { userAgent, getUrl } from "../helper.mjs";
@@ -27,7 +25,15 @@ const exposeFunction = ({
 
     reject(err);
   } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
-    const parsedPage = parser($, domain, uri, parg, instance.config.pages, instance.config.name, instance.log);
+    const parsedPage = parser(
+      $,
+      domain,
+      uri,
+      parg,
+      instance.config.pages,
+      instance.config.name,
+      instance.log
+    );
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach(pages => {
@@ -36,7 +42,9 @@ const exposeFunction = ({
 
     instance.log(
       "INFO",
-      `[HEADLESS] Completing parsing ${parsedPage.result.length} page(s) ${uri}...`
+      `[HEADLESS] Completing parsing ${
+        parsedPage.result.length
+      } page(s) ${uri}...`
     );
 
     output.yield = parsedPage.result;

@@ -50,6 +50,11 @@ yargs
     describe: "Clean processedAt and startedAt.",
     default: false
   })
+  .option("sync", {
+    alias: "s",
+    describe: "Postgres option to sync database.",
+    default: false
+  })
   .demandOption(["environment", "page", "type", "cpu", "website"])
   .boolean("restart")
   .array("website")
@@ -144,7 +149,8 @@ const start = async () => {
   };
 
   const database = new Database(configuration.database, yargs.argv.environment);
-  await database.sync();
+  await database.init();
+  await database.sync({ force: yargs.argv.sync });
 
   let websites = configuration["websites"].slice(0) || [];
   let websitesArg = yargs.argv.website ? yargs.argv.website.slice(0) : [];

@@ -1,8 +1,6 @@
 import { Parser } from "../parser.mjs";
 import { log as l } from "../../log/log.mjs";
-import {
-  parser
-} from "./helper.mjs";
+import { parser } from "./helper.mjs";
 import Crawler from "crawler";
 import URL from "url";
 import { userAgent, getUrl, getStacktrace } from "../helper.mjs";
@@ -25,25 +23,32 @@ const defaultCb = ({ instance, parg, domain, uri, resolve, reject }) => (
     const err = `[HTML] Error parsing website ${uri}: ${getStacktrace(error)}.`;
     instance.log("ERROR", err);
     reject(err);
-
   } else if (!$) {
-    output.yield = [[{ 'statusCode': res.statusCode, 'pageUrl': uri.href }]];
+    output.yield = [[{ statusCode: res.statusCode, pageUrl: uri.href }]];
 
     instance.log(
       "ERROR",
       `[HTML] [HEADLESS] Error parsing website ${uri}: without $.`
     );
   } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
-    const parsedPage = parser($, domain, uri, parg, instance.config.pages, instance.config.name, instance.log);
+    const parsedPage = parser(
+      $,
+      domain,
+      uri,
+      parg,
+      instance.config.pages,
+      instance.config.name,
+      instance.log
+    );
 
     // Save all nextPages on output
-    parsedPage.forEach(pages => {
+    parsedPage.nextPages.forEach(pages => {
       output.nextPages.concat(pages);
     });
 
     instance.log(
       "INFO",
-      `[HTML] Completing parsing ${result.length} page(s) ${uri}...`
+      `[HTML] Completing parsing ${parsedPage.result.length} page(s) ${uri}...`
     );
 
     output.yield = parsedPage.result;
@@ -76,7 +81,7 @@ class Html extends Parser {
     });
   }
 
-  async close() { }
+  async close() {}
 
   async reader(parg, urls) {
     if (!urls) return;

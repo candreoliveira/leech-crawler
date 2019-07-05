@@ -43,7 +43,7 @@ class Crawler {
           )}.`
         );
 
-        await sleep(500);
+        await sleep(this.crawl.config.retryDelay || 500);
         return await this.getNextPages(++count);
       }
     } else {
@@ -65,7 +65,7 @@ class Crawler {
           )}.`
         );
 
-        await sleep(500);
+        await sleep(this.crawl.config.retryDelay || 500);
         return await this.getObject(coll, url, ++count);
       }
     } else {
@@ -90,7 +90,7 @@ class Crawler {
     let page;
 
     if (count > 0) {
-      await sleep(500);
+      await sleep(this.crawl.config.retryDelay || 500);
     }
 
     if (!url && count < 50) {
@@ -390,7 +390,7 @@ class Crawler {
     let pages, pagesResult;
 
     if (count > 0) {
-      await sleep(500);
+      await sleep(this.crawl.config.retryDelay || 500);
     }
 
     if (count < 50) {
