@@ -24,6 +24,7 @@ const connect = async (config, env) => {
 
   const Page = db.collection("pages");
   const Item = db.collection("items");
+  const Metric = db.collection("metrics");
 
   try {
     await Page.createIndex({ serial: 1 }, { unique: true });
@@ -34,6 +35,8 @@ const connect = async (config, env) => {
 
     await Item.createIndex({ serial: 1 }, { unique: true });
     await Item.createIndex({ name: 1 }, { background: true });
+
+    await Metric.createIndex({ serial: 1 }, { unique: true });
   } catch (e) {
     throw new Error(`[Mongodb] Can't create indexes ${e}.`);
   }
@@ -42,7 +45,8 @@ const connect = async (config, env) => {
     client: client,
     model: {
       Page,
-      Item
+      Item,
+      Metric
     }
   };
 };
@@ -128,6 +132,7 @@ const upsertPage = model => {
 };
 
 const upsertItem = upsertPage;
+const upsertMetric = upsertPage;
 
 export {
   connect,
@@ -136,6 +141,7 @@ export {
   findOnePageByUrl,
   findOneItemByUrl,
   upsertPage,
+  upsertMetric,
   upsertItem,
   countItems,
   countPages,

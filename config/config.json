@@ -18,6 +18,9 @@
       "name": "test",
       "retryDelay": 1,
       "domain": "https://www.magazineluiza.com.br",
+      "parserOptions": {
+        "maxConnections": 1
+      },
       "dependency": {
         "sitemap": {
           "hasMany": "department",

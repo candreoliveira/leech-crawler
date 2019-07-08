@@ -82,7 +82,7 @@ const run = async cfg => {
 
   switch (cfg.config.type) {
     case "html":
-      const html = new Html(cfg.config, cfg.args);
+      const html = new Html(cfg.config, cfg.args, cfg.db);
       await html.init();
       crawl = new Crawler(cfg.db, html, cfg.args);
       break;
@@ -92,7 +92,7 @@ const run = async cfg => {
       crawl = new Crawler(cfg.db, rss, cfg.args);
       break;
     case "headless":
-      const headless = new Headless(cfg.config, cfg.args);
+      const headless = new Headless(cfg.config, cfg.args, cfg.db);
       await headless.init();
       crawl = new Crawler(cfg.db, headless, cfg.args);
       break;

@@ -66,6 +66,40 @@ const connect = (config, env) => {
     }
   );
 
+  const Metric = sequelize.define(
+    "Metric",
+    {
+      serial: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      url: {
+        type: Sequelize.STRING(5000),
+        allowNull: false
+      },
+      date: {
+        type: Sequelize.DATE,
+        allowNull: false
+      },
+      time: {
+        type: Sequelize.INTEGER,
+        allowNull: false
+      },
+      status: {
+        type: Sequelize.STRING,
+        allowNull: false
+      }
+    },
+    {
+      schema: "public",
+      indexes: [
+        {
+          fields: ["serial"]
+        }
+      ]
+    }
+  );
+
   const Item = sequelize.define(
     "Item",
     {
@@ -104,13 +138,19 @@ const connect = (config, env) => {
     onDelete: "CASCADE"
   });
 
+  const PageMetrics = Page.hasMany(Metric, {
+    onDelete: "CASCADE"
+  });
+
   return Promise.resolve({
     client: sequelize,
     model: {
       Page,
       Item,
+      Metric,
       PageItems,
-      PagePages
+      PagePages,
+      PageMetrics
     }
   });
 };
@@ -150,7 +190,7 @@ const findOnePageByUrl = model => {
         url: url
       }
     });
-    return r.dataValues;
+    return r && r.dataValues ? r.dataValues : r;
   };
 };
 
@@ -161,7 +201,7 @@ const findOneItemByUrl = model => {
         "data.url": url
       }
     });
-    return r.dataValues;
+    return r && r.dataValues ? r.dataValues : r;
   };
 };
 
@@ -237,14 +277,8 @@ const upsertItem = model => {
   };
 };
 
-const upsertPage = model => {
-  return async doc => {
-    const r = await model.upsert(doc, {
-      returning: true
-    });
-    return r[0].dataValues;
-  };
-};
+const upsertPage = upsertItem;
+const upsertMetric = upsertItem;
 
 export {
   connect,
@@ -254,6 +288,7 @@ export {
   findOneItemByUrl,
   upsertPage,
   upsertItem,
+  upsertMetric,
   countItems,
   countPages,
   restartPages

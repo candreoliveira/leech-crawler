@@ -5,13 +5,20 @@ import Crawler from "crawler";
 import URL from "url";
 import { userAgent, getUrl, getStacktrace } from "../helper.mjs";
 
-const defaultCb = ({ instance, parg, domain, uri, resolve, reject }) => (
+const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
   error,
   res,
   done
 ) => {
-  const resLog = `[HTML] Get ${uri}: ${res.statusCode}.`;
-  instance.log("DEBUG", resLog);
+  // Zero seconds to prevent 
+  const date = new Date();
+  date.setSeconds(0);
+
+  instance.db.upsertMetric({
+    url: uri.href,
+    status: res.statusCode,
+    time: new Date() - start
+  });
 
   const $ = res.$;
   let output = {
@@ -61,10 +68,11 @@ const defaultCb = ({ instance, parg, domain, uri, resolve, reject }) => (
 };
 
 class Html extends Parser {
-  constructor(config, args) {
+  constructor(config, args, db) {
     super();
     this.args = args;
     this.config = config;
+    this.db = db;
   }
 
   async init() {
@@ -109,6 +117,7 @@ class Html extends Parser {
                 parg,
                 domain: this.config.domain,
                 uri: new URL.URL(uri),
+                start: new Date(),
                 resolve,
                 reject
               })

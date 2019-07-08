@@ -10,14 +10,20 @@ const exposeFunction = ({
   parg,
   domain,
   uri,
+  start,
   resolve,
   reject
 }) => async html => {
-  const $ = cheerio.load(html);
+  instance.db.upsertMetric({
+    url: uri,
+    time: new Date() - start
+  });
+
   let output = {
     yield: null,
     nextPages: []
   };
+  const $ = cheerio.load(html);
 
   if (!$) {
     const err = `[HEADLESS] Error parsing website: without $.`;
@@ -57,10 +63,11 @@ const exposeFunction = ({
 };
 
 class Headless extends Parser {
-  constructor(config, args) {
+  constructor(config, args, db) {
     super();
     this.args = args;
     this.config = config;
+    this.db = db;
   }
 
   async init() {
@@ -80,6 +87,12 @@ class Headless extends Parser {
       retryCount: 10,
       retryDelay: 1000,
       timeout: 30000,
+      onSuccess: res => {
+        this.db.upsertMetric({
+          url: res.options.url,
+          status: res.response.status
+        });
+      },
       ...this.config.parserOptions
     });
   }
@@ -149,6 +162,7 @@ class Headless extends Parser {
                   parg,
                   domain: this.config.domain,
                   uri: new URL(uri),
+                  start: new Date(),
                   resolve,
                   reject
                 })

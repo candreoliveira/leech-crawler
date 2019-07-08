@@ -33,6 +33,7 @@ class Database {
     this.countItems = this.db.countItems(this.dbcli.model.Item);
     this.upsertItem = this.db.upsertItem(this.dbcli.model.Item);
     this.upsertPage = this.db.upsertPage(this.dbcli.model.Page);
+    this.upsertMetric = this.db.upsertPage(this.dbcli.model.Metric);
   }
 }
 

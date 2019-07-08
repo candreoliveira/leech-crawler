@@ -49,7 +49,7 @@ const userAgent = (type, website) => {
     ]
   };
 
-  const l = list[website || "default"];
+  const l = list[website || "default"] || list.default;
   return type === "rotate" ? l[randomize(l.length)] : l;
 };
 
