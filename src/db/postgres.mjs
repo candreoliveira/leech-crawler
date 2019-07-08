@@ -1,4 +1,5 @@
 import { default as Sequelize } from "sequelize";
+import sha256 from "sha256";
 
 const connect = (config, env) => {
   const sequelize = new Sequelize(
@@ -83,11 +84,11 @@ const connect = (config, env) => {
       },
       time: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: true
       },
       status: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: true
       }
     },
     {
@@ -191,13 +192,14 @@ const findOnePageByUrl = model => {
   return async url => {
     const r = await model.findOne({
       where: {
-        url: url
+        serial: sha256(url)
       }
     });
     return r && r.dataValues ? r.dataValues : r;
   };
 };
 
+//TODO: find by serial
 const findOneItemByUrl = model => {
   return async url => {
     const r = await model.findOne({
@@ -282,7 +284,27 @@ const upsertItem = model => {
 };
 
 const upsertPage = upsertItem;
-const upsertMetric = upsertItem;
+
+const upsertMetric = model => {
+  return async doc => {
+    let tmp;
+    console.log(doc, doc.PageId, !doc.PageId)
+    if (!doc.PageId) {
+      const p = await findOnePageByUrl(model)(doc.url);
+      tmp = {
+        ...doc,
+        PageId: 1
+      };
+    } else {
+      tmp = doc;
+    }
+    
+    const r = await model.upsert(tmp, {
+      returning: true
+    });
+    return r[0].dataValues;
+  };
+};
 
 export {
   connect,

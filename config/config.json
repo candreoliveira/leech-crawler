@@ -14,7 +14,7 @@
   },
   "websites": [
     {
-      "type": "html",
+      "type": "headless",
       "name": "test",
       "retryDelay": 1,
       "domain": "https://www.magazineluiza.com.br",

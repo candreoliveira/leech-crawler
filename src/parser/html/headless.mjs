@@ -3,6 +3,7 @@ import { log as l } from "../../log/log.mjs";
 import { parser } from "./helper.mjs";
 import { default as Crawler } from "headless-chrome-crawler";
 import { default as cheerio } from "cheerio";
+import sha256 from "sha256";
 import { userAgent, getUrl } from "../helper.mjs";
 
 const exposeFunction = ({
@@ -96,6 +97,7 @@ class Headless extends Parser {
         this.db.upsertMetric({
           date: res.result.date,
           serial: sha256(res.options.url),
+          url: res.options.url,
           status: res.response.status
         });
       },
