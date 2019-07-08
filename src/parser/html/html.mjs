@@ -3,6 +3,7 @@ import { log as l } from "../../log/log.mjs";
 import { parser } from "./helper.mjs";
 import Crawler from "crawler";
 import URL from "url";
+import sha256 from "sha256";
 import { userAgent, getUrl, getStacktrace } from "../helper.mjs";
 
 const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
@@ -10,14 +11,16 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
   res,
   done
 ) => {
-  // Zero seconds to prevent 
+  // Zero seconds to prevent error
   const date = new Date();
   date.setSeconds(0);
 
   instance.db.upsertMetric({
+    serial: sha256(uri.href),
+    date: date,
     url: uri.href,
-    status: res.statusCode,
-    time: new Date() - start
+    time: new Date() - start,
+    status: res.statusCode
   });
 
   const $ = res.$;

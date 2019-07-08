@@ -14,14 +14,19 @@ const exposeFunction = ({
   resolve,
   reject
 }) => async html => {
+  const date = new Date();
+
   instance.db.upsertMetric({
-    url: uri,
+    serial: sha256(uri.href),
+    date: date,
+    url: uri.href,
     time: new Date() - start
   });
 
   let output = {
     yield: null,
-    nextPages: []
+    nextPages: [],
+    date: date
   };
   const $ = cheerio.load(html);
 
@@ -89,7 +94,8 @@ class Headless extends Parser {
       timeout: 30000,
       onSuccess: res => {
         this.db.upsertMetric({
-          url: res.options.url,
+          date: res.result.date,
+          serial: sha256(res.options.url),
           status: res.response.status
         });
       },

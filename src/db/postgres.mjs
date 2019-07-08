@@ -95,7 +95,11 @@ const connect = (config, env) => {
       indexes: [
         {
           fields: ["serial"]
-        }
+        },
+        {
+          fields: ["date", "serial"],
+          unique: true
+        }        
       ]
     }
   );
