@@ -1,4 +1,5 @@
 import { default as Sequelize } from "sequelize";
+import { sleep } from "../parser/helper.mjs";
 import sha256 from "sha256";
 
 const connect = (config, env) => {
@@ -130,6 +131,9 @@ const connect = (config, env) => {
         },
         {
           fields: ["name"]
+        },
+        {
+          fields: [sequelize.literal('("data"->>\'serial\')')],
         }
       ]
     }
@@ -204,7 +208,7 @@ const findOneItemByUrl = model => {
   return async url => {
     const r = await model.findOne({
       where: {
-        "data.url": url
+        "data.serial": sha256(url)
       }
     });
     return r && r.dataValues ? r.dataValues : r;
@@ -286,22 +290,23 @@ const upsertItem = model => {
 const upsertPage = upsertItem;
 
 const upsertMetric = model => {
-  return async doc => {
-    let tmp;
-    console.log(doc, doc.PageId, !doc.PageId)
-    if (!doc.PageId) {
+  return async (doc, tryToGetPage = false, slip = 5000) => {
+    await sleep(slip);
+    let tmp = doc;
+
+    debugger;
+    if (!doc.PageId && tryToGetPage) {
       const p = await findOnePageByUrl(model)(doc.url);
       tmp = {
         ...doc,
         PageId: 1
       };
-    } else {
-      tmp = doc;
-    }
+    } 
     
     const r = await model.upsert(tmp, {
       returning: true
     });
+
     return r[0].dataValues;
   };
 };

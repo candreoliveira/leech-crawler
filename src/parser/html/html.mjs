@@ -21,7 +21,7 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
     url: uri.href,
     time: new Date() - start,
     status: res.statusCode
-  });
+  }, true);
 
   const $ = res.$;
   let output = {

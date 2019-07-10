@@ -99,7 +99,7 @@ class Headless extends Parser {
           serial: sha256(res.options.url),
           url: res.options.url,
           status: res.response.status
-        });
+        }, true);
       },
       ...this.config.parserOptions
     });

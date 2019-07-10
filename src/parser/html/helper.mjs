@@ -1,5 +1,6 @@
 import { default as htmlToText } from "html-to-text";
 import { clean, zip, getUrl } from "../helper.mjs";
+import sha256 from "sha256";
 
 const getNextPages = ($, uri, pageNextPages) => {
   let output = [];
@@ -317,6 +318,7 @@ const parsePage = ($, domain, href, page, pageData, logger) => {
 
   // Set pageUrl and website
   out = appendData(out, {
+    serial: sha256(href),
     pageUrl: href,
     website: page
   });
