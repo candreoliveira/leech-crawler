@@ -131,7 +131,7 @@ const upsertPage = model => {
   };
 };
 
-const upsertItem = upsertPage;
+const upsertItem = upsertPage;  
 const upsertMetric = upsertPage;
 
 export {

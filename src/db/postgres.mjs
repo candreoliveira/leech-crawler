@@ -101,7 +101,7 @@ const connect = (config, env) => {
         {
           fields: ["date", "serial"],
           unique: true
-        }        
+        }
       ]
     }
   );
@@ -133,7 +133,7 @@ const connect = (config, env) => {
           fields: ["name"]
         },
         {
-          fields: [sequelize.literal('("data"->>\'serial\')')],
+          fields: [sequelize.literal("(\"data\"->>'serial')")]
         }
       ]
     }
@@ -290,23 +290,18 @@ const upsertItem = model => {
 const upsertPage = upsertItem;
 
 const upsertMetric = model => {
-  return async (doc, tryToGetPage = false, slip = 5000) => {
+  return async (doc, tryToGetPage = false, slip = 1000) => {
     await sleep(slip);
-    let tmp = doc;
+    const tmp = doc;
 
-    debugger;
     if (!doc.PageId && tryToGetPage) {
       const p = await findOnePageByUrl(model)(doc.url);
-      tmp = {
-        ...doc,
-        PageId: 1
-      };
-    } 
-    
+      tmp.PageId = p.id;
+    }
+
     const r = await model.upsert(tmp, {
       returning: true
     });
-
     return r[0].dataValues;
   };
 };

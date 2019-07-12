@@ -374,6 +374,7 @@ class Crawler {
   }
 
   async close() {
+    await sleep(5000);
     await this.db.close();
     return await this.crawl.close();
   }
