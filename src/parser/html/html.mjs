@@ -15,18 +15,22 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
   const date = new Date();
   date.setSeconds(0);
 
-  instance.db.upsertMetric({
-    serial: sha256(uri.href),
-    date: date,
-    url: uri.href,
-    time: new Date() - start,
-    status: res.statusCode
-  }, true);
+  instance.db.upsertMetric(
+    {
+      serial: sha256(getUrl(domain, uri.href)),
+      date: date,
+      url: getUrl(domain, uri.href),
+      time: new Date() - start,
+      status: res.statusCode
+    },
+    true
+  );
 
   const $ = res.$;
   let output = {
     yield: null,
-    nextPages: []
+    nextPages: [],
+    meta: null
   };
 
   if (error) {
@@ -34,7 +38,9 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
     instance.log("ERROR", err);
     reject(err);
   } else if (!$) {
-    output.yield = [[{ statusCode: res.statusCode, pageUrl: uri.href }]];
+    output.yield = [
+      [{ statusCode: res.statusCode, pageUrl: getUrl(domain, uri.href) }]
+    ];
 
     instance.log(
       "ERROR",

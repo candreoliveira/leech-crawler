@@ -203,12 +203,11 @@ const findOnePageByUrl = model => {
   };
 };
 
-//TODO: find by serial
 const findOneItemByUrl = model => {
   return async url => {
     const r = await model.findOne({
       where: {
-        "data.serial": sha256(url)
+        "data.pageSerial": sha256(url)
       }
     });
     return r && r.dataValues ? r.dataValues : r;
@@ -292,14 +291,13 @@ const upsertPage = upsertItem;
 const upsertMetric = model => {
   return async (doc, tryToGetPage = false, slip = 1000) => {
     await sleep(slip);
-    const tmp = doc;
 
     if (!doc.PageId && tryToGetPage) {
       const p = await findOnePageByUrl(model)(doc.url);
-      tmp.PageId = p.id;
+      doc.PageId = p.id;
     }
 
-    const r = await model.upsert(tmp, {
+    const r = await model.upsert(doc, {
       returning: true
     });
     return r[0].dataValues;

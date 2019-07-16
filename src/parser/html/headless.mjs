@@ -18,16 +18,19 @@ const exposeFunction = ({
   const date = new Date();
 
   instance.db.upsertMetric({
-    serial: sha256(uri.href),
+    serial: sha256(getUrl(domain, uri.href)),
     date: date,
-    url: uri.href,
+    url: getUrl(domain, uri.href),
     time: new Date() - start
   });
 
   let output = {
     yield: null,
     nextPages: [],
-    date: date
+    meta: {
+      date: date,
+      url: getUrl(domain, uri.href)
+    }
   };
   const $ = cheerio.load(html);
 
@@ -94,12 +97,15 @@ class Headless extends Parser {
       retryDelay: 1000,
       timeout: 30000,
       onSuccess: res => {
-        this.db.upsertMetric({
-          date: res.result.date,
-          serial: sha256(res.options.url),
-          url: res.options.url,
-          status: res.response.status
-        }, true);
+        this.db.upsertMetric(
+          {
+            date: res.result.meta.date,
+            serial: sha256(getUrl(res.result.meta.domain, res.options.url)),
+            url: res.result.meta.url,
+            status: res.response.status
+          },
+          true
+        );
       },
       ...this.config.parserOptions
     });

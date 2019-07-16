@@ -139,7 +139,9 @@ class Crawler {
           type: this.type,
           website: this.website
         },
-        "Page"
+        "Page",
+        0,
+        true
       );
 
       return [page];
@@ -148,7 +150,7 @@ class Crawler {
     }
   }
 
-  async upsertObject(doc, coll, count = 0) {
+  async upsertObject(doc, coll, count = 0, upsert = false) {
     if (count < 50) {
       if (!doc.serial) {
         doc = {
@@ -159,7 +161,7 @@ class Crawler {
       }
 
       try {
-        return await this.db[`upsert${coll}`](doc);
+        return await this.db[`upsert${coll}`](doc, upsert);
       } catch (err) {
         this.log(
           "WARN",
@@ -168,7 +170,7 @@ class Crawler {
           } #${count} ${getStacktrace(err)} ${getPrettyJson(doc)}.`
         );
 
-        return await this.upsertObject(doc, coll, ++count);
+        return await this.upsertObject(doc, coll, ++count, upsert);
       }
     } else {
       this.sendError(
@@ -179,12 +181,12 @@ class Crawler {
     }
   }
 
-  async upsertMany(coll, docs, count = 0) {
+  async upsertMany(coll, docs, count = 0, upsert = true) {
     if (count < 50) {
       try {
         return await Promise.all(
           docs.map(doc => {
-            return this.upsertObject(doc, coll);
+            return this.upsertObject(doc, coll, 0, upsert);
           })
         );
       } catch (err) {
@@ -195,7 +197,7 @@ class Crawler {
           } #${count} ${getStacktrace(err)}.`
         );
 
-        return await this.upsertMany(coll, docs, ++count);
+        return await this.upsertMany(coll, docs, ++count, upsert);
       }
     } else {
       this.sendError(
@@ -208,12 +210,12 @@ class Crawler {
 
   async unsetAllAttribute(array, attr, coll) {
     const arr = setAll(array, attr, null);
-    return await this.upsertMany(coll, arr);
+    return await this.upsertMany(coll, arr, 0, false);
   }
 
   async setAllAttribute(array, attr, value, coll) {
     const arr = setAll(array, attr, value);
-    return await this.upsertMany(coll, arr);
+    return await this.upsertMany(coll, arr, 0, false);
   }
 
   async insertPages(currentPage, nextPages, unset) {
@@ -258,7 +260,7 @@ class Crawler {
       );
 
       currentPage.processedAt = new Date();
-      await this.upsertObject(currentPage, "Page");
+      await this.upsertObject(currentPage, "Page", 0, true);
 
       this.log(
         "VERBOSE",

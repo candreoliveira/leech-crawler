@@ -1,22 +1,29 @@
 {
   "remote": {
-    "url2": "http://alfred-v1.b2w.io/wp-json/api/v1/settings_sanguessuga"
+    "url2": "key url is an json api"
   },
   "database": {
     "development": {
-      "host": "localhost",
-      "port": 5432,
+      "host": "127.0.0.1",
+      "port": 27017,
       "name": "crawler",
       "user": "crawl",
       "password": "crawl",
-      "engine": "postgres"
+      "engine": "mongo"
+    },
+    "test": {
+      "name": "test",
+      "user": "crawl",
+      "password": "crawl",
+      "engine": "mongo",
+      "srv": true
     }
   },
   "websites": [
     {
       "type": "headless",
       "name": "test",
-      "retryDelay": 1,
+      "retryDelay": 500,
       "domain": "https://www.magazineluiza.com.br",
       "parserOptions": {
         "maxConnections": 1
@@ -24,7 +31,8 @@
       "dependency": {
         "sitemap": {
           "hasMany": "department",
-          "through": "url"
+          "through": "url",
+          "type": "headless"
         },
         "department": {
           "hasMany": "category",

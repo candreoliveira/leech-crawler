@@ -24,7 +24,7 @@ class Database {
     }
 
     this.dbcli = await this.db.connect(this.config, this.env);
-    this.sync = this.db.sync(this.dbcli.client);
+    this.sync = this.db.sync(this.dbcli.client, this.dbcli.model);
     this.findPages = this.db.findPages(this.dbcli.model.Page);
     this.findOnePageByUrl = this.db.findOnePageByUrl(this.dbcli.model.Page);
     this.findOneItemByUrl = this.db.findOneItemByUrl(this.dbcli.model.Item);

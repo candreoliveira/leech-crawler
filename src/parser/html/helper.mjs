@@ -6,55 +6,57 @@ const getNextPages = ($, uri, pageNextPages) => {
   let output = [];
 
   if (pageNextPages && Array.isArray(pageNextPages)) {
-    pageNextPages.filter(p => typeof p === "object").forEach(p => {
-      let res;
+    pageNextPages
+      .filter(p => typeof p === "object")
+      .forEach(p => {
+        let res;
 
-      if (p.param) {
-        res = Array.from($(p.selector)).map(elem => {
-          if (p.attr && typeof p.attr === "string") {
-            const page = $(elem).attr(p.attr);
+        if (p.param) {
+          res = Array.from($(p.selector)).map(elem => {
+            if (p.attr && typeof p.attr === "string") {
+              const page = $(elem).attr(p.attr);
 
-            return `${uri.origin}${uri.pathname}?${p.param}=${page}`;
-          } else if (p.attr && Array.isArray(p.attr)) {
-            const page = p.attr.reduce((accumulate, current) => {
-              return $(accumulate).attr(current);
-            }, elem);
+              return `${uri.origin}${uri.pathname}?${p.param}=${page}`;
+            } else if (p.attr && Array.isArray(p.attr)) {
+              const page = p.attr.reduce((accumulate, current) => {
+                return $(accumulate).attr(current);
+              }, elem);
 
-            return `${uri.origin}${uri.pathname}?${p.param}=${page}`;
-          } else if (p.method == "text") {
-            const page = htmlToText.fromString($(elem).html(), {
-              linkHrefBaseUrl: uri.origin,
-              wordwrap: false,
-              ignoreImage: true
-            });
+              return `${uri.origin}${uri.pathname}?${p.param}=${page}`;
+            } else if (p.method == "text") {
+              const page = htmlToText.fromString($(elem).html(), {
+                linkHrefBaseUrl: uri.origin,
+                wordwrap: false,
+                ignoreImage: true
+              });
 
-            return `${uri.origin}${uri.pathname}?${p.param}=${page}`;
-          }
+              return `${uri.origin}${uri.pathname}?${p.param}=${page}`;
+            }
 
-          return null;
-        });
-      } else {
-        res = Array.from($(p.selector)).map(elem => {
-          if (p.attr && typeof p.attr === "string") {
-            return $(elem).attr(p.attr);
-          } else if (p.attr && Array.isArray(p.attr)) {
-            return p.attr.reduce((accumulate, current) => {
-              return $(accumulate).attr(current);
-            }, elem);
-          } else if (p.method == "text") {
-            return htmlToText.fromString($(elem).html(), {
-              linkHrefBaseUrl: uri.origin,
-              wordwrap: false,
-              ignoreImage: true
-            });
-          }
+            return null;
+          });
+        } else {
+          res = Array.from($(p.selector)).map(elem => {
+            if (p.attr && typeof p.attr === "string") {
+              return $(elem).attr(p.attr);
+            } else if (p.attr && Array.isArray(p.attr)) {
+              return p.attr.reduce((accumulate, current) => {
+                return $(accumulate).attr(current);
+              }, elem);
+            } else if (p.method == "text") {
+              return htmlToText.fromString($(elem).html(), {
+                linkHrefBaseUrl: uri.origin,
+                wordwrap: false,
+                ignoreImage: true
+              });
+            }
 
-          return null;
-        });
-      }
+            return null;
+          });
+        }
 
-      output = output.concat(res);
-    });
+        output = output.concat(res);
+      });
   }
 
   return clean(output);
@@ -183,8 +185,15 @@ const getValueFromSelector = ($, element, selector, domain) => {
   }
 
   // Replace
-  if (element.replace && element.replace.pattern && (element.replace.new || element.replace.new === "")) {
-    const regex = new RegExp(element.replace.pattern, (element.replace.options || ""));
+  if (
+    element.replace &&
+    element.replace.pattern &&
+    (element.replace.new || element.replace.new === "")
+  ) {
+    const regex = new RegExp(
+      element.replace.pattern,
+      element.replace.options || ""
+    );
 
     // Replace all values
     output = output.map(e => {
@@ -212,7 +221,8 @@ const parseDataWithSelector = ($, domain, array, logger) => {
         `[HTML] Error parsing config: ${element} is not an object.`
       );
 
-    let selector = [], selectors = [];
+    let selector = [],
+      selectors = [];
     const niw = {};
 
     if (Array.isArray(element.selector)) {
@@ -232,7 +242,9 @@ const parseDataWithSelector = ($, domain, array, logger) => {
         // Get the value from any selector to prevent the empty value above
         for (let j = 0; j < selectors.length; j++) {
           if (selectors[j][i]) {
-            value = value || getValueFromSelector($, element, selectors[j][i], domain)[0];
+            value =
+              value ||
+              getValueFromSelector($, element, selectors[j][i], domain)[0];
           }
         }
 
@@ -296,7 +308,7 @@ const appendData = (out, data) => {
   return out.map(element => {
     return { ...element, ...data };
   });
-}
+};
 
 const parsePage = ($, domain, href, page, pageData, logger) => {
   // Parse data
@@ -318,13 +330,13 @@ const parsePage = ($, domain, href, page, pageData, logger) => {
 
   // Set pageUrl and website
   out = appendData(out, {
-    serial: sha256(href),
-    pageUrl: href,
+    pageSerial: sha256(getUrl(domain, href)),
+    pageUrl: getUrl(domain, href),
     website: page
   });
 
   return out;
-}
+};
 
 const parser = ($, domain, uri, parg, configPages, configName, logger) => {
   // Return an array of array of items
@@ -342,7 +354,7 @@ const parser = ($, domain, uri, parg, configPages, configName, logger) => {
       return getNextPages($, uri, page.nextPages);
     })
   };
-}
+};
 
 export {
   parseDataWithSelector,

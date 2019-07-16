@@ -1,11 +1,14 @@
 import { default as Mongodb } from "mongodb";
+import { sleep } from "../parser/helper.mjs";
+import sha256 from "sha256";
 
 const connect = async (config, env) => {
   let db;
   const client = new Mongodb.MongoClient(
-    `mongodb://${process.env.DB_USER || config[env].user}:${process.env
+    `mongodb${process.env.DB_SRV || config[env].srv ? "+srv" : ""}://${process.env.DB_USER || config[env].user}:${process.env
       .DB_PASS || config[env].password}@${process.env.DB_HOST ||
-      config[env].host}:${process.env.DB_PORT || config[env].port}`,
+      config[env].host}${process.env.DB_SRV || config[env].srv ? "" : ":" + (process.env.DB_PORT || config[env].port)}/${process.env
+      .DB_NAME || config[env].name}`,
     {
       useNewUrlParser: true,
       poolSize: 50,
@@ -51,15 +54,18 @@ const connect = async (config, env) => {
   };
 };
 
-const sync = () => {
+const sync = (client, model) => {
   return async () => {
-    return await Promise.resolve("[Mongodb] Don't need to sync mongodb.");
+    await model.Page.drop();
+    await model.Item.drop();
+    await model.Metric.drop();
+    return await Promise.resolve("[Mongodb] Mongodb collections dropped.");
   };
 };
 
 const findPages = model => {
   return async params => {
-    return await model
+    const r = await model
       .find(
         {
           name: params.name,
@@ -73,22 +79,37 @@ const findPages = model => {
         }
       )
       .toArray();
+
+    if (Array.isArray(r)) {
+      return r.map(v => {
+        if (v._id) v.id = v._id.toString();
+        return v;
+      });
+    }
+
+    return r;
   };
 };
 
 const findOnePageByUrl = model => {
   return async url => {
-    return await model.findOne({
-      url: url
+    const r = await model.findOne({
+      serial: sha256(url)
     });
+
+    if (r && r._id) r.id = r._id.toString();
+    return r;
   };
 };
 
 const findOneItemByUrl = model => {
   return async url => {
-    return await model.findOne({
-      "data.url": url
+    const r = await model.findOne({
+      "data.pageSerial": sha256(url)
     });
+
+    if (r && r._id) r.id = r._id.toString();
+    return r;
   };
 };
 
@@ -105,7 +126,7 @@ const restartPages = model => {
           startedAt: params.startedAt
         }
       },
-      { upsert: true }
+      { upsert: false }
     );
   };
 };
@@ -124,15 +145,86 @@ const countPages = model => {
 const countItems = countPages;
 
 const upsertPage = model => {
-  return async doc => {
-    return await model.updateOne(doc, {
-      $set: doc
-    });
+  return async (doc, upsert = false) => {
+    const { id, serial, data } = doc;
+    const filter = {};
+
+    if (serial) {
+      filter["serial"] = serial;
+    } else if (id) {
+      filter["_id"] = new Mongodb.ObjectID(id);
+    } else if (data && data.pageSerial) {
+      filter["data.pageSerial"] = data.pageSerial;
+    } else {
+      filter = doc;
+    }
+
+    const r = await model.findOneAndUpdate(
+      filter,
+      {
+        $set: doc
+      },
+      { upsert: upsert, returnNewDocument: true }
+    );
+
+    if (r.value && r.value._id) {
+      r.id = r.value._id.toString();
+    } else if (r.lastErrorObject && r.lastErrorObject.upserted) {
+      r.id = r.lastErrorObject.upserted.toString();
+    }
+
+    return {
+      id: r.id,
+      ...r.value,
+      ...doc
+    };
   };
 };
 
-const upsertItem = upsertPage;  
-const upsertMetric = upsertPage;
+const upsertItem = upsertPage;
+
+const upsertMetric = model => {
+  return async (doc, tryToGetPage = false, slip = 1000) => {
+    await sleep(slip);
+
+    if (!doc.PageId && tryToGetPage) {
+      const p = await findOnePageByUrl(model)(doc.url);
+      if (p) doc.PageId = p.id;
+    }
+
+    const { id, serial, data } = doc;
+    const filter = {};
+    if (serial) {
+      filter["serial"] = serial;
+    } else if (id) {
+      filter["_id"] = new Mongodb.ObjectID(id);
+    } else if (data && data.pageSerial) {
+      filter["data.pageSerial"] = data.pageSerial;
+    } else {
+      filter = doc;
+    }
+
+    const r = await model.findOneAndUpdate(
+      filter,
+      {
+        $set: doc
+      },
+      { upsert: true, returnNewDocument: true }
+    );
+
+    if (r.value && r.value._id) {
+      r.id = r.value._id.toString();
+    } else if (r.lastErrorObject && r.lastErrorObject.upserted) {
+      r.id = r.lastErrorObject.upserted.toString();
+    }
+
+    return {
+      id: r.id,
+      ...r.value,
+      ...doc
+    };
+  };
+};
 
 export {
   connect,
