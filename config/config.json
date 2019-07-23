@@ -5,12 +5,19 @@
   "database": {
     "development": {
       "host": "127.0.0.1",
+      "port": 5432,
+      "name": "crawler",
+      "user": "crawl",
+      "password": "crawl"
+    },
+    "test2": {
+      "host": "127.0.0.1",
       "port": 27017,
       "name": "crawler",
       "user": "crawl",
       "password": "crawl",
       "engine": "mongo"
-    },
+    },    
     "test": {
       "name": "test",
       "user": "crawl",

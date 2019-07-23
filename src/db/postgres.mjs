@@ -294,7 +294,7 @@ const upsertMetric = model => {
 
     if (!doc.PageId && tryToGetPage) {
       const p = await findOnePageByUrl(model)(doc.url);
-      doc.PageId = p.id;
+      if(p) doc.PageId = p.id;
     }
 
     const r = await model.upsert(doc, {
