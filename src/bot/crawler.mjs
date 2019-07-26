@@ -33,7 +33,7 @@ class Crawler {
           website: this.website,
           processedAt: null,
           startedAt: null,
-          limit: 10
+          limit: (this.crawl.config.parserOptions && this.crawl.config.parserOptions.pages ? this.crawl.config.parserOptions.pages : 10)
         });
       } catch (err) {
         this.log(

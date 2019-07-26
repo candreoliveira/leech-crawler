@@ -1,19 +1,46 @@
 {
   "database": {
     "development": {
-      "host": "localhost",
-      "port": 5432,
+      "host": "127.0.0.1",
+      "port": 27017,
       "name": "crawler",
       "user": "crawl",
-      "password": "crawl1234"
+      "password": "crawl",
+      "engine": "mongo"
     }
   },
   "websites": [
     {
       "type": "headless",
-      "name": "americanas",
-      "domain": "https://www.americanas.com.br",
+      "name": "magalu",
+      "domain": "https://www.magazineluiza.com.br",
+      "dependency": {
+        "category": {
+          "hasMany": "item",
+          "through": "url",
+          "type": "headless"
+        }
+      },
+      "parserOptions": {
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
+        "headless": false,
+        "devtools": true,
+        "maxConnections": 1,
+        "pages": 1
+      },
       "pages": [
+        {
+          "rootUrl": "/notebook-e-macbook/informatica/s/in/ntmk",
+          "name": "category",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": "#showcase > ul:nth-child(4) a[name='linkToProduct']",
+              "newKey": "url",
+              "attr": "href"
+            }
+          ]
+        },
         {
           "name": "item",
           "nextPages": null,
@@ -25,17 +52,13 @@
           ],
           "data": [
             {
-              "selector": ".product-name",
+              "selector": ".header-product__title",
               "newKey": "name",
               "method": "text"
             },
             {
-              "selector": [
-                "#crawlerScriptResult .zipcode table tbody td:nth-child(1) > span > div > svg use",
-                "#crawlerScriptResult .zipcode table tbody td:nth-child(1) > span"
-              ],
+              "selector": "#crawlerScriptResult .zipcode table tbody td:nth-child(1) > span",
               "newKey": "delivery",
-              "attr": "href",
               "method": "text"
             },
             {
@@ -49,11 +72,7 @@
               "method": "text"
             },
             {
-              "join": [
-                "delivery",
-                "shipping",
-                "time"
-              ],
+              "join": ["delivery", "shipping", "time"],
               "newKey": "freight",
               "list": true
             }

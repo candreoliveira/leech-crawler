@@ -150,7 +150,8 @@ const start = async () => {
 
   const database = new Database(configuration.database, yargs.argv.environment);
   await database.init();
-  await database.sync({ force: yargs.argv.sync });
+
+  if (yargs.argv.sync) await database.sync({ force: yargs.argv.sync });
 
   let websites = configuration["websites"].slice(0) || [];
   let websitesArg = yargs.argv.website ? yargs.argv.website.slice(0) : [];

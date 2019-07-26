@@ -41,7 +41,10 @@
         } else if (!!window.document.querySelector(freightErrorSelector)) {
           clearInterval(interval);
           resolve(false);
-        } else if (!window.document.querySelector(freightResultSelector) && retries >= 50) {
+        } else if (
+          !window.document.querySelector(freightResultSelector) &&
+          retries >= 50
+        ) {
           clearInterval(interval);
           resolve(false);
         } else {
@@ -72,16 +75,28 @@
     scriptResult.appendChild(cloneWrapper);
   };
 
-  const start = (zipcodes, inputFreight, submitFreight, freightResultSelector, freightErrorSelector, crawlerScriptResult) => {
+  const start = (
+    zipcodes,
+    inputFreight,
+    submitFreight,
+    freightResultSelector,
+    freightErrorSelector,
+    crawlerScriptResult
+  ) => {
     const input = window.document.querySelector(inputFreight);
     const submit = window.document.querySelector(submitFreight);
+
+    if (!(input && submit)) return [Promise.resolve("NO FREIGHT CALCULATOR!")];
 
     return zipcodes.map(zipcode => {
       calulateFreight(zipcode, input, submit);
       return new Promise(async (resolve, reject) => {
         const msg = "ERROR WAITING FOR FREIGHT RESULT " + zipcode;
         try {
-          const ret = await getFreightResponse(freightResultSelector, freightErrorSelector);
+          const ret = await getFreightResponse(
+            freightResultSelector,
+            freightErrorSelector
+          );
 
           if (ret) {
             writeResult(zipcode, freightResultSelector, crawlerScriptResult);
@@ -100,10 +115,10 @@
 
   return start(
     ["24240-660"],
-    "#input-freight-product",
-    "#bt-freight-product",
-    ".card-freight table",
-    "#freight-feedback-error",
+    "input.input__zipcode",
+    "button.input__zipcode-button",
+    "table.freight-product__table",
+    ".freight-product__freight-text > :not(.js-loading)",
     "crawlerScriptResult"
   );
 })();

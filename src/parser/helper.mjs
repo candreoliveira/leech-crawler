@@ -37,15 +37,9 @@ const userAgent = (type, website) => {
       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.81 Safari/537.36"
     ],
     americanas: [
-      "APIs-Google (+https://developers.google.com/webmasters/APIs-Google.html)",
-      "Googlebot-Image/1.0",
-      "Googlebot-News",
-      "Googlebot-Video/1.0",
-      "Mediapartners-Google/2.1",
-      "AdsBot-Google (+http://www.google.com/adsbot.html)",
-      "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-      "Googlebot/2.1 (+http://www.google.com/bot.html)",
-      "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.81 Safari/537.36",
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36"      
     ]
   };
 

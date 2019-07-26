@@ -43,11 +43,13 @@
         },
         "department": {
           "hasMany": "category",
-          "through": "url"
+          "through": "url",
+          "type": "headless"
         },
         "category": {
           "hasMany": "item",
-          "through": "url"
+          "through": "url",
+          "type": "headless"
         }
       },
       "pages": [
