@@ -21,7 +21,8 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
       date: date,
       url: getUrl(domain, uri.href),
       time: new Date() - start,
-      status: res.statusCode
+      status: res.statusCode,
+      website: instance.config.name
     },
     true
   );

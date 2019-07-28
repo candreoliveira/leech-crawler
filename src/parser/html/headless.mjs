@@ -21,7 +21,8 @@ const exposeFunction = ({
     serial: sha256(getUrl(domain, uri.href)),
     date: date,
     url: getUrl(domain, uri.href),
-    time: new Date() - start
+    time: new Date() - start,
+    website: instance.config.name
   });
 
   let output = {

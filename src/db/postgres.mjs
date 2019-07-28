@@ -90,6 +90,10 @@ const connect = (config, env) => {
       status: {
         type: Sequelize.STRING,
         allowNull: true
+      },
+      website: {
+        type: Sequelize.STRING,
+        allowNull: false
       }
     },
     {
@@ -294,7 +298,7 @@ const upsertMetric = model => {
 
     if (!doc.PageId && tryToGetPage) {
       const p = await findOnePageByUrl(model)(doc.url);
-      if(p) doc.PageId = p.id;
+      if (p) doc.PageId = p.id;
     }
 
     const r = await model.upsert(doc, {
