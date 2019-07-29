@@ -91,7 +91,15 @@ const connect = (config, env) => {
         type: Sequelize.STRING,
         allowNull: true
       },
+      type: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
       website: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      name: {
         type: Sequelize.STRING,
         allowNull: false
       }

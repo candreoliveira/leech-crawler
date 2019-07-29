@@ -22,7 +22,9 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
       url: getUrl(domain, uri.href),
       time: new Date() - start,
       status: res.statusCode,
-      website: instance.config.name
+      type: instance.config.type,
+      website: instance.config.name,
+      name: parg
     },
     true
   );
@@ -60,7 +62,7 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach(pages => {
-      output.nextPages.concat(pages);
+      output.nextPages = output.nextPages.concat(pages);
     });
 
     instance.log(

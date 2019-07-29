@@ -14,6 +14,12 @@
       "type": "headless",
       "name": "magalu",
       "domain": "https://www.magazineluiza.com.br",
+      "lru": {
+        "max": 1000
+      },
+      "retryDelay": 100,
+      "retry": 5,
+      "unset": 5,
       "dependency": {
         "category": {
           "hasMany": "item",
@@ -26,13 +32,19 @@
         "headless": true,
         "devtools": false,
         "maxConnections": 1,
-        "pages": 1
+        "pages": 5
       },
       "pages": [
         {
           "rootUrl": "/notebook-e-macbook/informatica/s/in/ntmk",
           "name": "category",
-          "nextPages": null,
+          "nextPages": [
+            {
+              "selector": "#showcase > ul:nth-child(5) li:not(.disabled):not(:first-child):not(:last-child) > a:not([aria-current='page'])",
+              "method": "text",
+              "param": "page"
+            }
+          ],
           "data": [
             {
               "selector": "#showcase > ul:nth-child(4) a[name='linkToProduct']",

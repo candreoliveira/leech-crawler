@@ -8,6 +8,7 @@ import {
 } from "../parser/helper.mjs";
 import { log as l } from "../log/log.mjs";
 import sha256 from "sha256";
+import { default as LRU } from "lru-cache";
 
 class Crawler {
   constructor(db, crawl, args) {
@@ -17,6 +18,11 @@ class Crawler {
     this.log = l(args.log);
     this.type = args.type;
     this.website = args.website;
+    this.lru = new LRU({
+      max: 5000,
+      maxAge: 1000 * 60 * 60,
+      ...(crawl.config.lru || {})
+    });
   }
 
   sendError(msg) {
@@ -25,7 +31,7 @@ class Crawler {
   }
 
   async getNextPages(count = 0) {
-    if (count < 50) {
+    if (count < (this.crawl.config.retry || 50)) {
       try {
         return await this.db.findPages({
           name: this.name,
@@ -33,7 +39,11 @@ class Crawler {
           website: this.website,
           processedAt: null,
           startedAt: null,
-          limit: (this.crawl.config.parserOptions && this.crawl.config.parserOptions.pages ? this.crawl.config.parserOptions.pages : 10)
+          limit:
+            this.crawl.config.parserOptions &&
+            this.crawl.config.parserOptions.pages
+              ? this.crawl.config.parserOptions.pages
+              : 10
         });
       } catch (err) {
         this.log(
@@ -54,7 +64,7 @@ class Crawler {
   }
 
   async getObject(coll, url, count = 0) {
-    if (count < 50) {
+    if (count < (this.crawl.config.retry || 50)) {
       try {
         return await this.db[`findOne${coll}ByUrl`](url);
       } catch (err) {
@@ -93,7 +103,7 @@ class Crawler {
       await sleep(this.crawl.config.retryDelay || 500);
     }
 
-    if (!url && count < 50) {
+    if (!url && count < (this.crawl.config.retry || 50)) {
       this.log(
         "DEBUG",
         `[${this.crawl.config.type.toUpperCase()}] Trying ${
@@ -151,7 +161,7 @@ class Crawler {
   }
 
   async upsertObject(doc, coll, count = 0, upsert = false) {
-    if (count < 50) {
+    if (count < (this.crawl.config.retry || 50)) {
       if (!doc.serial) {
         doc = {
           ...doc,
@@ -182,7 +192,7 @@ class Crawler {
   }
 
   async upsertMany(coll, docs, count = 0, upsert = true) {
-    if (count < 50) {
+    if (count < (this.crawl.config.retry || 50)) {
       try {
         return await Promise.all(
           docs.map(doc => {
@@ -209,8 +219,26 @@ class Crawler {
   }
 
   async unsetAllAttribute(array, attr, coll) {
-    const arr = setAll(array, attr, null);
-    return await this.upsertMany(coll, arr, 0, false);
+    let count = 0;
+    array.forEach(e => {
+      // Inc count for the key e
+      count = (this.lru.get(e) || count) + 1;
+      this.lru.set(e, count);
+    });
+
+    // Should really unset?
+    if (count < (this.crawl.config.unset || 10)) {
+      const arr = setAll(array, attr, null);
+      return await this.upsertMany(coll, arr, 0, false);
+    }
+
+    this.log(
+      "WARN",
+      `[${this.crawl.config.type.toUpperCase()}] Prevented unset of ${
+        array.length
+      } ${coll.toLowerCase()}(s) using attribute ${attr}.`
+    );
+    return Promise.resolve("Unsets limited!");
   }
 
   async setAllAttribute(array, attr, value, coll) {
@@ -221,12 +249,6 @@ class Crawler {
   async insertPages(currentPage, nextPages, unset) {
     if (Array.isArray(nextPages)) {
       try {
-        this.log(
-          "VERBOSE",
-          `[${this.crawl.config.type.toUpperCase()}] Saving next page(s) ${
-            nextPages[0]
-          }...`
-        );
         await this.upsertMany(
           "Page",
           nextPages.map(next => ({
@@ -236,6 +258,12 @@ class Crawler {
             website: this.website,
             PageId: currentPage.id
           }))
+        );
+        this.log(
+          "VERBOSE",
+          `[${this.crawl.config.type.toUpperCase()}] Saved ${
+            nextPages.length
+          } next page(s) ${nextPages[0]},...`
         );
       } catch (err) {
         this.log(
@@ -264,9 +292,9 @@ class Crawler {
 
       this.log(
         "VERBOSE",
-        `[${this.crawl.config.type.toUpperCase()}] ${currentPage.url} ${
+        `[${this.crawl.config.type.toUpperCase()}] Inserted ${
           insertedItems.length
-        } inserted item(s).`
+        } item(s) for ${currentPage.url}.`
       );
     } catch (err) {
       this.log(
@@ -333,9 +361,9 @@ class Crawler {
           const insertedDependencies = await this.upsertMany("Page", its);
           this.log(
             "VERBOSE",
-            `[${this.crawl.config.type.toUpperCase()}] ${
+            `[${this.crawl.config.type.toUpperCase()}] Inserted ${
               insertedDependencies.length
-            } inserted pages(s) dependency.`
+            } pages(s) dependency.`
           );
         } catch (err) {
           this.log(
@@ -396,7 +424,7 @@ class Crawler {
       await sleep(this.crawl.config.retryDelay || 500);
     }
 
-    if (count < 50) {
+    if (count < (this.crawl.config.retry || 50)) {
       const pageConfig = find(this.crawl.config.pages, "name", this.name);
       try {
         this.log(
