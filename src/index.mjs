@@ -52,7 +52,7 @@ yargs
   })
   .option("sync", {
     alias: "s",
-    describe: "Postgres option to sync database.",
+    describe: "Sync database.",
     default: false
   })
   .demandOption(["environment", "page", "type", "cpu", "website"])
