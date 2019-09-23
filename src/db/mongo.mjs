@@ -5,10 +5,13 @@ import sha256 from "sha256";
 const connect = async (config, env) => {
   let db;
   const client = new Mongodb.MongoClient(
-    `mongodb${process.env.DB_SRV || config[env].srv ? "+srv" : ""}://${process.env.DB_USER || config[env].user}:${process.env
-      .DB_PASS || config[env].password}@${process.env.DB_HOST ||
-      config[env].host}${process.env.DB_SRV || config[env].srv ? "" : ":" + (process.env.DB_PORT || config[env].port)}/${process.env
-      .DB_NAME || config[env].name}`,
+    `mongodb${process.env.DB_SRV || config[env].srv ? "+srv" : ""}://${process
+      .env.DB_USER || config[env].user}:${process.env.DB_PASS ||
+      config[env].password}@${process.env.DB_HOST || config[env].host}${
+      process.env.DB_SRV || config[env].srv
+        ? ""
+        : ":" + (process.env.DB_PORT || config[env].port)
+    }/${process.env.DB_NAME || config[env].name}`,
     {
       useNewUrlParser: true,
       poolSize: 50,
@@ -41,7 +44,7 @@ const connect = async (config, env) => {
 
     await Metric.createIndex({ serial: 1 }, { unique: true });
   } catch (e) {
-    throw new Error(`[Mongodb] Can't create indexes ${e}.`);
+    console.log(`[Mongodb] Can't create indexes ${e}.`);
   }
 
   return {
@@ -159,10 +162,14 @@ const upsertPage = model => {
       filter = doc;
     }
 
+    // Prevent performing an update on the path '_id'
+    const tmp = { ...doc };
+    delete tmp._id;
+
     const r = await model.findOneAndUpdate(
       filter,
       {
-        $set: doc
+        $set: tmp
       },
       { upsert: upsert, returnNewDocument: true }
     );

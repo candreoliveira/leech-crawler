@@ -57,7 +57,8 @@
   const writeResult = (
     zipcode,
     freightResultSelector,
-    scriptResultID = "crawlerScriptResult"
+    scriptResultID = "crawlerScriptResult",
+    notAvailableText = "Não disponível"
   ) => {
     let scriptResult = window.document.querySelector(scriptResultID);
     if (!scriptResult) {
@@ -67,11 +68,36 @@
     }
 
     const node = window.document.querySelector(freightResultSelector);
+    const maxCells = Array.from(node.rows).reduce((acc, curr) => {
+      acc = curr.cells.length > acc ? curr.cells.length : acc;
+      return acc;
+    }, 0);
+
     const cloneWrapper = window.document.createElement("div");
     cloneWrapper.setAttribute("id", zipcode);
     cloneWrapper.setAttribute("class", "zipcode");
-    const clone = node.cloneNode(true);
-    cloneWrapper.appendChild(clone);
+
+    const table = window.document.createElement("table");
+    table.setAttribute("class", "table");
+
+    Array.from(node.rows).forEach(row => {
+      const tr = window.document.createElement("tr");
+      tr.setAttribute("class", "tr");
+
+      for (let i = 0; i < maxCells; i++) {
+        const td = window.document.createElement("td");
+        td.setAttribute("class", "td");
+        td.innerText = row.cells[i]
+          ? row.cells[i].innerText.trim()
+          : notAvailableText;
+
+        tr.appendChild(td);
+      }
+
+      table.appendChild(tr);
+    });
+
+    cloneWrapper.appendChild(table);
     scriptResult.appendChild(cloneWrapper);
   };
 
@@ -81,7 +107,8 @@
     submitFreight,
     freightResultSelector,
     freightErrorSelector,
-    crawlerScriptResult
+    crawlerScriptResult,
+    notAvailableText
   ) => {
     const input = window.document.querySelector(inputFreight);
     const submit = window.document.querySelector(submitFreight);
@@ -99,7 +126,12 @@
           );
 
           if (ret) {
-            writeResult(zipcode, freightResultSelector, crawlerScriptResult);
+            writeResult(
+              zipcode,
+              freightResultSelector,
+              crawlerScriptResult,
+              notAvailableText
+            );
           } else {
             console.error(msg);
           }
@@ -119,6 +151,7 @@
     "button.input__zipcode-button",
     "table.freight-product__table",
     ".freight-product__freight-text > :not(.js-loading)",
-    "crawlerScriptResult"
+    "crawlerScriptResult",
+    "Não disponível"
   );
 })();

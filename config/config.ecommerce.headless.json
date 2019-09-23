@@ -40,14 +40,14 @@
           "name": "category",
           "nextPages": [
             {
-              "selector": "#showcase > ul:nth-child(5) li:not(.disabled):not(:first-child):not(:last-child) > a:not([aria-current='page'])",
+              "selector": "#showcase > ul:nth-child(6) li:not(.disabled):not(:first-child):not(:last-child) > a:not([aria-current='page'])",
               "method": "text",
               "param": "page"
             }
           ],
           "data": [
             {
-              "selector": "#showcase > ul:nth-child(4) a[name='linkToProduct']",
+              "selector": "#showcase > ul:nth-child(5) a[name='linkToProduct']",
               "newKey": "url",
               "attr": "href"
             }
@@ -69,22 +69,27 @@
               "method": "text"
             },
             {
-              "selector": "#crawlerScriptResult .zipcode table tbody td:nth-child(1) > span",
+              "selector": "#crawlerScriptResult .zipcode .table td:nth-child(1)",
               "newKey": "delivery",
               "method": "text"
             },
             {
-              "selector": "#crawlerScriptResult .zipcode table tbody td:nth-child(2) > span",
+              "selector": "#crawlerScriptResult .zipcode .table td:nth-child(2)",
+              "newKey": "time",
+              "method": "text",
+              "replace": {
+                "pattern": "(<[^>]*>?)|(\n)",
+                "new": " ",
+                "options": "gm"
+              }
+            },
+            {
+              "selector": "#crawlerScriptResult .zipcode .table td:nth-child(3)",
               "newKey": "shipping",
               "method": "text"
             },
             {
-              "selector": "#crawlerScriptResult .zipcode table tbody td:nth-child(3) > span",
-              "newKey": "time",
-              "method": "text"
-            },
-            {
-              "join": ["delivery", "shipping", "time"],
+              "join": ["delivery", "time", "shipping"],
               "newKey": "freight",
               "list": true
             }
