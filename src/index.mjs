@@ -55,6 +55,11 @@ yargs
     describe: "Sync database.",
     default: false
   })
+  .option("admin", {
+    alias: "a",
+    describe: "Launch admin panel.",
+    default: false
+  })
   .demandOption(["environment", "page", "type", "cpu", "website"])
   .boolean("restart")
   .array("website")
@@ -133,7 +138,7 @@ const getRemoteConfig = async config => {
   if (config && config.remote && config.remote.url) {
     try {
       return await r2(config.remote.url).json;
-    } catch (e) {}
+    } catch (e) { }
   }
   return null;
 };

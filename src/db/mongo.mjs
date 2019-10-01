@@ -8,9 +8,9 @@ const connect = async (config, env) => {
     `mongodb${process.env.DB_SRV || config[env].srv ? "+srv" : ""}://${process
       .env.DB_USER || config[env].user}:${process.env.DB_PASS ||
       config[env].password}@${process.env.DB_HOST || config[env].host}${
-      process.env.DB_SRV || config[env].srv
-        ? ""
-        : ":" + (process.env.DB_PORT || config[env].port)
+    process.env.DB_SRV || config[env].srv
+      ? ""
+      : ":" + (process.env.DB_PORT || config[env].port)
     }/${process.env.DB_NAME || config[env].name}`,
     {
       useNewUrlParser: true,
@@ -59,10 +59,13 @@ const connect = async (config, env) => {
 
 const sync = (client, model) => {
   return async () => {
+    await model.Page.dropIndexes();
+    await model.Item.dropIndexes();
+    await model.Metric.dropIndexes();
     await model.Page.drop();
     await model.Item.drop();
     await model.Metric.drop();
-    return await Promise.resolve("[Mongodb] Mongodb collections dropped.");
+    return await Promise.resolve("[Mongodb] Mongodb collections and indexes dropped.");
   };
 };
 
@@ -121,7 +124,8 @@ const restartPages = model => {
     return await model.updateMany(
       {
         website: params.website,
-        name: params.name
+        name: params.name,
+        type: params.type
       },
       {
         $set: {
@@ -139,6 +143,7 @@ const countPages = model => {
     return await model.countDocuments({
       website: params.website,
       name: params.name,
+      type: params.type,
       processedAt: params.processedAt,
       startedAt: params.startedAt
     });
@@ -146,6 +151,48 @@ const countPages = model => {
 };
 
 const countItems = countPages;
+
+const metrics = model => {
+  return async params => {
+    const aggs = [
+      {
+        $match: {
+          website: params.website,
+          name: params.name,
+          type: params.type
+        }
+      },
+      {
+        $sort: { time: -1 }
+      },
+      {
+        $group: {
+          _id: $status,
+          statusTotal: { $sum: NumberInt(1) },
+          statusAvgTime: { $avg: $time },
+          statusUrlsDate: { $push: { url: $url, date: $date } }
+        }
+      },
+      {
+        $project: {
+          statusUrlsDate: { $slice: [$statusUrlsDate, params.limit] },
+          statusAvgTime: 1,
+          statusTotal: 1
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          avgTime: { $avg: $statusAvgTime },
+          total: { $sum: $statusTotal },
+          metrics: { $push: $$ROOT }
+        }
+      }
+    ];
+
+    return await model.aggregate(aggs);
+  };
+};
 
 const upsertPage = model => {
   return async (doc, upsert = false) => {
@@ -244,5 +291,6 @@ export {
   upsertItem,
   countItems,
   countPages,
-  restartPages
+  restartPages,
+  metrics
 };

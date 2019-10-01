@@ -34,6 +34,7 @@ class Database {
     this.upsertItem = this.db.upsertItem(this.dbcli.model.Item);
     this.upsertPage = this.db.upsertPage(this.dbcli.model.Page);
     this.upsertMetric = this.db.upsertMetric(this.dbcli.model.Metric);
+    this.metrics = this.db.metrics(this.dbcli.model.Metric);
   }
 }
 
