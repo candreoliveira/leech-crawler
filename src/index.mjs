@@ -1,86 +1,20 @@
-import { Database } from "./db/database.mjs";
+import { start as loadConfig } from "./config/config.mjs";
 import { Crawler } from "./bot/crawler.mjs";
 import { Rss } from "./parser/rss/rss.mjs";
 import { Html } from "./parser/html/html.mjs";
 import { Headless } from "./parser/html/headless.mjs";
 import { getUrl, getStacktrace } from "./parser/helper.mjs";
 import { log as l } from "./log/log.mjs";
-import { default as colors } from "colors";
-import { default as yargs } from "yargs";
 import { default as dotenv } from "dotenv";
-import { default as r2 } from "r2";
+import { spawn } from "child_process";
 import { default as path } from "path";
 import fs from "fs";
 
+// Start dotenv
 dotenv.config();
 
-yargs
-  .option("website", {
-    alias: "w",
-    describe: "Ordered array of websites to run first."
-  })
-  .option("type", {
-    alias: "t",
-    describe: "Crawler page type to run."
-  })
-  .option("page", {
-    alias: "p",
-    describe: "Crawler page to run."
-  })
-  .option("environment", {
-    alias: "e",
-    describe: "Environment to run.",
-    default: "development"
-  })
-  .option("log", {
-    alias: "l",
-    describe: "Log level."
-  })
-  .option("cpu", {
-    alias: "c",
-    describe: "Cpu quantity to fork."
-  })
-  .option("file", {
-    alias: "f",
-    describe: "File config to load.",
-    default: "config.json"
-  })
-  .option("restart", {
-    alias: "r",
-    describe: "Clean processedAt and startedAt.",
-    default: false
-  })
-  .option("sync", {
-    alias: "s",
-    describe: "Sync database.",
-    default: false
-  })
-  .option("admin", {
-    alias: "a",
-    describe: "Launch admin panel.",
-    default: false
-  })
-  .demandOption(["environment", "page", "type", "cpu", "website"])
-  .boolean("restart")
-  .array("website")
-  .array("page");
-
-colors.setTheme({
-  silly: "rainbow",
-  input: "grey",
-  verbose: "cyan",
-  prompt: "grey",
-  info: "green",
-  data: "grey",
-  help: "cyan",
-  warn: "yellow",
-  debug: "blue",
-  error: "red"
-});
-
-const log = l(yargs.argv.log);
+// Start vars
 let runners = 0;
-let configuration;
 
 const run = async cfg => {
   let crawl;
@@ -111,7 +45,7 @@ const run = async cfg => {
     (crawl && cfg.args.type && crawl.type === cfg.args.type) ||
     (crawl && !cfg.args.type)
   ) {
-    log(
+    cfg.log(
       "INFO",
       `Starting proccess for ${getUrl(
         cfg.config.domain,
@@ -123,7 +57,7 @@ const run = async cfg => {
       runners += 1;
       await crawl.start();
     } catch (err) {
-      log("ERROR", `Closing ${getStacktrace(err)}`);
+      cfg.log("ERROR", `Closing ${getStacktrace(err)}`);
 
       runners -= 1;
       if (runners === 0) {
@@ -134,33 +68,37 @@ const run = async cfg => {
   }
 };
 
-const getRemoteConfig = async config => {
-  if (config && config.remote && config.remote.url) {
-    try {
-      return await r2(config.remote.url).json;
-    } catch (e) { }
-  }
-  return null;
-};
-
 const start = async () => {
-  const file = path.join("config", yargs.argv.file);
-  const config = JSON.parse(fs.readFileSync(file, "utf-8"));
-  const remote = await getRemoteConfig(config);
-  configuration = remote ? remote : config;
-  configuration = {
-    ...config,
-    ...configuration
-  };
+  const { database, configuration, args } = await loadConfig();  
+  const log = l(args.log);
 
-  const database = new Database(configuration.database, yargs.argv.environment);
-  await database.init();
-
-  if (yargs.argv.sync) await database.sync({ force: yargs.argv.sync });
+  if (args.admin) {
+    const www = path.join(path.resolve(), "src", "admin", "bin", "www.mjs");
+    const programArgs = ["--experimental-modules", www];
+    
+    Object.entries(args).forEach(([key, value]) => {
+      if (key !== "$0" && key !== "_" && key.length === 1) {
+        if (Array.isArray(value)) {
+          value.forEach((k, v) => {
+            programArgs.push(`--${key}`);
+            programArgs.push(String(v));
+          });
+        } else {
+          programArgs.push(`--${key}`);
+          programArgs.push(String(value));
+        }
+      }
+    });
+    
+    const adm = spawn("node", programArgs);
+    adm.stdout.on('data', data => log("VERBOSE", `[ADMIN] ${data}`));
+    adm.stderr.on('data', data => log("ERROR", `[ADMIN] ${data}`));
+    adm.on('close', code => log("INFO", `[ADMIN] Process closed by ${code}.`));
+  }
 
   let websites = configuration["websites"].slice(0) || [];
-  let websitesArg = yargs.argv.website ? yargs.argv.website.slice(0) : [];
-  let pagesArg = yargs.argv.page ? yargs.argv.page.slice(0) : [];
+  let websitesArg = args.website ? args.website.slice(0) : [];
+  let pagesArg = args.page ? args.page.slice(0) : [];
 
   // Adjust config with preprocessed file
   websites.forEach(w => {
@@ -178,7 +116,7 @@ const start = async () => {
   websites
     .filter(
       v =>
-        v.type === yargs.argv.type &&
+        v.type === args.type &&
         ((websitesArg.length > 0 && websitesArg.indexOf(v.name) > -1) ||
           websitesArg.length === 0)
     )
@@ -187,15 +125,16 @@ const start = async () => {
         const websitePages = w.pages.map(i => i.name);
         if (websitePages.indexOf(p) > -1) {
           run({
+            log: log,
             db: database,
             config: w,
             args: {
               page: p,
-              type: yargs.argv.type,
-              env: yargs.argv.environment,
+              type: args.type,
+              env: args.environment,
               website: w.name,
-              restart: yargs.argv.restart,
-              log: yargs.argv.log
+              restart: args.restart,
+              log: args.log
             }
           });
         }

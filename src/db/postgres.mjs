@@ -316,6 +316,8 @@ const upsertMetric = model => {
   };
 };
 
+const metrics = () => {}
+
 export {
   connect,
   sync,
@@ -327,5 +329,6 @@ export {
   upsertMetric,
   countItems,
   countPages,
-  restartPages
+  restartPages,
+  metrics
 };
