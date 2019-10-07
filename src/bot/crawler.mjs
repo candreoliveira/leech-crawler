@@ -12,6 +12,13 @@ import { default as LRU } from "lru-cache";
 
 class Crawler {
   constructor(db, crawl, args) {
+    // Defaults
+    if (!crawl.config.settings) crawl.config.settings = {};
+    crawl.config.settings.lru = crawl.config.settings.lru || {};
+    crawl.config.settings.retryDelay = crawl.config.settings.retryDelay || 500;
+    crawl.config.settings.retry = crawl.config.settings.retry || 50;
+    crawl.config.settings.retryOnEmpty = crawl.config.settings.retryOnEmpty || 5;
+
     this.db = db;
     this.crawl = crawl;
     this.name = args.page;
@@ -21,7 +28,7 @@ class Crawler {
     this.lru = new LRU({
       max: 5000,
       maxAge: 1000 * 60 * 60,
-      ...(crawl.config.lru || {})
+      ...crawl.config.settings.lru
     });
   }
 
@@ -53,7 +60,7 @@ class Crawler {
           )}.`
         );
 
-        await sleep(this.crawl.config.retryDelay || 500);
+        await sleep(this.crawl.config.settings.retryDelay || 500);
         return await this.getNextPages(++count);
       }
     } else {
@@ -75,7 +82,7 @@ class Crawler {
           )}.`
         );
 
-        await sleep(this.crawl.config.retryDelay || 500);
+        await sleep(this.crawl.config.settings.retryDelay || 500);
         return await this.getObject(coll, url, ++count);
       }
     } else {
@@ -100,7 +107,7 @@ class Crawler {
     let page;
 
     if (count > 0) {
-      await sleep(this.crawl.config.retryDelay || 500);
+      await sleep(this.crawl.config.settings.retryDelay || 500);
     }
 
     if (!url && count < (this.crawl.config.retry || 50)) {
@@ -227,7 +234,8 @@ class Crawler {
     });
 
     // Should really unset?
-    if (count < (this.crawl.config.unset || 10)) {
+    // Should really retryOnEmpty?
+    if (count < (this.crawl.config.settings.retryOnEmpty || this.crawl.config.unset || 10)) {
       const arr = setAll(array, attr, null);
       return await this.upsertMany(coll, arr, 0, false);
     }
@@ -421,7 +429,7 @@ class Crawler {
     let pages, pagesResult;
 
     if (count > 0) {
-      await sleep(this.crawl.config.retryDelay || 500);
+      await sleep(this.crawl.config.settings.retryDelay || 500);
     }
 
     if (count < (this.crawl.config.retry || 50)) {

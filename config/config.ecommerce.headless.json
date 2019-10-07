@@ -14,25 +14,27 @@
       "type": "headless",
       "name": "magalu",
       "domain": "https://www.magazineluiza.com.br",
-      "lru": {
-        "max": 1000
+      "settings": {
+        "lru": {
+          "max": 1000
+        },
+        "retryDelay": 100,
+        "retry": 5,
+        "retryOnEmpty": 5,
+        "parserOptions": {
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
+          "headless": true,
+          "devtools": false,
+          "maxConnections": 1,
+          "pages": 5
+        }        
       },
-      "retryDelay": 100,
-      "retry": 5,
-      "unset": 5,
       "dependency": {
         "category": {
           "hasMany": "item",
           "through": "url",
           "type": "headless"
         }
-      },
-      "parserOptions": {
-        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
-        "headless": true,
-        "devtools": false,
-        "maxConnections": 1,
-        "pages": 5
       },
       "pages": [
         {
