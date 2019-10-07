@@ -6,7 +6,7 @@ import { Headless } from "./parser/html/headless.mjs";
 import { getUrl, getStacktrace } from "./parser/helper.mjs";
 import { log as l } from "./log/log.mjs";
 import { default as dotenv } from "dotenv";
-import { spawn } from "child_process";
+import { spawn, spawnSync } from "child_process";
 import { default as path } from "path";
 import fs from "fs";
 
@@ -89,6 +89,9 @@ const start = async () => {
         }
       }
     });
+    
+    // Install dependencies before starting admin
+    spawnSync("npm", ["install"], { cwd: path.join(path.resolve(), "src", "admin") });
     
     const adm = spawn("node", programArgs);
     adm.stdout.on('data', data => log("VERBOSE", `[ADMIN] ${data}`));
