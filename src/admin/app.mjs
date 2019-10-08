@@ -11,7 +11,6 @@ const start = async () => {
   const app = express();
   const { database, configuration, args } = await loadConfig();  
 
-
   // view engine setup
   app.set("views", path.join(path.resolve(), "src", "admin", "views"));
   app.set("view engine", "ejs");

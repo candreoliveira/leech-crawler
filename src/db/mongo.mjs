@@ -59,12 +59,12 @@ const connect = async (config, env) => {
 
 const sync = (client, model) => {
   return async () => {
-    await model.Page.dropIndexes();
-    await model.Item.dropIndexes();
-    await model.Metric.dropIndexes();
-    await model.Page.drop();
-    await model.Item.drop();
-    await model.Metric.drop();
+    // await model.Page.dropIndexes();
+    // await model.Item.dropIndexes();
+    // await model.Metric.dropIndexes();
+    // await model.Page.drop();
+    // await model.Item.drop();
+    // await model.Metric.drop();
     return await Promise.resolve("[Mongodb] Mongodb collections and indexes dropped.");
   };
 };
@@ -154,28 +154,30 @@ const countItems = countPages;
 
 const metrics = model => {
   return async params => {
+    const tmp = {};
+    if (params.website) tmp.website = params.website; 
+    if (params.name) tmp.website = params.name;
+    if (params.type) tmp.website = params.type;
+    if (!params.limit) params.limit = 50;
+    
     const aggs = [
       {
-        $match: {
-          website: params.website,
-          name: params.name,
-          type: params.type
-        }
+        $match: tmp
       },
       {
         $sort: { time: -1 }
       },
       {
         $group: {
-          _id: $status,
-          statusTotal: { $sum: NumberInt(1) },
-          statusAvgTime: { $avg: $time },
-          statusUrlsDate: { $push: { url: $url, date: $date } }
+          _id: "$status",
+          statusTotal: { $sum: parseInt(1) },
+          statusAvgTime: { $avg: "$time" },
+          statusUrlsDate: { $push: { url: "$url", date: "$date" } }
         }
       },
       {
         $project: {
-          statusUrlsDate: { $slice: [$statusUrlsDate, params.limit] },
+          statusUrlsDate: { $slice: ["$statusUrlsDate", params.limit] },
           statusAvgTime: 1,
           statusTotal: 1
         }
@@ -183,9 +185,9 @@ const metrics = model => {
       {
         $group: {
           _id: null,
-          avgTime: { $avg: $statusAvgTime },
-          total: { $sum: $statusTotal },
-          metrics: { $push: $$ROOT }
+          avgTime: { $avg: "$statusAvgTime" },
+          total: { $sum: "$statusTotal" },
+          metrics: { $push: "$$ROOT" }
         }
       }
     ];

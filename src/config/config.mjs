@@ -51,7 +51,17 @@ yargs
     describe: "Launch admin panel.",
     default: false
   })
-  .demandOption(["environment", "page", "type", "cpu", "website"])
+  .option("debug", {
+    alias: "d",
+    describe: "Debug admin panel.",
+    default: false
+  })  
+  .option("bot", {
+    alias: "b",
+    describe: "Launch bot.",
+    default: false
+  })  
+  .demandOption(["environment", "page", "type", "cpu", "website", "bot", "admin"])
   .boolean("restart")
   .array("website")
   .array("page");

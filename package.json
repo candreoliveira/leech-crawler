@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "start": "node --max-old-space-size=12288 --experimental-modules src/cluster.mjs",
-    "debug": "node --inspect-brk --experimental-modules src/cluster.mjs",
+    "debug": "node --inspect-brk --experimental-modules src/cluster.mjs -d",
     "serve": "node --experimental-modules src/server.mjs"
   },
   "author": "",

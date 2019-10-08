@@ -75,6 +75,10 @@ const start = async () => {
   if (args.admin) {
     const www = path.join(path.resolve(), "src", "admin", "bin", "www.mjs");
     const programArgs = ["--experimental-modules", www];
+
+    if (args.debug) {
+      programArgs.unshift("--inspect-brk");
+    }
     
     Object.entries(args).forEach(([key, value]) => {
       if (key !== "$0" && key !== "_" && key.length === 1) {
@@ -92,57 +96,59 @@ const start = async () => {
     
     // Install dependencies before starting admin
     spawnSync("npm", ["install"], { cwd: path.join(path.resolve(), "src", "admin") });
-    
+
     const adm = spawn("node", programArgs);
     adm.stdout.on('data', data => log("VERBOSE", `[ADMIN] ${data}`));
     adm.stderr.on('data', data => log("ERROR", `[ADMIN] ${data}`));
     adm.on('close', code => log("INFO", `[ADMIN] Process closed by ${code}.`));
   }
 
-  let websites = configuration["websites"].slice(0) || [];
-  let websitesArg = args.website ? args.website.slice(0) : [];
-  let pagesArg = args.page ? args.page.slice(0) : [];
-
-  // Adjust config with preprocessed file
-  websites.forEach(w => {
-    const pages = w.pages || [];
-    pages.forEach(p => {
-      const preprocesses = p.preprocess || [];
-      preprocesses.forEach(s => {
-        if (s.type.toLowerCase() === "file") {
-          s.script = `return ${fs.readFileSync(s.path, "utf-8")}`;
-        }
+  if (args.bot) {
+    let websites = configuration["websites"].slice(0) || [];
+    let websitesArg = args.website ? args.website.slice(0) : [];
+    let pagesArg = args.page ? args.page.slice(0) : [];
+  
+    // Adjust config with preprocessed file
+    websites.forEach(w => {
+      const pages = w.pages || [];
+      pages.forEach(p => {
+        const preprocesses = p.preprocess || [];
+        preprocesses.forEach(s => {
+          if (s.type.toLowerCase() === "file") {
+            s.script = `return ${fs.readFileSync(s.path, "utf-8")}`;
+          }
+        });
       });
     });
-  });
-
-  websites
-    .filter(
-      v =>
-        v.type === args.type &&
-        ((websitesArg.length > 0 && websitesArg.indexOf(v.name) > -1) ||
-          websitesArg.length === 0)
-    )
-    .forEach(w => {
-      pagesArg.forEach(p => {
-        const websitePages = w.pages.map(i => i.name);
-        if (websitePages.indexOf(p) > -1) {
-          run({
-            log: log,
-            db: database,
-            config: w,
-            args: {
-              page: p,
-              type: args.type,
-              env: args.environment,
-              website: w.name,
-              restart: args.restart,
-              log: args.log
-            }
-          });
-        }
+  
+    websites
+      .filter(
+        v =>
+          v.type === args.type &&
+          ((websitesArg.length > 0 && websitesArg.indexOf(v.name) > -1) ||
+            websitesArg.length === 0)
+      )
+      .forEach(w => {
+        pagesArg.forEach(p => {
+          const websitePages = w.pages.map(i => i.name);
+          if (websitePages.indexOf(p) > -1) {
+            run({
+              log: log,
+              db: database,
+              config: w,
+              args: {
+                page: p,
+                type: args.type,
+                env: args.environment,
+                website: w.name,
+                restart: args.restart,
+                log: args.log
+              }
+            });
+          }
+        });
       });
-    });
+  }
 };
 
 export { start };
