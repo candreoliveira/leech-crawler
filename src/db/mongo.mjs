@@ -59,12 +59,12 @@ const connect = async (config, env) => {
 
 const sync = (client, model) => {
   return async () => {
-    // await model.Page.dropIndexes();
-    // await model.Item.dropIndexes();
-    // await model.Metric.dropIndexes();
-    // await model.Page.drop();
-    // await model.Item.drop();
-    // await model.Metric.drop();
+    await model.Page.dropIndexes();
+    await model.Item.dropIndexes();
+    await model.Metric.dropIndexes();
+    await model.Page.drop();
+    await model.Item.drop();
+    await model.Metric.drop();
     return await Promise.resolve("[Mongodb] Mongodb collections and indexes dropped.");
   };
 };
@@ -155,11 +155,11 @@ const countItems = countPages;
 const metrics = model => {
   return async params => {
     const tmp = {};
-    if (params.website) tmp.website = params.website; 
+    if (params.website) tmp.website = params.website;
     if (params.name) tmp.website = params.name;
     if (params.type) tmp.website = params.type;
     if (!params.limit) params.limit = 50;
-    
+
     const aggs = [
       {
         $match: tmp

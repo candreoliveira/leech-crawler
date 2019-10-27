@@ -69,7 +69,7 @@ const run = async cfg => {
 };
 
 const start = async () => {
-  const { database, configuration, args } = await loadConfig();  
+  const { database, configuration, args } = await loadConfig();
   const log = l(args.log);
 
   if (args.admin) {
@@ -79,7 +79,7 @@ const start = async () => {
     if (args.debug) {
       programArgs.unshift("--inspect-brk");
     }
-    
+
     Object.entries(args).forEach(([key, value]) => {
       if (key !== "$0" && key !== "_" && key.length === 1) {
         if (Array.isArray(value)) {
@@ -93,7 +93,7 @@ const start = async () => {
         }
       }
     });
-    
+
     // Install dependencies before starting admin
     spawnSync("npm", ["install"], { cwd: path.join(path.resolve(), "src", "admin") });
 
@@ -107,7 +107,7 @@ const start = async () => {
     let websites = configuration["websites"].slice(0) || [];
     let websitesArg = args.website ? args.website.slice(0) : [];
     let pagesArg = args.page ? args.page.slice(0) : [];
-  
+
     // Adjust config with preprocessed file
     websites.forEach(w => {
       const pages = w.pages || [];
@@ -120,7 +120,7 @@ const start = async () => {
         });
       });
     });
-  
+
     websites
       .filter(
         v =>
@@ -148,6 +148,11 @@ const start = async () => {
           }
         });
       });
+  }
+
+  if (!(args.bot || args.admin)) {
+    log("ERROR", `Start the crawler with admin or bot parameters.`);
+    process.exit(0);
   }
 };
 
