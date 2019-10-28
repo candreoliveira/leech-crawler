@@ -5,7 +5,7 @@ var router = express.Router();
 router.get("/", async (req, res, next) => {
   const database = res.app.get("database"); 
   const config = res.app.get("configuration"); 
-  const metricsCursor = await database.metrics({
+  const metrics = await database.metrics({
     website: config.website,
     name: undefined,
     type: config.type,
@@ -13,7 +13,6 @@ router.get("/", async (req, res, next) => {
   });
 
   // Return metrics object
-  const metrics = (await metricsCursor.toArray())[0];
   res.render("index", { title: "Express", metrics: metrics });
 });
 

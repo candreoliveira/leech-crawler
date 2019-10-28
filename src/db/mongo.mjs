@@ -192,9 +192,27 @@ const metrics = model => {
       }
     ];
 
-    return await model.aggregate(aggs);
+    const ret = await model.aggregate(aggs).toArray();
+    return formatMetrics(ret[0]);
   };
 };
+
+const formatMetrics = (res) => {
+  const { avgTime, total, metrics } = res;
+  const output = {
+    total,
+    avgTime,
+    metrics: metrics.map((v, i) => {
+      return {
+        statusCode: v._id,
+        total: v.statusTotal,
+        avgTime: v.statusAvgTime,
+        mostTimeConsuming: v.statusUrlsDate
+      };
+    })
+  };
+  return output;
+}
 
 const upsertPage = model => {
   return async (doc, upsert = false) => {
