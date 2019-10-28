@@ -12,7 +12,8 @@ router.get("/", async (req, res, next) => {
     limit: 50
   });
 
-  const metrics = await metricsCursor.toArray();
+  // Return metrics object
+  const metrics = (await metricsCursor.toArray())[0];
   res.render("index", { title: "Express", metrics: metrics });
 });
 

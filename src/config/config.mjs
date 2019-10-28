@@ -103,7 +103,9 @@ const start = async () => {
   // Start database
   const database = new Database(configuration.database, yargs.argv.environment);
   await database.init();
-  if (yargs.argv.sync) await database.sync({ force: yargs.argv.sync });
+  if (yargs.argv.sync === "true" || yargs.argv.sync === true) {
+    await database.sync({ force: yargs.argv.sync });
+  }
 
   return {
     database,
