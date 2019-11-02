@@ -100,7 +100,10 @@ const start = async () => {
     const adm = spawn("node", programArgs);
     adm.stdout.on('data', data => log("VERBOSE", `[ADMIN] ${data}`));
     adm.stderr.on('data', data => log("ERROR", `[ADMIN] ${data}`));
-    adm.on('close', code => log("INFO", `[ADMIN] Process closed by ${code}.`));
+    adm.on('close', code => {
+      log("INFO", `[ADMIN] Process closed by ${code}.`)
+      process.exit(0);
+    });
   }
 
   if (args.bot) {

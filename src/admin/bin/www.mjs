@@ -9,7 +9,7 @@ import { default as http } from 'http';
 
 const start = async () => {
   const app = await startApp();
-  let port = normalizePort(process.env.PORT || '3000');
+  let port = normalizePort(process.env.PORT || '3001');
 
   /**
   * Get port from environment and store in Express.

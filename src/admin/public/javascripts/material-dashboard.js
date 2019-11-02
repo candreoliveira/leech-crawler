@@ -14,7 +14,6 @@
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
  */
-
 (function () {
   isWindows = navigator.platform.indexOf('Win') > -1 ? true : false;
 
@@ -50,7 +49,7 @@ var seq2 = 0,
   durations2 = 500;
 
 $(document).ready(function () {
-
+  window._metrics = JSON.parse(window._metrics);
   $('body').bootstrapMaterialDesign();
 
   $sidebar = $('.sidebar');
@@ -249,112 +248,62 @@ md = {
   initDashboardPageCharts: function () {
 
     if ($('#dailySalesChart').length != 0 || $('#completedTasksChart').length != 0 || $('#totalStatusChart').length != 0) {
-      /* ----------==========     Daily Sales Chart initialization    ==========---------- */
+      /* ----------==========     Chart initialization     ==========---------- */
+      var status = window._metrics.metrics.map(v => String(v.statusCode));
+      var totals = window._metrics.metrics.map(v => v.total);
+      var times = window._metrics.metrics.map(v => (v.avgTime / 1000));
 
-      dataDailySalesChart = {
-        labels: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
-        series: [
-          [12, 17, 7, 17, 23, 18, 38]
-        ]
-      };
-
-      optionsDailySalesChart = {
-        lineSmooth: Chartist.Interpolation.cardinal({
-          tension: 0
-        }),
-        low: 0,
-        high: 50, // creative tim: we recommend you to set the high sa the biggest value + something for a better look
-        chartPadding: {
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0
+      var totalStatusChart = Chartist.Bar(
+        '#totalStatusChart',
+        {
+          labels: status,
+          series: [totals]
         },
-      }
-
-      var dailySalesChart = new Chartist.Line('#dailySalesChart', dataDailySalesChart, optionsDailySalesChart);
-      // var data = {
-      //   series: [5, 3, 4]
-      // };
-
-      // var sum = function (a, b) { return a + b };
-
-      // var dailySalesChart = new Chartist.Pie('#dailySalesChart', data, {
-      //   labelInterpolationFnc: function (value) {
-      //     return Math.round(value / data.series.reduce(sum) * 100) + '%';
-      //   }
-      // });
-
-      md.startAnimationForLineChart(dailySalesChart);
-
-
-
-      /* ----------==========     Completed Tasks Chart initialization    ==========---------- */
-
-      dataCompletedTasksChart = {
-        labels: ['12p', '3p', '6p', '9p', '12p', '3a', '6a', '9a'],
-        series: [
-          [230, 750, 450, 300, 280, 240, 200, 190]
-        ]
-      };
-
-      optionsCompletedTasksChart = {
-        lineSmooth: Chartist.Interpolation.cardinal({
-          tension: 0
-        }),
-        low: 0,
-        high: 1000, // creative tim: we recommend you to set the high sa the biggest value + something for a better look
-        chartPadding: {
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0
-        }
-      }
-
-      var completedTasksChart = new Chartist.Line('#completedTasksChart', dataCompletedTasksChart, optionsCompletedTasksChart);
-
-      // start animation for the Completed Tasks Chart - Line Chart
-      md.startAnimationForLineChart(completedTasksChart);
-
-
-      /* ----------==========     Emails Subscription Chart initialization    ==========---------- */
-
-      var dataWebsiteViewsChart = {
-        labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
-        series: [
-          [542, 443, 320, 780, 553, 453, 326, 434, 568, 610, 756, 895]
-
-        ]
-      };
-      
-      var optionsWebsiteViewsChart = {
-        axisX: {
-          showGrid: false
+        {
+          low: Math.min.apply(null, totals),
+          high: Math.max.apply(null, totals),
+          reverseData: true,
+          horizontalBars: true
         },
-        low: 0,
-        high: 1000,
-        chartPadding: {
-          top: 0,
-          right: 5,
-          bottom: 0,
-          left: 0
-        }
-      };
-      var responsiveOptions = [
-        ['screen and (max-width: 640px)', {
-          seriesBarDistance: 5,
-          axisX: {
-            labelInterpolationFnc: function (value) {
-              return value[0];
+        [
+          ['screen and (max-width: 640px)', {
+            seriesBarDistance: 5,
+            axisX: {
+              labelInterpolationFnc: function (value) {
+                return value[0];
+              }
             }
-          }
-        }]
-      ];
-      var websiteViewsChart = Chartist.Bar('#totalStatusChart', dataWebsiteViewsChart, optionsWebsiteViewsChart, responsiveOptions);
+          }]
+        ]
+      );
+
+      var timeStatusChart = Chartist.Bar(
+        '#timeStatusChart',
+        {
+          labels: status,
+          series: [times]
+        },
+        {
+          low: Math.min.apply(null, times),
+          high: Math.max.apply(null, times),
+          reverseData: true,
+          horizontalBars: true
+        },
+        [
+          ['screen and (max-width: 640px)', {
+            seriesBarDistance: 5,
+            axisX: {
+              labelInterpolationFnc: function (value) {
+                return value[0];
+              }
+            }
+          }]
+        ]
+      );
 
       //start animation for the Emails Subscription Chart
-      md.startAnimationForBarChart(websiteViewsChart);
+      md.startAnimationForBarChart(totalStatusChart);
+      md.startAnimationForBarChart(timeStatusChart);
     }
   },
 
@@ -410,15 +359,15 @@ md = {
 
       nav_content = '<ul class="nav navbar-nav nav-mobile-menu">' + nav_content + '</ul>';
 
-      navbar_form = $('nav').find('.navbar-form').get(0).outerHTML;
+      // navbar_form = $('nav').find('.navbar-form').get(0).outerHTML;
 
       $sidebar_nav = $sidebar_wrapper.find(' > .nav');
 
       // insert the navbar form before the sidebar list
       $nav_content = $(nav_content);
-      $navbar_form = $(navbar_form);
+      // $navbar_form = $(navbar_form);
       $nav_content.insertBefore($sidebar_nav);
-      $navbar_form.insertBefore($nav_content);
+      // $navbar_form.insertBefore($nav_content);
 
       $(".sidebar-wrapper .dropdown .dropdown-menu > li > a").click(function (event) {
         event.stopPropagation();

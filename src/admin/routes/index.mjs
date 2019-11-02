@@ -3,8 +3,8 @@ var router = express.Router();
 
 /* GET home page. */
 router.get("/", async (req, res, next) => {
-  const database = res.app.get("database"); 
-  const config = res.app.get("configuration"); 
+  const database = res.app.get("database");
+  const config = res.app.get("configuration");
   const metrics = await database.metrics({
     website: config.website,
     name: undefined,
@@ -13,7 +13,7 @@ router.get("/", async (req, res, next) => {
   });
 
   // Return metrics object
-  res.render("index", { title: "Express", metrics: metrics });
+  res.render("index", { title: "Crawler", metrics: metrics });
 });
 
 export {
