@@ -1,19 +1,47 @@
 import { default as express } from "express";
 var router = express.Router();
 
-/* GET home page. */
+const getMetrics = async (database, website = undefined, name = undefined, type = undefined, limit = 50) => {
+  return await database.metrics({
+    website,
+    name,
+    type,
+    limit
+  });
+}
+
 router.get("/", async (req, res, next) => {
   const database = res.app.get("database");
-  const config = res.app.get("configuration");
-  const metrics = await database.metrics({
-    website: config.website,
-    name: undefined,
-    type: config.type,
-    limit: 50
-  });
+  const website = undefined,
+    type = undefined,
+    name = undefined;
 
-  // Return metrics object
-  res.render("index", { title: "Crawler", metrics: metrics });
+  try {
+    const metrics = await getMetrics(database);
+    res.render("index", {
+      title: "Crawler",
+      metrics: metrics,
+      website: website,
+      type: type,
+      name: name
+    });
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
+
+router.get("/metrics", async (req, res, next) => {
+  const database = res.app.get("database");
+  const website = undefined,
+    type = undefined,
+    name = undefined;
+
+  try {
+    const metrics = await getMetrics(database);
+    res.status(200).json(metrics);
+  } catch (e) {
+    res.status(500).send(e);
+  }
 });
 
 export {

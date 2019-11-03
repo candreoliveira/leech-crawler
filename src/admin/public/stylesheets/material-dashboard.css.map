@@ -1,0 +1,9 @@
+{
+	"version": 3,
+	"file": "material-dashboard.css",
+	"sources": [
+		"material-dashboard.scss"
+	],
+	"names": [],
+	"mappings": "AAAA,AAAA,cAAc,AAAA,OAAO,CACrB,cAAc,AAAA,OAAO,AAAC,CACpB,gBAAgB,CAAE,OAAO,CACzB,KAAK,CAAE,OAAO,CACf"
+}

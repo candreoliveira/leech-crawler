@@ -9,7 +9,7 @@ import { default as sassMiddleware } from "node-sass-middleware";
 
 const start = async () => {
   const app = express();
-  const { database, configuration, args } = await loadConfig();  
+  const { database, configuration, args } = await loadConfig();
 
   // view engine setup
   app.set("views", path.join(path.resolve(), "src", "admin", "views"));
@@ -25,8 +25,10 @@ const start = async () => {
   app.use(sassMiddleware({
     src: path.join(path.resolve(), "src", "admin", "public"),
     dest: path.join(path.resolve(), "src", "admin", "public"),
-    indentedSyntax: true, // true = .sass and false = .scss
-    sourceMap: true
+    indentedSyntax: false, // true = .sass and false = .scss
+    sourceMap: true,
+    debug: true,
+    outputStyle: 'compressed'
   }));
   app.use(express.static(path.join(path.resolve(), "src", "admin", "public")));
   app.use("/assets", express.static(path.join(path.resolve(), "src", "admin", "node_modules/material-dashboard/assets")));
@@ -48,7 +50,7 @@ const start = async () => {
     res.status(err.status || 500);
     res.render("error");
   });
-  
+
   return app;
 }
 

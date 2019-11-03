@@ -48,23 +48,29 @@ yargs
   })
   .option("admin", {
     alias: "a",
-    describe: "Launch admin panel.",
-    default: false
+    describe: "Launch admin panel."
   })
   .option("debug", {
     alias: "d",
     describe: "Debug admin panel.",
     default: false
-  })  
+  })
   .option("bot", {
     alias: "b",
-    describe: "Launch bot.",
-    default: false
-  })  
-  .demandOption(["environment", "page", "type", "cpu", "website", "bot", "admin"])
+    describe: "Launch bot."
+  })
+  .demandOption(["environment"])
   .boolean("restart")
   .array("website")
   .array("page");
+
+if (process.argv.indexOf("-b") > -1 || process.argv.indexOf("--b") > -1 ||
+  process.argv.indexOf("-bot") > -1 || process.argv.indexOf("--bot") > -1) {
+  console.log(process.argv)
+  yargs.demandOption(["page", "type", "cpu", "website", "bot"]);
+} else {
+  yargs.demandOption(["admin"]);
+}
 
 colors.setTheme({
   silly: "rainbow",
