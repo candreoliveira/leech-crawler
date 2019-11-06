@@ -31,7 +31,7 @@ const start = async () => {
     outputStyle: 'compressed'
   }));
   app.use(express.static(path.join(path.resolve(), "src", "admin", "public")));
-  app.use("/assets", express.static(path.join(path.resolve(), "src", "admin", "node_modules/material-dashboard/assets")));
+  app.use("/assets", express.static(path.join(path.resolve(), "src", "admin", "node_modules")));
 
   app.use("/", indexRouter);
 
