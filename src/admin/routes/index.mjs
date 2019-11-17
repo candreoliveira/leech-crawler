@@ -12,16 +12,18 @@ const getMetrics = async (database, website = undefined, name = undefined, type 
 
 router.get("/", async (req, res, next) => {
   const database = res.app.get("database");
-  const website = undefined,
+  const config = res.app.get("configuration");
+  const website = req.query.website || undefined,
     type = undefined,
     name = undefined;
 
   try {
-    const metrics = await getMetrics(database);
+    const metrics = await getMetrics(database, website);
     res.render("index", {
       title: "Crawler",
       metrics: metrics,
       website: website,
+      websites: config.websites.map(v => v.name),
       type: type,
       name: name
     });
@@ -32,12 +34,12 @@ router.get("/", async (req, res, next) => {
 
 router.get("/metrics", async (req, res, next) => {
   const database = res.app.get("database");
-  const website = undefined,
+  const website = req.query.website || undefined,
     type = undefined,
     name = undefined;
 
   try {
-    const metrics = await getMetrics(database);
+    const metrics = await getMetrics(database, website);
     res.status(200).json(metrics);
   } catch (e) {
     res.status(500).send(e);

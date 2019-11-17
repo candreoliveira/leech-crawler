@@ -16,7 +16,7 @@
  */
 
 (function () {
-  window.options = {};
+  // window.options = {};
   isWindows = navigator.platform.indexOf('Win') > -1 ? true : false;
 
   if (isWindows) {
@@ -28,59 +28,59 @@
     $('html').addClass('perfect-scrollbar-off');
   }
 
-  // Tell the browser not to handle scrolling when restoring via the history or
-  // when reloading
-  if ('scrollRestoration' in history) {
-    history.scrollRestoration = 'manual'
-  }
+  // // Tell the browser not to handle scrolling when restoring via the history or
+  // // when reloading
+  // if ('scrollRestoration' in history) {
+  //   history.scrollRestoration = 'manual'
+  // }
 
-  var SCROLL_POSITION = 'scroll-position'
-  var PAGE_INVALIDATED = 'page-invalidated'
+  // var SCROLL_POSITION = 'scroll-position'
+  // var PAGE_INVALIDATED = 'page-invalidated'
 
-  // Persist the scroll position on refresh
-  addEventListener('beforeunload', function () {
-    sessionStorage.setItem(SCROLL_POSITION, JSON.stringify(scrollData()))
-  });
+  // // Persist the scroll position on refresh
+  // addEventListener('beforeunload', function () {
+  //   sessionStorage.setItem(SCROLL_POSITION, JSON.stringify(scrollData()))
+  // });
 
-  // Invalidate the page when the next page is different from the current page
-  // Persist scroll information across pages
-  document.addEventListener('turbolinks:before-visit', function (event) {
-    if (event.data.url !== location.href) {
-      sessionStorage.setItem(PAGE_INVALIDATED, 'true')
-    }
-    sessionStorage.setItem(SCROLL_POSITION, JSON.stringify(scrollData()))
-  })
+  // // Invalidate the page when the next page is different from the current page
+  // // Persist scroll information across pages
+  // document.addEventListener('turbolinks:before-visit', function (event) {
+  //   if (event.data.url !== location.href) {
+  //     sessionStorage.setItem(PAGE_INVALIDATED, 'true')
+  //   }
+  //   sessionStorage.setItem(SCROLL_POSITION, JSON.stringify(scrollData()))
+  // })
 
-  // When a page is fully loaded:
-  // 1. Get the persisted scroll position
-  // 2. If the locations match and the load did not originate from a page
-  // invalidation,
-  // 3. scroll to the persisted position if there, or to the top otherwise
-  // 4. Remove the persisted information
-  addEventListener('turbolinks:load', function (event) {
-    var scrollPosition = JSON.parse(sessionStorage.getItem(SCROLL_POSITION))
+  // // When a page is fully loaded:
+  // // 1. Get the persisted scroll position
+  // // 2. If the locations match and the load did not originate from a page
+  // // invalidation,
+  // // 3. scroll to the persisted position if there, or to the top otherwise
+  // // 4. Remove the persisted information
+  // addEventListener('turbolinks:load', function (event) {
+  //   var scrollPosition = JSON.parse(sessionStorage.getItem(SCROLL_POSITION))
 
-    if (shouldScroll(scrollPosition)) {
-      scrollTo(scrollPosition.scrollX, scrollPosition.scrollY)
-    } else {
-      scrollTo(0, 0)
-    }
-    sessionStorage.removeItem(PAGE_INVALIDATED)
-  });
+  //   if (shouldScroll(scrollPosition)) {
+  //     scrollTo(scrollPosition.scrollX, scrollPosition.scrollY)
+  //   } else {
+  //     scrollTo(0, 0)
+  //   }
+  //   sessionStorage.removeItem(PAGE_INVALIDATED)
+  // });
 
-  function shouldScroll(scrollPosition) {
-    return (scrollPosition
-      && scrollPosition.location === location.href
-      && !JSON.parse(sessionStorage.getItem(PAGE_INVALIDATED)))
-  }
+  // function shouldScroll(scrollPosition) {
+  //   return (scrollPosition
+  //     && scrollPosition.location === location.href
+  //     && !JSON.parse(sessionStorage.getItem(PAGE_INVALIDATED)))
+  // }
 
-  function scrollData() {
-    return {
-      scrollX: scrollX,
-      scrollY: scrollY,
-      location: location.href
-    }
-  }
+  // function scrollData() {
+  //   return {
+  //     scrollX: scrollX,
+  //     scrollY: scrollY,
+  //     location: location.href
+  //   }
+  // }
 })();
 
 var breakCards = true;
@@ -141,49 +141,49 @@ window.rel = function () {
 
 $(document).ready(window.rel);
 
-function reloadActives() {
-  if (window.options.refreshChange) {
-    relClassClick($("#refresh > a[data-refresh=" + window.options.refresh + "]"), true);
-  }
+// function reloadActives() {
+//   if (window.options.refreshChange) {
+//     relClassClick($("#refresh > a[data-refresh=" + window.options.refresh + "]"), true);
+//   }
 
-  if (window.options.mostTimeConsumingChange) {
-    relClassClick($("#mostTimeConsuming .nav-tabs li > a[href='" + window.options.mostTimeConsuming + "']"), true);
-  }
-}
+//   if (window.options.mostTimeConsumingChange) {
+//     relClassClick($("#mostTimeConsuming .nav-tabs li > a[href='" + window.options.mostTimeConsuming + "']"), true);
+//   }
+// }
 
-function relClassClick(el, click = true) {
-  var tgt = $(el);
-  tgt.parent().children(".active").removeClass("active");
-  tgt.addClass("active");
+// function relClassClick(el, click = false) {
+//   var tgt = $(el);
+//   tgt.parent().children(".active").removeClass("active");
+//   tgt.addClass("active");
 
-  if (click) tgt.click();
-}
+//   if (click) tgt.click();
+// }
 
-window.interval = null;
-$("#refresh > a").on("click", (e) => {
-  var tgt = $(e.currentTarget);
-  relClassClick(tgt, false);
+// window.interval = null;
+// $("#refresh > a").on("click", (e) => {
+//   var tgt = $(e.currentTarget);
+//   relClassClick(tgt, false);
 
-  if (parseInt(tgt.data("refresh")) !== 0) {
-    window.options.refreshChange = true;
-    window.options.refresh = parseInt(tgt.data("refresh"));
+//   if (parseInt(tgt.data("refresh")) !== 0) {
+//     window.options.refreshChange = true;
+//     window.options.refresh = parseInt(tgt.data("refresh"));
 
-    interval = setInterval(() => {
-      window.Turbolinks.visit(window.location.href);
-    }, (parseInt(tgt.data("refresh")) * 1000));
-  } else {
-    if (interval) clearInterval(interval);
-  }
-});
+//     interval = setInterval(() => {
+//       window.Turbolinks.visit(window.location.href);
+//     }, (parseInt(tgt.data("refresh")) * 1000));
+//   } else {
+//     if (interval) clearInterval(interval);
+//   }
+// });
 
-$("#mostTimeConsuming .nav-tabs li > a").on("click", (e) => {
-  window.options.mostTimeConsumingChange = true;
-  window.options.mostTimeConsuming = $(e.currentTarget).attr("href");
-});
+// $("#mostTimeConsuming .nav-tabs li > a").on("click", (e) => {
+//   window.options.mostTimeConsumingChange = true;
+//   window.options.mostTimeConsuming = $(e.currentTarget).attr("href");
+// });
 
-$(document).on("turbolinks:load", (e) => {
-  // reloadActives();
-});
+// $(document).on("turbolinks:load", (e) => {
+//   reloadActives();
+// });
 
 $(document).on('click', '.navbar-toggler', function () {
   $toggle = $(this);
