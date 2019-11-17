@@ -193,7 +193,7 @@ const metrics = model => {
     ];
 
     const ret = await model.aggregate(aggs).toArray();
-    return formatMetrics(ret[0]);
+    return ret[0] ? formatMetrics(ret[0]) : ret[0];
   };
 };
 

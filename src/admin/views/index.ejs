@@ -116,133 +116,144 @@
       <!-- End Navbar -->
       <div class="content">
         <div class="container-fluid">
-          <div class="row">
-            <div class="col-lg-6 col-md-6 col-sm-6">
-              <div class="card card-stats">
-                <div class="card-header card-header-success card-header-icon">
-                  <div class="card-icon">
-                    <i class="material-icons">visibility</i>
+          <% if(hasData) { %>
+            <div class="row">
+              <div class="col-lg-6 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                  <div class="card-header card-header-success card-header-icon">
+                    <div class="card-icon">
+                      <i class="material-icons">visibility</i>
+                    </div>
+                    <p class="card-category">Total Scanned</p>
+                    <h3 class="card-title">
+                      <%= metrics.total %>
+                        <small>pages</small>
+                    </h3>
                   </div>
-                  <p class="card-category">Total Scanned</p>
-                  <h3 class="card-title">
-                    <%= metrics.total %>
-                      <small>pages</small>
-                  </h3>
-                </div>
-                <div class="card-footer">
-                  <div class="stats">
-                    <i class="material-icons">update</i> Just Updated
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-6 col-md-6 col-sm-6">
-              <div class="card card-stats">
-                <div class="card-header card-header-info card-header-icon">
-                  <div class="card-icon">
-                    <i class="material-icons">access_time</i>
-                  </div>
-                  <p class="card-category">Average Time</p>
-                  <h3 class="card-title">
-                    <%= (metrics.avgTime / 1000).toString().replace(".",",") %>
-                      <small>s</small>
-                  </h3>
-                </div>
-                <div class="card-footer">
-                  <div class="stats">
-                    <i class="material-icons">update</i> Just Updated
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="card card-chart">
-                <div class="card-header card-header-success">
-                  <div class="ct-chart" id="totalStatusChart"></div>
-                </div>
-                <div class="card-body">
-                  <h4 class="card-title">Status Code x Total Scanned</h4>
-                  <p class="card-category">Status code per number of scanned.</p>
-                </div>
-                <div class="card-footer">
-                  <div class="stats">
-                    <i class="material-icons">update</i> Just Updated
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card card-chart">
-                <div class="card-header card-header-info">
-                  <div class="ct-chart" id="timeStatusChart"></div>
-                </div>
-                <div class="card-body">
-                  <h4 class="card-title">Status Code x Average Time (s)</h4>
-                  <p class="card-category">Status code per average time of scanned pages.</p>
-                </div>
-                <div class="card-footer">
-                  <div class="stats">
-                    <i class="material-icons">update</i> Just Updated
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-md-12">
-              <div class="card">
-                <div class="card-header card-header-tabs card-header-primary">
-                  <div id="mostTimeConsuming" class="nav-tabs-navigation">
-                    <div class="nav-tabs-wrapper">
-                      <span class="nav-tabs-title">Most time consuming pages per status code:</span>
-                      <ul class="nav nav-tabs" data-tabs="tabs">
-                        <% metrics.metrics.forEach(function(m){ %>
-                          <li class="nav-item">
-                            <% if (metrics.metrics[0].statusCode === m.statusCode) { %>
-                              <a class="nav-link active" href="#<%= 'status' + String(m.statusCode) %>" data-toggle="tab">
-                                <% } else { %>
-                                  <a class="nav-link" href="#<%= 'status' + String(m.statusCode) %>" data-toggle="tab">
-                                    <% } %>
-                                      <%= String(m.statusCode) %>
-                                  </a>
-                          </li>
-                          <% }); %>
-                      </ul>
+                  <div class="card-footer">
+                    <div class="stats">
+                      <i class="material-icons">update</i> Just Updated
                     </div>
                   </div>
                 </div>
-                <div class="card-body">
-                  <div class="tab-content">
-                    <% metrics.metrics.forEach(function(m){ %>
-                      <% if (metrics.metrics[0].statusCode === m.statusCode) { %>
-                        <div class="tab-pane active" id="<%= 'status' + String(m.statusCode) %>">
-                          <% } else { %>
-                            <div class="tab-pane" id="<%= 'status' + String(m.statusCode) %>">
-                              <% } %>
-                                <table class="table">
-                                  <tbody>
-                                    <% m.mostTimeConsuming.forEach(function(t){ %>
-                                      <tr>
-                                        <td>
-                                          <%= String(t.date) %>
-                                        </td>
-                                        <td>
-                                          <%= String(t.url) %>
-                                        </td>
-                                      </tr>
-                                      <% }); %>
-                                  </tbody>
-                                </table>
-                            </div>
-                            <% }); %>
-                        </div>
+              </div>
+              <div class="col-lg-6 col-md-6 col-sm-6">
+                <div class="card card-stats">
+                  <div class="card-header card-header-info card-header-icon">
+                    <div class="card-icon">
+                      <i class="material-icons">access_time</i>
+                    </div>
+                    <p class="card-category">Average Time</p>
+                    <h3 class="card-title">
+                      <%= (metrics.avgTime / 1000).toString().replace(".",",") %>
+                        <small>s</small>
+                    </h3>
+                  </div>
+                  <div class="card-footer">
+                    <div class="stats">
+                      <i class="material-icons">update</i> Just Updated
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card card-chart">
+                  <div class="card-header card-header-success">
+                    <div class="ct-chart" id="totalStatusChart"></div>
+                  </div>
+                  <div class="card-body">
+                    <h4 class="card-title">Status Code x Total Scanned</h4>
+                    <p class="card-category">Status code per number of scanned.</p>
+                  </div>
+                  <div class="card-footer">
+                    <div class="stats">
+                      <i class="material-icons">update</i> Just Updated
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card card-chart">
+                  <div class="card-header card-header-info">
+                    <div class="ct-chart" id="timeStatusChart"></div>
+                  </div>
+                  <div class="card-body">
+                    <h4 class="card-title">Status Code x Average Time (s)</h4>
+                    <p class="card-category">Status code per average time of scanned pages.</p>
+                  </div>
+                  <div class="card-footer">
+                    <div class="stats">
+                      <i class="material-icons">update</i> Just Updated
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card">
+                  <div class="card-header card-header-tabs card-header-primary">
+                    <div id="mostTimeConsuming" class="nav-tabs-navigation">
+                      <div class="nav-tabs-wrapper">
+                        <span class="nav-tabs-title">Most time consuming pages per status code:</span>
+                        <ul class="nav nav-tabs" data-tabs="tabs">
+                          <% metrics.metrics.forEach(function(m){ %>
+                            <li class="nav-item">
+                              <% if (metrics.metrics[0].statusCode === m.statusCode) { %>
+                                <a class="nav-link active" href="#<%= 'status' + String(m.statusCode) %>" data-toggle="tab">
+                                  <% } else { %>
+                                    <a class="nav-link" href="#<%= 'status' + String(m.statusCode) %>" data-toggle="tab">
+                                      <% } %>
+                                        <%= String(m.statusCode) %>
+                                    </a>
+                            </li>
+                            <% }); %>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="tab-content">
+                      <% metrics.metrics.forEach(function(m){ %>
+                        <% if (metrics.metrics[0].statusCode === m.statusCode) { %>
+                          <div class="tab-pane active" id="<%= 'status' + String(m.statusCode) %>">
+                            <% } else { %>
+                              <div class="tab-pane" id="<%= 'status' + String(m.statusCode) %>">
+                                <% } %>
+                                  <table class="table">
+                                    <tbody>
+                                      <% m.mostTimeConsuming.forEach(function(t){ %>
+                                        <tr>
+                                          <td>
+                                            <%= String(t.date) %>
+                                          </td>
+                                          <td>
+                                            <%= String(t.url) %>
+                                          </td>
+                                        </tr>
+                                        <% }); %>
+                                    </tbody>
+                                  </table>
+                              </div>
+                              <% }); %>
+                          </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <% } else { %>
+              <div class="card">
+                <div class="card-header card-header-primary">
+                  <h3 class="card-title">Data not found!</h3>
+                  <p class="card-category">This website there isn't data yet.</p>
+                </div>
+                <div class="card-body">
+                </div>
+              </div>
+              <% } %>
         </div>
         <footer class="footer">
           <div class="container-fluid">

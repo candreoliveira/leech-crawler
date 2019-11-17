@@ -25,7 +25,8 @@ router.get("/", async (req, res, next) => {
       website: website,
       websites: config.websites.map(v => v.name),
       type: type,
-      name: name
+      name: name,
+      hasData: !!metrics
     });
   } catch (e) {
     res.status(500).send(e);
