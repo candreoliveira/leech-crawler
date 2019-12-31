@@ -350,14 +350,21 @@ md = {
 
     if ($('#dailySalesChart').length != 0 || $('#completedTasksChart').length != 0 || $('#totalStatusChart').length != 0) {
       /* ----------==========     Chart initialization     ==========---------- */
-      var status = window._metrics.metrics.map(v => String(v.statusCode));
+      var statuses = window._metrics.metrics.map(v => String(v.statusCode));
       var totals = window._metrics.metrics.map(v => v.total);
       var times = window._metrics.metrics.map(v => (v.avgTime / 1000));
+
+      // Fix chartist 1 bar error
+      if (statuses.length === 1) {
+        statuses.push("0");
+        totals.push(0);
+        times.push(0);
+      }
 
       var totalStatusChart = Chartist.Bar(
         '#totalStatusChart',
         {
-          labels: status,
+          labels: statuses,
           series: [totals]
         },
         {
@@ -381,7 +388,7 @@ md = {
       var timeStatusChart = Chartist.Bar(
         '#timeStatusChart',
         {
-          labels: status,
+          labels: statuses,
           series: [times]
         },
         {
