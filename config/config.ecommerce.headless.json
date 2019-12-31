@@ -18,16 +18,16 @@
         "lru": {
           "max": 1000
         },
-        "retryDelay": 100,
+        "retryDelay": 500,
         "retry": 5,
         "retryOnEmpty": 5,
         "parserOptions": {
           "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
           "headless": true,
           "devtools": false,
-          "maxConnections": 1,
+          "maxConnections": 5,
           "pages": 5
-        }        
+        }
       },
       "dependency": {
         "category": {
@@ -91,7 +91,11 @@
               "method": "text"
             },
             {
-              "join": ["delivery", "time", "shipping"],
+              "join": [
+                "delivery",
+                "time",
+                "shipping"
+              ],
               "newKey": "freight",
               "list": true
             }
@@ -107,19 +111,19 @@
         "lru": {
           "max": 1000
         },
-        "retryDelay": 100,
+        "retryDelay": 999,
         "retry": 5,
         "retryOnEmpty": 5,
         "parserOptions": {
           "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
           "headless": true,
           "devtools": false,
-          "maxConnections": 1,
+          "maxConnections": 5,
           "pages": 5,
           "retryTimeout": 100,
           "timeout": 5000,
-          "retryDelay": 100
-        }            
+          "retryDelay": 1000
+        }
       },
       "pages": [
         {
@@ -140,11 +144,11 @@
                 "pattern": "\\%",
                 "options": "i",
                 "new": ""
-              }              
+              }
             }
           ]
         }
       ]
-    }    
+    }
   ]
 }

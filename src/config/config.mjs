@@ -66,7 +66,6 @@ yargs
 
 if (process.argv.indexOf("-b") > -1 || process.argv.indexOf("--b") > -1 ||
   process.argv.indexOf("-bot") > -1 || process.argv.indexOf("--bot") > -1) {
-  console.log(process.argv)
   yargs.demandOption(["page", "type", "cpu", "website", "bot"]);
 } else {
   yargs.demandOption(["admin"]);
