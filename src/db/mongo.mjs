@@ -17,7 +17,8 @@ const connect = async (config, env) => {
       poolSize: 50,
       minSize: 0,
       keepAlive: true,
-      loggerLevel: "warn"
+      loggerLevel: "warn",
+      useUnifiedTopology: true
     }
   );
 
