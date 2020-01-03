@@ -7,6 +7,20 @@
       "user": "crawl",
       "password": "crawl",
       "engine": "mongo"
+    },
+    "importer": {
+      "host": "127.0.0.1",
+      "name": "importer",
+      "user": "crawl",
+      "password": "crawl",
+      "engine": "mysql",
+      "query": "",
+      "mapping": {
+        "url": "urlCol",
+        "defaults": {
+          "name": "item"
+        }
+      }
     }
   },
   "websites": [
@@ -14,6 +28,7 @@
       "type": "headless",
       "name": "magalu",
       "domain": "https://www.magazineluiza.com.br",
+      "importer": true,
       "settings": {
         "lru": {
           "max": 1000

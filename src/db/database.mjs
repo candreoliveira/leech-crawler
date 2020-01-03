@@ -1,3 +1,5 @@
+import { promisify } from require('util');
+
 class Database {
   constructor(config, env) {
     this.config = config;
@@ -21,6 +23,15 @@ class Database {
         throw new Error(
           `[${this.config.type.toUpperCase()}] Engine not found.`
         );
+    }
+
+    if (this.config.importer) {
+      this.importer = {};
+      this.importer.db = await import("./importer/mysql.mjs");
+      this.importer.dbcli = await this.importer.db.connect(this.config.importer);
+      this.importer.pause = promisify(this.importer.dbcli.pause).bind(this.importer.dbcli);
+      this.importer.resume = promisify(this.importer.dbcli.resume).bind(this.importer.dbcli);
+      this.importer.end = promisify(this.importer.dbcli.end).bind(this.importer.dbcli);
     }
 
     this.dbcli = await this.db.connect(this.config, this.env);
