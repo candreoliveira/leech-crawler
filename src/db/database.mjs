@@ -1,4 +1,4 @@
-import { promisify } from require('util');
+import { promisify } from "util";
 
 class Database {
   constructor(config, env) {
@@ -28,15 +28,16 @@ class Database {
     if (this.config.importer) {
       this.importer = {};
       this.importer.db = await import("./importer/mysql.mjs");
-      this.importer.dbcli = await this.importer.db.connect(this.config.importer);
-      this.importer.pause = promisify(this.importer.dbcli.pause).bind(this.importer.dbcli);
-      this.importer.resume = promisify(this.importer.dbcli.resume).bind(this.importer.dbcli);
-      this.importer.end = promisify(this.importer.dbcli.end).bind(this.importer.dbcli);
+      this.importer.client = await this.importer.db.connect(this.config.importer);
+      this.importer.pause = promisify(this.importer.client.pause).bind(this.importer.client);
+      this.importer.resume = promisify(this.importer.client.resume).bind(this.importer.client);
+      this.importer.end = promisify(this.importer.client.end).bind(this.importer.client);
     }
 
     this.dbcli = await this.db.connect(this.config, this.env);
     this.sync = this.db.sync(this.dbcli.client, this.dbcli.model);
     this.findPages = this.db.findPages(this.dbcli.model.Page);
+    this.lastPageImported = this.db.lastPageImported(this.dbcli.model.Page);
     this.findOnePageByUrl = this.db.findOnePageByUrl(this.dbcli.model.Page);
     this.findOneItemByUrl = this.db.findOneItemByUrl(this.dbcli.model.Item);
     this.restartPages = this.db.restartPages(this.dbcli.model.Page);

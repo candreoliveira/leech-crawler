@@ -70,6 +70,24 @@ const sync = (client, model) => {
   };
 };
 
+const lastPageImported = model => {
+  return async params => {
+    const r = await model
+      .find({
+        name: params.name,
+        website: params.website,
+        PageId: null,
+        processedAt: { $exists: true },
+        startedAt: { $exists: true }
+      }, { limit: 1 })
+      .sort({ processedAt: -1 })
+      .toArray();
+
+    if (r[0] && r[0]._id) r[0].id = r[0]._id.toString();
+    return r[0];
+  }
+}
+
 const findPages = model => {
   return async params => {
     const r = await model
@@ -305,6 +323,7 @@ export {
   connect,
   sync,
   findPages,
+  lastPageImported,
   findOnePageByUrl,
   findOneItemByUrl,
   upsertPage,

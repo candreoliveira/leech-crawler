@@ -10,13 +10,13 @@
     },
     "importer": {
       "host": "127.0.0.1",
-      "name": "importer",
-      "user": "crawl",
-      "password": "crawl",
+      "name": "test",
+      "user": "root",
+      "password": "",
       "engine": "mysql",
-      "query": "",
+      "query": "SELECT url FROM test.temp",
       "mapping": {
-        "url": "urlCol",
+        "url": "url",
         "defaults": {
           "name": "item"
         }

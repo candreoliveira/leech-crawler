@@ -54,8 +54,15 @@ const run = async cfg => {
     );
 
     try {
-      runners += 1;
       await crawl.import();
+    } catch (err) {
+      cfg.log("ERROR", `Closing ${getStacktrace(err)}`);
+      await crawl.close();
+      process.exit(0);
+    }
+
+    try {
+      runners += 1;
       await crawl.start();
     } catch (err) {
       cfg.log("ERROR", `Closing ${getStacktrace(err)}`);

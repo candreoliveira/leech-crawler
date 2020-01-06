@@ -410,19 +410,19 @@ class Crawler {
     // Do nothing
     return;
   }
-  
+
   async import() {
-    const oneDay = 60 * 60 * 24 * 1000;
+    const time = 60 * 60 * 24 * 1000;
     const urlKey = this.db.config.importer.mappings && this.db.config.importer.mappings.url ? this.db.config.importer.mappings.url : "url";
     const defaultName = this.db.config.importer.defaults && this.db.config.importer.defaults.name ? this.db.config.importer.defaults.name : "importer";
-    
+
     const processRow = async (row) => {
       return await this.upsertObject({
-          url: getUrl(this.crawl.config.domain, row[urlKey]),
-          name: defaultName,
-          type: this.type,
-          website: this.website
-        },
+        url: getUrl(this.crawl.config.domain, row[urlKey]),
+        name: defaultName,
+        type: this.type,
+        website: this.website
+      },
         "Page",
         0,
         true
@@ -430,37 +430,35 @@ class Crawler {
     };
 
     const page = await this.db.lastPageImported({
-      website,
-      name: defaultName,
-      PageId: null
+      website: this.website,
+      name: defaultName
     });
 
-    if ((!page || ((new Date) - page.processedAt > oneDay)) 
-      && this.db.config && this.db.config.importer && config.importer.query) {
-      const query = this.importer.dbcli.query(this.db.config.importer.query);
-      
-      query.on('error', (err) => {
-        // Handle error, an 'end' event will be emitted after this as well
-        console.log("ERR", err);
-      })
-      .on('fields', (fields) => {
-        // the field packets for the rows to follow
-        console.log("FIELDS", fields);
-      })
-      .on('result', async (row) => {
-        await this.importer.pause();
+    if ((!page || ((new Date) - page.processedAt > time))
+      && this.db.config && this.db.config.importer && this.db.config.importer.query) {
+      const query = this.db.importer.client.query(this.db.config.importer.query);
+
+      query.on("error", (err) => {
+        this.log(
+          "WARN",
+          `[${this.crawl.config.type.toUpperCase()}] Error running importer ${getStacktrace(
+            err
+          )}.`
+        );
+      }).on("result", async (row) => {
         await processRow(row);
-        await this.importer.resume();
-      })
-      .on('end', () => this.importer.end());
-    } else {
-      this.importer.end();
+      }).on("end", () => {
+        try {
+          this.db.importer.end();
+        } catch (e) {
+          this.sendError(`${msg} ${errors}.`);
+        }
+      });
     }
 
-    // Do nothing
-    return;    
+    return;
   }
-  
+
   async close() {
     await sleep(5000);
     await this.db.close();
