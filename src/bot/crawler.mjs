@@ -434,7 +434,8 @@ class Crawler {
           url: getUrl(this.crawl.config.domain, row[urlKey]),
           name: defaultName,
           type: this.type,
-          website: this.website
+          website: this.website,
+          importer: true
         },
         "Page",
         0,
