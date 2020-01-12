@@ -11,8 +11,8 @@
     "importer": {
       "host": "127.0.0.1",
       "name": "test",
-      "user": "root",
-      "password": "",
+      "user": "crawl",
+      "password": "crawl",
       "engine": "mysql",
       "query": "SELECT url FROM test.temp",
       "mapping": {
@@ -106,11 +106,7 @@
               "method": "text"
             },
             {
-              "join": [
-                "delivery",
-                "time",
-                "shipping"
-              ],
+              "join": ["delivery", "time", "shipping"],
               "newKey": "freight",
               "list": true
             }
