@@ -417,18 +417,21 @@ class Crawler {
 
   async import() {
     const time = 60 * 60 * 24 * 1000;
-    const urlKey =
-      this.db.config.importer.mapping && this.db.config.importer.mapping.url
+    const urlKey = this.db.config && this.db.config.importer && this.db.config.importer.mapping && this.db.config.importer.mapping.url
         ? this.db.config.importer.mapping.url
         : "url";
-    const defaultName =
-      this.db.config.importer.mapping &&
+    const defaultName = this.db.config && this.db.config.importer && this.db.config.importer.mapping &&
       this.db.config.importer.mapping.defaults &&
       this.db.config.importer.mapping.defaults.name
         ? this.db.config.importer.mapping.defaults.name
         : "importer";
 
     const processRow = async row => {
+      this.log(
+        "DEBUG",
+        `[${this.crawl.config.type.toUpperCase()}] Importer processing row.`
+      );
+
       return await this.upsertObject(
         {
           url: getUrl(this.crawl.config.domain, row[urlKey]),
@@ -452,23 +455,34 @@ class Crawler {
       (!page || new Date() - page.processedAt > time) &&
       this.db.config &&
       this.db.config.importer &&
-      this.db.config.importer.query
+      this.db.config.importer.query &&
+      this.db.config.importer.query.block &&
+      this.db.config.importer.query.count &&
+      this.db.config.importer.block
     ) {
-      const query = this.db.importer.client.query(
-        this.db.config.importer.query
-      );
-
-      query
+      const count = this.db.importer.client.query(this.db.config.importer.query.count);
+      count
         .on("error", err => {
           this.log(
             "ERROR",
-            `[${this.crawl.config.type.toUpperCase()}] Error running importer ${getStacktrace(
-              err
-            )}.`
+            `[${this.crawl.config.type.toUpperCase()}] Error running importer ${getStacktrace(err)} counter.`
           );
         })
-        .on("result", async row => {
-          await processRow(row);
+        .on("result", async count => {
+          for (let i=0; i<count; i+=this.db.config.importer.block) {
+            const q = this.db.config.importer.query + " and limit " + this.db.config.importer.block + " offset " + i;
+            const query = this.db.importer.client.query(q);
+            query
+              .on("error", err => {
+                this.log(
+                  "ERROR",
+                  `[${this.crawl.config.type.toUpperCase()}] Error running importer ${getStacktrace(err)} idx ${i}.`
+                );
+              })
+              .on("result", async row => {
+                await processRow(row);
+              });
+          }
         });
     }
 

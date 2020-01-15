@@ -1,4 +1,6 @@
 import { default as express } from "express";
+import { default as moment } from "moment";
+
 var router = express.Router();
 
 const getMetrics = async (database, website = undefined, name = undefined, type = undefined, limit = 50) => {
@@ -26,7 +28,8 @@ router.get("/", async (req, res, next) => {
       websites: config.websites.map(v => v.name),
       type: type,
       name: name,
-      hasData: !!metrics
+      hasData: !!metrics,
+      moment: moment
     });
   } catch (e) {
     res.status(500).send(e);

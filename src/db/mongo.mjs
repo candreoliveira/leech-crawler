@@ -191,12 +191,12 @@ const metrics = model => {
           _id: "$status",
           statusTotal: { $sum: parseInt(1) },
           statusAvgTime: { $avg: "$time" },
-          statusUrlsDate: { $push: { url: "$url", date: "$date" } }
+          statusUrlDateTime: { $push: { url: "$url", date: "$date", time: "$time" } }
         }
       },
       {
         $project: {
-          statusUrlsDate: { $slice: ["$statusUrlsDate", params.limit] },
+          statusUrlDateTime: { $slice: ["$statusUrlDateTime", params.limit] },
           statusAvgTime: 1,
           statusTotal: 1
         }
@@ -226,7 +226,7 @@ const formatMetrics = (res) => {
         statusCode: v._id,
         total: v.statusTotal,
         avgTime: v.statusAvgTime,
-        mostTimeConsuming: v.statusUrlsDate
+        mostTimeConsuming: v.statusUrlDateTime
       };
     })
   };

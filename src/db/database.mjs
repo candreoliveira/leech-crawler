@@ -32,6 +32,7 @@ class Database {
       this.importer.pause = promisify(this.importer.client.pause).bind(this.importer.client);
       this.importer.resume = promisify(this.importer.client.resume).bind(this.importer.client);
       this.importer.end = promisify(this.importer.client.end).bind(this.importer.client);
+      this.importer.query = promisify(this.importer.client.query).bind(this.importer.client);
     }
 
     this.dbcli = await this.db.connect(this.config, this.env);

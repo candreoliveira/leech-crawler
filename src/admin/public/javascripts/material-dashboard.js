@@ -356,7 +356,7 @@ md = {
 
       // Fix chartist 1 bar error
       if (statuses.length === 1) {
-        statuses.push("null");
+        statuses.push("Loading");
         totals.push(0);
         times.push(0);
       }

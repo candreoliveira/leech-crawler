@@ -7,20 +7,6 @@
       "user": "crawl",
       "password": "crawl",
       "engine": "mongo"
-    },
-    "importer": {
-      "host": "127.0.0.1",
-      "name": "test",
-      "user": "crawl",
-      "password": "crawl",
-      "engine": "mysql",
-      "query": "SELECT url FROM test.temp",
-      "mapping": {
-        "url": "url",
-        "defaults": {
-          "name": "item"
-        }
-      }
     }
   },
   "websites": [

@@ -227,7 +227,10 @@
                                       <% m.mostTimeConsuming.forEach(function(t){ %>
                                         <tr>
                                           <td>
-                                            <%= String(t.date) %>
+                                            <%= moment(String(t.date)).format('DD/MM/YYYY'); %>
+                                          </td>
+                                          <td>
+                                            <%= String(t.time/1000) + 's' %>
                                           </td>
                                           <td>
                                             <%= String(t.url) %>
@@ -273,7 +276,7 @@
     <!-- Plugin for the pjax  -->
     <!-- <script src="assets/jquery-pjax/jquery.pjax.js"></script> -->
     <!-- Plugin for the momentJs  -->
-    <!-- <script src="assets/material-dashboard/assets/js/plugins/moment.min.js"></script> -->
+    <script src="assets/moment/min/moment.min.js"></script>
     <!--  Plugin for Sweet Alert -->
     <!-- <script src="assets/material-dashboard/assets/js/plugins/sweetalert2.js"></script> -->
     <!-- Forms Validations Plugin -->
