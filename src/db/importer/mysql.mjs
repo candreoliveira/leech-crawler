@@ -5,7 +5,8 @@ const connect = async (config) => {
     host: config.host,
     user: config.user,
     password: config.password,
-    database: config.name
+    database: config.name,
+    connectTimeout: 30000
   });
 
   connection.connect();
