@@ -416,6 +416,11 @@ class Crawler {
   }
 
   async import() {
+    this.log(
+      "DEBUG",
+      `[${this.crawl.config.type.toUpperCase()}] Starting importer.`
+    );
+
     const time = 60 * 60 * 24 * 1000;
     const urlKey = this.db.config && this.db.config.importer && this.db.config.importer.mapping && this.db.config.importer.mapping.url
         ? this.db.config.importer.mapping.url
@@ -468,9 +473,9 @@ class Crawler {
             `[${this.crawl.config.type.toUpperCase()}] Error running importer ${getStacktrace(err)} counter.`
           );
         })
-        .on("result", async count => {
-          for (let i=0; i<count; i+=this.db.config.importer.block) {
-            const q = this.db.config.importer.query.block + " and limit " + this.db.config.importer.block + " offset " + i;
+        .on("result", async r => {
+          for (let i=0; i < r.count; i+=this.db.config.importer.block) {
+            const q = `${this.db.config.importer.query.block} limit ${this.db.config.importer.block} offset ${i}`;
             const query = this.db.importer.client.query(q);
             query
               .on("error", err => {
@@ -486,6 +491,10 @@ class Crawler {
         });
     }
 
+    this.log(
+      "DEBUG",
+      `[${this.crawl.config.type.toUpperCase()}] Completing importer.`
+    );    
     return;
   }
 

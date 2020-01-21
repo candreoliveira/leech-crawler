@@ -10,15 +10,15 @@
     },
     "importer": {
       "host": "127.0.0.1",
-      "port": 3306,
+      "port": 27017,
       "name": "crawler",
       "user": "crawl",
       "password": "crawl",
       "engine": "mysql",
       "block": 100,
       "query": {
-        "count": "",
-        "block": ""
+        "count": "select count(*) as count from ",
+        "block": "select url as url from "
       },
       "mapping": {
         "url": "url",
