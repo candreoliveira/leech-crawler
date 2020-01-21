@@ -7,6 +7,25 @@
       "user": "crawl",
       "password": "crawl",
       "engine": "mongo"
+    },
+    "importer": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "name": "crawler",
+      "user": "crawl",
+      "password": "crawl",
+      "engine": "mysql",
+      "block": 100,
+      "query": {
+        "count": "",
+        "block": ""
+      },
+      "mapping": {
+        "url": "url",
+        "defaults": {
+          "name": "item"
+        }
+      }
     }
   },
   "websites": [

@@ -470,7 +470,7 @@ class Crawler {
         })
         .on("result", async count => {
           for (let i=0; i<count; i+=this.db.config.importer.block) {
-            const q = this.db.config.importer.query + " and limit " + this.db.config.importer.block + " offset " + i;
+            const q = this.db.config.importer.query.block + " and limit " + this.db.config.importer.block + " offset " + i;
             const query = this.db.importer.client.query(q);
             query
               .on("error", err => {
