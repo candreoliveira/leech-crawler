@@ -151,6 +151,7 @@ const restartPages = (model) => {
       {
         website: params.website,
         name: params.name,
+        type: params.type,
       },
       {
         $set: {
@@ -179,7 +180,7 @@ const countItems = countPages;
 
 const metrics = (model) => {
   return async (params) => {
-    const tmp = {};
+    const tmp = { category: "PARSER" };
     if (params.website) tmp.website = params.website;
     if (params.name) tmp.website = params.name;
     if (params.type) tmp.website = params.type;
@@ -244,7 +245,7 @@ const formatMetrics = (res) => {
 const upsertPage = (model) => {
   return async (doc, upsert = false) => {
     const { id, serial, data } = doc;
-    const filter = {};
+    let filter = {};
 
     if (serial) {
       filter["serial"] = serial;
@@ -284,7 +285,7 @@ const upsertPage = (model) => {
 
 const upsertItem = upsertPage;
 
-const upsertMetric = (model) => {
+const upsertMetric = (model, category = "PARSER") => {
   return async (doc, tryToGetPage = false, slip = 1000) => {
     await sleep(slip);
 
@@ -294,11 +295,11 @@ const upsertMetric = (model) => {
     }
 
     const { id, serial, data } = doc;
-    const filter = {};
+    let filter = {};
     if (serial) {
-      filter["serial"] = serial;
+      filter.serial = serial;
     } else if (id) {
-      filter["_id"] = new Mongodb.ObjectID(id);
+      filter._id = new Mongodb.ObjectID(id);
     } else if (data && data.pageSerial) {
       filter["data.pageSerial"] = data.pageSerial;
     } else {
@@ -308,7 +309,10 @@ const upsertMetric = (model) => {
     const r = await model.findOneAndUpdate(
       filter,
       {
-        $set: doc,
+        $set: {
+          category,
+          ...doc,
+        },
       },
       { upsert: true, returnNewDocument: true }
     );
@@ -327,6 +331,10 @@ const upsertMetric = (model) => {
   };
 };
 
+const upsertErrorMetric = (model) => {
+  return upsertMetric(model, "CONFIG");
+};
+
 export {
   connect,
   sync,
@@ -336,6 +344,7 @@ export {
   findOneItemByUrl,
   upsertPage,
   upsertMetric,
+  upsertErrorMetric,
   upsertItem,
   countItems,
   countPages,

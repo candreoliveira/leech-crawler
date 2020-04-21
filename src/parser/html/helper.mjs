@@ -128,15 +128,18 @@ const parseDataWithJoin = (previousParsedPage, array) => {
   });
 };
 
+// $ => cheerio html loaded, element => page config element, selector => current value from content array
 const getValueFromSelector = ($, element, selector, domain) => {
   let output = null;
   let gotData = false;
+
+  // Transform selector to array
   selector = Array.isArray(selector) ? selector : [selector];
 
   // Is a method text?
   if (selector && element.method === "text") {
     gotData = true;
-    output = selector.map((e, i) => {
+    output = selector.map((e) => {
       return htmlToText.fromString($(e).html(), {
         linkHrefBaseUrl: domain,
         wordwrap: false,
@@ -147,7 +150,7 @@ const getValueFromSelector = ($, element, selector, domain) => {
     // Is a method?
   } else if (selector && element.method) {
     gotData = true;
-    output = selector.map((e, i) => {
+    output = selector.map((e) => {
       return $(e)[element.method]();
     });
   }
@@ -179,7 +182,7 @@ const getValueFromSelector = ($, element, selector, domain) => {
 
   // Default
   if (selector && !gotData) {
-    output = selector.map((e, i) => {
+    output = selector.map((e) => {
       return e;
     });
   }
@@ -214,9 +217,11 @@ const getValueFromSelector = ($, element, selector, domain) => {
   return output;
 };
 
+// $ => html content, array => pageConfig, $ => cheerio obj with html loaded
 const parseDataWithSelector = ($, domain, array, logger) => {
   let output = {};
 
+  // Loop page config data
   array.forEach((element) => {
     if (typeof element !== "object")
       return logger(
@@ -230,14 +235,21 @@ const parseDataWithSelector = ($, domain, array, logger) => {
 
     if (Array.isArray(element.selector)) {
       for (let i = 0; i < element.selector.length; i++) {
+        // Content array from html
         const tmp = Array.from($(element.selector[i]));
+
+        // Push content array on selectors array
         selectors.push(tmp);
+
         if (tmp.length > selector.length) {
+          // Bigger array of content on selector
           selector = tmp;
         }
       }
 
       let values = [];
+
+      // Loop the bigger array of content
       for (let i = 0; i < selector.length; i++) {
         // This value can be empty or null
         let value = getValueFromSelector($, element, selector[i], domain)[0];
@@ -251,6 +263,11 @@ const parseDataWithSelector = ($, domain, array, logger) => {
           }
         }
 
+        // Value is the content and cant be empty otherwise the config is not working for this page
+        if (!value || (Array.isArray(value) && value.length === 0)) {
+          throw createErrorOnEmpty(element.selector, domain);
+        }
+
         values.push(value);
       }
 
@@ -258,7 +275,14 @@ const parseDataWithSelector = ($, domain, array, logger) => {
       output = { ...output, ...niw };
     } else {
       selector = Array.from($(element.selector));
-      niw[element.newKey] = getValueFromSelector($, element, selector, domain);
+      const value = getValueFromSelector($, element, selector, domain);
+
+      // Value is the content and cant be empty otherwise the config is not working for this page
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        throw createErrorOnEmpty(element.selector, domain);
+      }
+
+      niw[element.newKey] = value;
       output = { ...output, ...niw };
     }
 
@@ -289,6 +313,14 @@ const parseDataWithSelector = ($, domain, array, logger) => {
   });
 
   return output;
+};
+
+const createErrorOnEmpty = (selector, domain) => {
+  const e = new Error();
+  e.message = `Selector ${selector.toString()} not working on ${domain}!`;
+  e.selector = Array.isArray(selector) ? selector : [selector];
+  e.domain = domain;
+  return e;
 };
 
 // {label: [string], value: [string], description: [string], name: [string]}

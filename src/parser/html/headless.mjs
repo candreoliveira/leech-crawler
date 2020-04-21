@@ -13,8 +13,8 @@ const exposeFunction = ({
   uri,
   start,
   resolve,
-  reject
-}) => async html => {
+  reject,
+}) => async (html) => {
   const date = new Date();
 
   instance.db.upsertMetric({
@@ -24,7 +24,7 @@ const exposeFunction = ({
     time: new Date() - start,
     type: instance.config.type,
     website: instance.config.name,
-    name: parg
+    name: parg,
   });
 
   let output = {
@@ -32,8 +32,8 @@ const exposeFunction = ({
     nextPages: [],
     meta: {
       date: date,
-      url: getUrl(domain, uri.href)
-    }
+      url: getUrl(domain, uri.href),
+    },
   };
   const $ = cheerio.load(html);
 
@@ -43,26 +43,42 @@ const exposeFunction = ({
 
     reject(err);
   } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
-    const parsedPage = parser(
-      $,
-      domain,
-      uri,
-      parg,
-      instance.config.pages,
-      instance.config.name,
-      instance.log
-    );
+    let parsedPage;
+
+    try {
+      parsedPage = parser(
+        $,
+        domain,
+        uri,
+        parg,
+        instance.config.pages,
+        instance.config.name,
+        instance.log
+      );
+    } catch (e) {
+      instance.db.upsertErrorMetric({
+        serial: sha256(getUrl(domain, uri.href)),
+        date: date,
+        url: getUrl(domain, uri.href),
+        time: new Date() - start,
+        type: instance.config.type,
+        website: instance.config.name,
+        name: parg,
+        selector: e.selector,
+      });
+
+      reject(e.message);
+      instance.log("ERROR", `[HEADLESS] ${e.message}`);
+    }
 
     // Save all nextPages on output
-    parsedPage.nextPages.forEach(pages => {
+    parsedPage.nextPages.forEach((pages) => {
       output.nextPages = output.nextPages.concat(pages);
     });
 
     instance.log(
       "INFO",
-      `[HEADLESS] Completing parsing ${
-        parsedPage.result.length
-      } page(s) ${uri}...`
+      `[HEADLESS] Completing parsing ${parsedPage.result.length} page(s) ${uri}...`
     );
 
     output.yield = parsedPage.result;
@@ -88,7 +104,7 @@ class Headless extends Parser {
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--ignore-certificate-errors"
+        "--ignore-certificate-errors",
       ],
       headless: true,
       devtools: false,
@@ -99,18 +115,18 @@ class Headless extends Parser {
       retryCount: 10,
       retryDelay: 1000,
       timeout: 30000,
-      onSuccess: res => {
+      onSuccess: (res) => {
         this.db.upsertMetric(
           {
             date: res.result.meta.date,
             serial: sha256(getUrl(res.result.meta.domain, res.options.url)),
             url: res.result.meta.url,
-            status: res.response.status
+            status: res.response.status,
           },
           true
         );
       },
-      ...this.config.parserOptions
+      ...this.config.parserOptions,
     });
   }
 
@@ -125,7 +141,7 @@ class Headless extends Parser {
     let uris;
 
     if (Array.isArray(urls)) {
-      uris = urls.map(url =>
+      uris = urls.map((url) =>
         getUrl(this.config.domain, url.url || this.config.rootUrl)
       );
     } else {
@@ -137,14 +153,14 @@ class Headless extends Parser {
     // TODO: Reprocess only error page
     return await Promise.all(
       uris.map(
-        uri =>
+        (uri) =>
           new Promise((resolve, reject) => {
             this.parser.queue({
               url: uri,
               userAgent: userAgent("rotate", this.args.website),
               evaluatePage: async (config, parg) => {
                 const promises = [];
-                config.pages.forEach(page => {
+                config.pages.forEach((page) => {
                   const isPargEqName =
                     parg &&
                     page.name === parg &&
@@ -153,10 +169,10 @@ class Headless extends Parser {
                   const hasNotParg =
                     !parg && page.preprocess && Array.isArray(page.preprocess);
                   if (isPargEqName || hasNotParg) {
-                    page.preprocess.forEach(pre => {
+                    page.preprocess.forEach((pre) => {
                       const result = new Function(pre.script)();
                       if (result && Array.isArray(result)) {
-                        result.forEach(r => {
+                        result.forEach((r) => {
                           promises.push(r);
                         });
                       } else {
@@ -181,9 +197,9 @@ class Headless extends Parser {
                   uri: new URL(uri),
                   start: new Date(),
                   resolve,
-                  reject
-                })
-              ]
+                  reject,
+                }),
+              ],
             });
           })
       )

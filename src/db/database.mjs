@@ -28,10 +28,18 @@ class Database {
     if (this.config.importer) {
       this.importer = {};
       this.importer.db = await import("./importer/mysql.mjs");
-      this.importer.client = await this.importer.db.connect(this.config.importer);
-      this.importer.pause = promisify(this.importer.client.pause).bind(this.importer.client);
-      this.importer.resume = promisify(this.importer.client.resume).bind(this.importer.client);
-      this.importer.end = promisify(this.importer.client.end).bind(this.importer.client);
+      this.importer.client = await this.importer.db.connect(
+        this.config.importer
+      );
+      this.importer.pause = promisify(this.importer.client.pause).bind(
+        this.importer.client
+      );
+      this.importer.resume = promisify(this.importer.client.resume).bind(
+        this.importer.client
+      );
+      this.importer.end = promisify(this.importer.client.end).bind(
+        this.importer.client
+      );
     }
 
     this.dbcli = await this.db.connect(this.config, this.env);
@@ -46,6 +54,7 @@ class Database {
     this.upsertItem = this.db.upsertItem(this.dbcli.model.Item);
     this.upsertPage = this.db.upsertPage(this.dbcli.model.Page);
     this.upsertMetric = this.db.upsertMetric(this.dbcli.model.Metric);
+    this.upsertErrorMetric = this.db.upsertErrorMetric(this.dbcli.model.Metric);
     this.metrics = this.db.metrics(this.dbcli.model.Metric);
   }
 }
