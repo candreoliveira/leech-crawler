@@ -131,7 +131,6 @@
       "type": "headless",
       "name": "magalu",
       "domain": "https://www.magazineluiza.com.br",
-      "importer": true,
       "settings": {
         "lru": {
           "max": 1000
