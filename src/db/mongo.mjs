@@ -5,12 +5,14 @@ import sha256 from "sha256";
 const connect = async (config, env) => {
   let db;
   const client = new Mongodb.MongoClient(
-    `mongodb${process.env.DB_SRV || config[env].srv ? "+srv" : ""}://${process
-      .env.DB_USER || config[env].user}:${process.env.DB_PASS ||
-      config[env].password}@${process.env.DB_HOST || config[env].host}${
-    process.env.DB_SRV || config[env].srv
-      ? ""
-      : ":" + (process.env.DB_PORT || config[env].port)
+    `mongodb${process.env.DB_SRV || config[env].srv ? "+srv" : ""}://${
+      process.env.DB_USER || config[env].user
+    }:${process.env.DB_PASS || config[env].password}@${
+      process.env.DB_HOST || config[env].host
+    }${
+      process.env.DB_SRV || config[env].srv
+        ? ""
+        : ":" + (process.env.DB_PORT || config[env].port)
     }/${process.env.DB_NAME || config[env].name}`,
     {
       useNewUrlParser: true,
@@ -18,7 +20,7 @@ const connect = async (config, env) => {
       minSize: 0,
       keepAlive: true,
       loggerLevel: "warn",
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     }
   );
 
@@ -53,8 +55,8 @@ const connect = async (config, env) => {
     model: {
       Page,
       Item,
-      Metric
-    }
+      Metric,
+    },
   };
 };
 
@@ -66,30 +68,35 @@ const sync = (client, model) => {
     await model.Page.drop();
     await model.Item.drop();
     await model.Metric.drop();
-    return await Promise.resolve("[Mongodb] Mongodb collections and indexes dropped.");
+    return await Promise.resolve(
+      "[Mongodb] Mongodb collections and indexes dropped."
+    );
   };
 };
 
-const lastPageImported = model => {
-  return async params => {
+const lastPageImported = (model) => {
+  return async (params) => {
     const r = await model
-      .find({
-        name: params.name,
-        website: params.website,
-        PageId: null,
-        processedAt: { $exists: true },
-        startedAt: { $exists: true }
-      }, { limit: 1 })
+      .find(
+        {
+          name: params.name,
+          website: params.website,
+          PageId: null,
+          processedAt: { $exists: true },
+          startedAt: { $exists: true },
+        },
+        { limit: 1 }
+      )
       .sort({ processedAt: -1 })
       .toArray();
 
     if (r[0] && r[0]._id) r[0].id = r[0]._id.toString();
     return r[0];
-  }
-}
+  };
+};
 
-const findPages = model => {
-  return async params => {
+const findPages = (model) => {
+  return async (params) => {
     const r = await model
       .find(
         {
@@ -97,16 +104,16 @@ const findPages = model => {
           type: params.type,
           website: params.website,
           processedAt: params.processedAt,
-          startedAt: params.startedAt
+          startedAt: params.startedAt,
         },
         {
-          limit: params.limit
+          limit: params.limit,
         }
       )
       .toArray();
 
     if (Array.isArray(r)) {
-      return r.map(v => {
+      return r.map((v) => {
         if (v._id) v.id = v._id.toString();
         return v;
       });
@@ -116,10 +123,10 @@ const findPages = model => {
   };
 };
 
-const findOnePageByUrl = model => {
-  return async url => {
+const findOnePageByUrl = (model) => {
+  return async (url) => {
     const r = await model.findOne({
-      serial: sha256(url)
+      serial: sha256(url),
     });
 
     if (r && r._id) r.id = r._id.toString();
@@ -127,10 +134,10 @@ const findOnePageByUrl = model => {
   };
 };
 
-const findOneItemByUrl = model => {
-  return async url => {
+const findOneItemByUrl = (model) => {
+  return async (url) => {
     const r = await model.findOne({
-      "data.pageSerial": sha256(url)
+      "data.pageSerial": sha256(url),
     });
 
     if (r && r._id) r.id = r._id.toString();
@@ -138,41 +145,40 @@ const findOneItemByUrl = model => {
   };
 };
 
-const restartPages = model => {
-  return async params => {
+const restartPages = (model) => {
+  return async (params) => {
     return await model.updateMany(
       {
         website: params.website,
         name: params.name,
-        type: params.type
       },
       {
         $set: {
           processedAt: params.processedAt,
-          startedAt: params.startedAt
-        }
+          startedAt: params.startedAt,
+        },
       },
       { upsert: false }
     );
   };
 };
 
-const countPages = model => {
-  return async params => {
+const countPages = (model) => {
+  return async (params) => {
     return await model.countDocuments({
       website: params.website,
       name: params.name,
       type: params.type,
       processedAt: params.processedAt,
-      startedAt: params.startedAt
+      startedAt: params.startedAt,
     });
   };
 };
 
 const countItems = countPages;
 
-const metrics = model => {
-  return async params => {
+const metrics = (model) => {
+  return async (params) => {
     const tmp = {};
     if (params.website) tmp.website = params.website;
     if (params.name) tmp.website = params.name;
@@ -181,34 +187,36 @@ const metrics = model => {
 
     const aggs = [
       {
-        $match: tmp
+        $match: tmp,
       },
       {
-        $sort: { time: -1 }
+        $sort: { time: -1 },
       },
       {
         $group: {
           _id: "$status",
           statusTotal: { $sum: parseInt(1) },
           statusAvgTime: { $avg: "$time" },
-          statusUrlDateTime: { $push: { url: "$url", date: "$date", time: "$time" } }
-        }
+          statusUrlDateTime: {
+            $push: { url: "$url", date: "$date", time: "$time" },
+          },
+        },
       },
       {
         $project: {
           statusUrlDateTime: { $slice: ["$statusUrlDateTime", params.limit] },
           statusAvgTime: 1,
-          statusTotal: 1
-        }
+          statusTotal: 1,
+        },
       },
       {
         $group: {
           _id: null,
           avgTime: { $avg: "$statusAvgTime" },
           total: { $sum: "$statusTotal" },
-          metrics: { $push: "$$ROOT" }
-        }
-      }
+          metrics: { $push: "$$ROOT" },
+        },
+      },
     ];
 
     const ret = await model.aggregate(aggs).toArray();
@@ -226,14 +234,14 @@ const formatMetrics = (res) => {
         statusCode: v._id,
         total: v.statusTotal,
         avgTime: v.statusAvgTime,
-        mostTimeConsuming: v.statusUrlDateTime
+        mostTimeConsuming: v.statusUrlDateTime,
       };
-    })
+    }),
   };
   return output;
-}
+};
 
-const upsertPage = model => {
+const upsertPage = (model) => {
   return async (doc, upsert = false) => {
     const { id, serial, data } = doc;
     const filter = {};
@@ -255,7 +263,7 @@ const upsertPage = model => {
     const r = await model.findOneAndUpdate(
       filter,
       {
-        $set: tmp
+        $set: tmp,
       },
       { upsert: upsert, returnNewDocument: true }
     );
@@ -269,14 +277,14 @@ const upsertPage = model => {
     return {
       id: r.id,
       ...r.value,
-      ...doc
+      ...doc,
     };
   };
 };
 
 const upsertItem = upsertPage;
 
-const upsertMetric = model => {
+const upsertMetric = (model) => {
   return async (doc, tryToGetPage = false, slip = 1000) => {
     await sleep(slip);
 
@@ -300,7 +308,7 @@ const upsertMetric = model => {
     const r = await model.findOneAndUpdate(
       filter,
       {
-        $set: doc
+        $set: doc,
       },
       { upsert: true, returnNewDocument: true }
     );
@@ -314,7 +322,7 @@ const upsertMetric = model => {
     return {
       id: r.id,
       ...r.value,
-      ...doc
+      ...doc,
     };
   };
 };
@@ -332,5 +340,5 @@ export {
   countItems,
   countPages,
   restartPages,
-  metrics
+  metrics,
 };

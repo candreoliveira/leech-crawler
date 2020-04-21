@@ -17,7 +17,7 @@
       "user": "crawl",
       "password": "crawl",
       "engine": "mongo"
-    },    
+    },
     "test": {
       "name": "test",
       "user": "crawl",

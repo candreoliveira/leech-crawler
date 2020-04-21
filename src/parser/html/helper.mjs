@@ -7,12 +7,12 @@ const getNextPages = ($, uri, pageNextPages) => {
 
   if (pageNextPages && Array.isArray(pageNextPages)) {
     pageNextPages
-      .filter(p => typeof p === "object")
-      .forEach(p => {
+      .filter((p) => typeof p === "object")
+      .forEach((p) => {
         let res;
 
         if (p.param) {
-          res = Array.from($(p.selector)).map(elem => {
+          res = Array.from($(p.selector)).map((elem) => {
             if (p.attr && typeof p.attr === "string") {
               const page = $(elem).attr(p.attr);
 
@@ -27,7 +27,7 @@ const getNextPages = ($, uri, pageNextPages) => {
               const page = htmlToText.fromString($(elem).html(), {
                 linkHrefBaseUrl: uri.origin,
                 wordwrap: false,
-                ignoreImage: true
+                ignoreImage: true,
               });
 
               return `${uri.origin}${uri.pathname}?${p.param}=${page}`;
@@ -36,7 +36,7 @@ const getNextPages = ($, uri, pageNextPages) => {
             return null;
           });
         } else {
-          res = Array.from($(p.selector)).map(elem => {
+          res = Array.from($(p.selector)).map((elem) => {
             if (p.attr && typeof p.attr === "string") {
               return $(elem).attr(p.attr);
             } else if (p.attr && Array.isArray(p.attr)) {
@@ -47,7 +47,7 @@ const getNextPages = ($, uri, pageNextPages) => {
               return htmlToText.fromString($(elem).html(), {
                 linkHrefBaseUrl: uri.origin,
                 wordwrap: false,
-                ignoreImage: true
+                ignoreImage: true,
               });
             }
 
@@ -66,9 +66,9 @@ const parseDataWithZipJoinList = (previousParsedPage, pageDataWithJoin) => {
   if (pageDataWithJoin.length === 0) return previousParsedPage;
 
   let output = previousParsedPage;
-  pageDataWithJoin.forEach(curr => {
+  pageDataWithJoin.forEach((curr) => {
     if (Array.isArray(curr.join) && curr.join.length > 1 && curr.list) {
-      const values = curr.join.map(key => {
+      const values = curr.join.map((key) => {
         return output[key];
       });
 
@@ -117,8 +117,8 @@ const parseDataWithJoin = (previousParsedPage, array) => {
 
         // Copy not join (others) keys
         Object.keys(element)
-          .filter(k => curr.join.indexOf(k) === -1)
-          .forEach(k => {
+          .filter((k) => curr.join.indexOf(k) === -1)
+          .forEach((k) => {
             acc[k] = element[k];
           });
 
@@ -140,7 +140,7 @@ const getValueFromSelector = ($, element, selector, domain) => {
       return htmlToText.fromString($(e).html(), {
         linkHrefBaseUrl: domain,
         wordwrap: false,
-        ignoreImage: true
+        ignoreImage: true,
       });
     });
 
@@ -190,20 +190,23 @@ const getValueFromSelector = ($, element, selector, domain) => {
     element.replace.pattern &&
     (element.replace.new || element.replace.new === "")
   ) {
-    const regex = new RegExp(
-      element.replace.pattern,
-      element.replace.options || ""
-    );
+    const patt = Array.isArray(element.replace.pattern)
+      ? element.replace.pattern
+      : [element.replace.pattern];
 
-    // Replace all values
-    output = output.map(e => {
-      return e.replace(regex, element.replace.new);
+    patt.forEach((p) => {
+      const regex = new RegExp(p, element.replace.options || "");
+
+      // Replace all values
+      output = output.map((e) => {
+        return e.replace(regex, element.replace.new);
+      });
     });
   }
 
   // Trim
   if (element.trim) {
-    output = output.map(e => {
+    output = output.map((e) => {
       return e.trim();
     });
   }
@@ -214,7 +217,7 @@ const getValueFromSelector = ($, element, selector, domain) => {
 const parseDataWithSelector = ($, domain, array, logger) => {
   let output = {};
 
-  array.forEach(element => {
+  array.forEach((element) => {
     if (typeof element !== "object")
       return logger(
         "ERROR",
@@ -264,7 +267,7 @@ const parseDataWithSelector = ($, domain, array, logger) => {
       ["url", "link"].indexOf(element.newKey) > -1 &&
       output[element.newKey]
     ) {
-      output[element.newKey] = output[element.newKey].map(u =>
+      output[element.newKey] = output[element.newKey].map((u) =>
         getUrl(domain, u)
       );
     }
@@ -274,7 +277,7 @@ const parseDataWithSelector = ($, domain, array, logger) => {
     }
 
     if (element.number && output[element.newKey]) {
-      output[element.newKey] = output[element.newKey].map(u => {
+      output[element.newKey] = output[element.newKey].map((u) => {
         let tmp = u.match(/\d+(?:(?:\.|\,)(?:\d*))?/);
         if (tmp) {
           tmp = Number(tmp[0].replace(",", "."));
@@ -289,7 +292,7 @@ const parseDataWithSelector = ($, domain, array, logger) => {
 };
 
 // {label: [string], value: [string], description: [string], name: [string]}
-const parseDataWithZip = previousParsedPage => {
+const parseDataWithZip = (previousParsedPage) => {
   const keys = Object.keys(previousParsedPage);
   const values = Object.values(previousParsedPage);
   const zippedValues = zip.apply(this, values);
@@ -305,7 +308,7 @@ const parseDataWithZip = previousParsedPage => {
 };
 
 const appendData = (out, data) => {
-  return out.map(element => {
+  return out.map((element) => {
     return { ...element, ...data };
   });
 };
@@ -315,24 +318,30 @@ const parsePage = ($, domain, href, page, pageData, logger) => {
   let out = parseDataWithSelector(
     $,
     domain,
-    pageData.filter(e => !!e.selector),
+    pageData.filter((e) => !!e.selector),
     logger
   );
 
   // zip join list
-  out = parseDataWithZipJoinList(out, pageData.filter(e => !!e.join));
+  out = parseDataWithZipJoinList(
+    out,
+    pageData.filter((e) => !!e.join)
+  );
 
   // zip array of selectors
   out = parseDataWithZip(out);
 
   // Adjust the "Join" case
-  out = parseDataWithJoin(out, pageData.filter(e => !!e.join));
+  out = parseDataWithJoin(
+    out,
+    pageData.filter((e) => !!e.join)
+  );
 
   // Set pageUrl and website
   out = appendData(out, {
     pageSerial: sha256(getUrl(domain, href)),
     pageUrl: getUrl(domain, href),
-    website: page
+    website: page,
   });
 
   return out;
@@ -343,16 +352,16 @@ const parser = ($, domain, uri, parg, configPages, configName, logger) => {
   let filteredPages = configPages;
 
   if (parg) {
-    filteredPages = filteredPages.filter(e => e.name === parg);
+    filteredPages = filteredPages.filter((e) => e.name === parg);
   }
 
   return {
-    result: filteredPages.map(page => {
+    result: filteredPages.map((page) => {
       return parsePage($, domain, uri.href, configName, page.data, logger);
     }),
-    nextPages: filteredPages.map(page => {
+    nextPages: filteredPages.map((page) => {
       return getNextPages($, uri, page.nextPages);
-    })
+    }),
   };
 };
 
@@ -363,5 +372,5 @@ export {
   parseDataWithJoin,
   getNextPages,
   parsePage,
-  parser
+  parser,
 };

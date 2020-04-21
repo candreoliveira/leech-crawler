@@ -4,7 +4,7 @@ import {
   setAll,
   find,
   getPrettyJson,
-  getStacktrace
+  getStacktrace,
 } from "../parser/helper.mjs";
 import { log as l } from "../log/log.mjs";
 import sha256 from "sha256";
@@ -29,7 +29,7 @@ class Crawler {
     this.lru = new LRU({
       max: 5000,
       maxAge: 1000 * 60 * 60,
-      ...crawl.config.settings.lru
+      ...crawl.config.settings.lru,
     });
   }
 
@@ -51,7 +51,7 @@ class Crawler {
             this.crawl.config.parserOptions &&
             this.crawl.config.parserOptions.pages
               ? this.crawl.config.parserOptions.pages
-              : 10
+              : 10,
         });
       } catch (err) {
         this.log(
@@ -155,7 +155,7 @@ class Crawler {
           url: getUrl(this.crawl.config.domain, url),
           name: this.name,
           type: this.type,
-          website: this.website
+          website: this.website,
         },
         "Page",
         0,
@@ -174,7 +174,9 @@ class Crawler {
         doc = {
           ...doc,
           serial:
-            coll === "Page" ? sha256(doc.url) : sha256(JSON.stringify(doc.data))
+            coll === "Page"
+              ? sha256(doc.url)
+              : sha256(JSON.stringify(doc.data)),
         };
       }
 
@@ -203,7 +205,7 @@ class Crawler {
     if (count < (this.crawl.config.retry || 50)) {
       try {
         return await Promise.all(
-          docs.map(doc => {
+          docs.map((doc) => {
             return this.upsertObject(doc, coll, 0, upsert);
           })
         );
@@ -228,7 +230,7 @@ class Crawler {
 
   async unsetAllAttribute(array, attr, coll) {
     let count = 0;
-    array.forEach(e => {
+    array.forEach((e) => {
       // Inc count for the key e
       count = (this.lru.get(e) || count) + 1;
       this.lru.set(e, count);
@@ -263,12 +265,12 @@ class Crawler {
       try {
         await this.upsertMany(
           "Page",
-          nextPages.map(next => ({
+          nextPages.map((next) => ({
             url: getUrl(this.crawl.config.domain, next),
             name: this.name,
             type: this.type,
             website: this.website,
-            PageId: currentPage.id
+            PageId: currentPage.id,
           }))
         );
         this.log(
@@ -292,10 +294,10 @@ class Crawler {
     try {
       const insertedItems = await this.upsertMany(
         "Item",
-        items.map(v => ({
+        items.map((v) => ({
           data: v,
           name: this.name,
-          PageId: currentPage.id
+          PageId: currentPage.id,
         }))
       );
 
@@ -331,8 +333,8 @@ class Crawler {
       this.crawl.config.dependency[this.name]
     ) {
       const its = items
-        .filter(v => v[this.crawl.config.dependency[this.name].through])
-        .map(v => ({
+        .filter((v) => v[this.crawl.config.dependency[this.name].through])
+        .map((v) => ({
           PageId: currentPage.id,
           url: getUrl(
             this.crawl.config.domain,
@@ -340,29 +342,29 @@ class Crawler {
           ),
           name: this.crawl.config.dependency[this.name].hasMany,
           website: this.website,
-          type: this.crawl.config.dependency[this.name].type || "html" // dependencies are always html
+          type: this.crawl.config.dependency[this.name].type || "html", // dependencies are always html
         }));
 
       if (
         this.crawl.config.dependency[this.name].add &&
-        Object.values(this.crawl.config.dependency[this.name].add).every(v =>
+        Object.values(this.crawl.config.dependency[this.name].add).every((v) =>
           Array.isArray(v)
         )
       ) {
         const keys = Object.keys(
           this.crawl.config.dependency[this.name].add
-        ).filter(k => new RegExp(k).test(currentPage.url));
+        ).filter((k) => new RegExp(k).test(currentPage.url));
 
         // Every key that matches current url
-        keys.forEach(k => {
+        keys.forEach((k) => {
           // Every dependency
-          this.crawl.config.dependency[this.name].add[k].forEach(dep => {
+          this.crawl.config.dependency[this.name].add[k].forEach((dep) => {
             its.push({
               PageId: currentPage.id,
               url: getUrl(this.crawl.config.domain, dep),
               name: this.crawl.config.dependency[this.name].hasMany,
               website: this.website,
-              type: this.crawl.config.dependency[this.name].type || "html" // dependencies are always html
+              type: this.crawl.config.dependency[this.name].type || "html", // dependencies are always html
             });
           });
         });
@@ -399,7 +401,7 @@ class Crawler {
       website,
       name: page,
       processedAt: null,
-      startedAt: null
+      startedAt: null,
     });
 
     if (count == 0) {
@@ -407,7 +409,7 @@ class Crawler {
         processedAt: null,
         startedAt: null,
         website,
-        name: page
+        name: page,
       });
     }
 
@@ -422,16 +424,23 @@ class Crawler {
     );
 
     const time = 60 * 60 * 24 * 1000;
-    const urlKey = this.db.config && this.db.config.importer && this.db.config.importer.mapping && this.db.config.importer.mapping.url
+    const urlKey =
+      this.db.config &&
+      this.db.config.importer &&
+      this.db.config.importer.mapping &&
+      this.db.config.importer.mapping.url
         ? this.db.config.importer.mapping.url
         : "url";
-    const defaultName = this.db.config && this.db.config.importer && this.db.config.importer.mapping &&
+    const defaultName =
+      this.db.config &&
+      this.db.config.importer &&
+      this.db.config.importer.mapping &&
       this.db.config.importer.mapping.defaults &&
       this.db.config.importer.mapping.defaults.name
         ? this.db.config.importer.mapping.defaults.name
         : "importer";
 
-    const processRow = async row => {
+    const processRow = async (row) => {
       this.log(
         "DEBUG",
         `[${this.crawl.config.type.toUpperCase()}] Importer processing row.`
@@ -443,7 +452,7 @@ class Crawler {
           name: defaultName,
           type: this.type,
           website: this.website,
-          importer: true
+          importer: true,
         },
         "Page",
         0,
@@ -453,7 +462,7 @@ class Crawler {
 
     const page = await this.db.lastPageImported({
       website: this.website,
-      name: defaultName
+      name: defaultName,
     });
 
     if (
@@ -465,26 +474,32 @@ class Crawler {
       this.db.config.importer.query.count &&
       this.db.config.importer.block
     ) {
-      const count = this.db.importer.client.query(this.db.config.importer.query.count);
+      const count = this.db.importer.client.query(
+        this.db.config.importer.query.count
+      );
       count
-        .on("error", err => {
+        .on("error", (err) => {
           this.log(
             "ERROR",
-            `[${this.crawl.config.type.toUpperCase()}] Error running importer ${getStacktrace(err)} counter.`
+            `[${this.crawl.config.type.toUpperCase()}] Error running importer ${getStacktrace(
+              err
+            )} counter.`
           );
         })
-        .on("result", async r => {
-          for (let i=0; i < r.count; i+=this.db.config.importer.block) {
+        .on("result", async (r) => {
+          for (let i = 0; i < r.count; i += this.db.config.importer.block) {
             const q = `${this.db.config.importer.query.block} limit ${this.db.config.importer.block} offset ${i}`;
             const query = this.db.importer.client.query(q);
             query
-              .on("error", err => {
+              .on("error", (err) => {
                 this.log(
                   "ERROR",
-                  `[${this.crawl.config.type.toUpperCase()}] Error running importer ${getStacktrace(err)} idx ${i}.`
+                  `[${this.crawl.config.type.toUpperCase()}] Error running importer ${getStacktrace(
+                    err
+                  )} idx ${i}.`
                 );
               })
-              .on("result", async row => {
+              .on("result", async (row) => {
                 await processRow(row);
               });
           }
@@ -494,14 +509,18 @@ class Crawler {
     this.log(
       "DEBUG",
       `[${this.crawl.config.type.toUpperCase()}] Completing importer.`
-    );    
+    );
     return;
   }
 
   async close() {
     await sleep(5000);
     await this.db.close();
-    await this.db.importer.end();
+
+    if (this.db.importer) {
+      await this.db.importer.end();
+    }
+
     return await this.crawl.close();
   }
 
@@ -525,15 +544,17 @@ class Crawler {
       try {
         this.log(
           "DEBUG",
-          `[${this.crawl.config.type.toUpperCase()}] Start crawling with uri ${pageConfig.rootUrl ||
-            uri} ${this.crawl.config.name} #${count}.`
+          `[${this.crawl.config.type.toUpperCase()}] Start crawling with uri ${
+            pageConfig.rootUrl || uri
+          } ${this.crawl.config.name} #${count}.`
         );
         pages = await this.tryToGetPage(pageConfig.rootUrl || uri);
       } catch (err) {
         this.log(
           "WARN",
-          `[${this.crawl.config.type.toUpperCase()}] Error on start trying to get page ${pageConfig.rootUrl ||
-            uri} ${this.crawl.config.name} #${count} ${getStacktrace(err)}.`
+          `[${this.crawl.config.type.toUpperCase()}] Error on start trying to get page ${
+            pageConfig.rootUrl || uri
+          } ${this.crawl.config.name} #${count} ${getStacktrace(err)}.`
         );
 
         return await this.start(null, ++count);
@@ -601,13 +622,13 @@ class Crawler {
     if (Array.isArray(pagesResult)) {
       pagesResult.forEach(async (result, index) => {
         if (Array.isArray(result.yield)) {
-          result.yield.forEach(async items => {
+          result.yield.forEach(async (items) => {
             if (Array.isArray(items) && items.length > 0) {
               // Get the pageUrl attribute from any (in the case first) page.
               let currentPage = find(
-                pages.map(obj => ({
+                pages.map((obj) => ({
                   ...obj,
-                  url: getUrl(this.crawl.config.domain, obj.url, true)
+                  url: getUrl(this.crawl.config.domain, obj.url, true),
                 })),
                 "url",
                 getUrl(this.crawl.config.domain, items[0].pageUrl, true)

@@ -8,7 +8,7 @@
       "password": "crawl",
       "engine": "mongo"
     },
-    "importer": {
+    "importer2": {
       "host": "127.0.0.1",
       "port": 27017,
       "name": "crawler",
@@ -29,6 +29,104 @@
     }
   },
   "websites": [
+    {
+      "type": "headless",
+      "name": "boadica",
+      "domain": "https://www.boadica.com.br",
+      "settings": {
+        "lru": {
+          "max": 1000
+        },
+        "retryDelay": 500,
+        "retry": 5,
+        "retryOnEmpty": 5,
+        "parserOptions": {
+          "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
+          "headless": true,
+          "devtools": false,
+          "maxConnections": 1,
+          "pages": 1
+        }
+      },
+      "dependency": {
+        "category": {
+          "hasMany": "item",
+          "through": "url",
+          "type": "headless"
+        },
+        "item": {
+          "hasMany": "seller",
+          "through": "url",
+          "type": "headless"
+        }
+      },
+      "pages": [
+        {
+          "rootUrl": "/pesquisa/compu_notebook/precos?ClasseProdutoX=1&CodCategoriaX=2&XF=66",
+          "name": "category",
+          "nextPages": [
+            {
+              "selector": ".no-mobile .paginacao > a:not(.lnk_atual)",
+              "attr": "href"
+            }
+          ],
+          "data": [
+            {
+              "selector": ".row.preco.detalhe div:nth-child(4) a",
+              "newKey": "url",
+              "attr": "href"
+            }
+          ]
+        },
+        {
+          "name": "item",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": ".nome",
+              "newKey": "name",
+              "method": "text"
+            },
+            {
+              "selector": ".tab-content #precos .row div:first-child .pull-left a",
+              "newKey": "url",
+              "attr": "href"
+            }
+          ]
+        },
+        {
+          "name": "seller",
+          "nextPages": null,
+          "data": [
+            {
+              "selector": "body > p:nth-child(5) a",
+              "newKey": "lat",
+              "attr": "href",
+              "replace": {
+                "pattern": [".*lat=", "\\&.*"],
+                "new": "",
+                "options": "gi"
+              }
+            },
+            {
+              "selector": "body > p:nth-child(5) a",
+              "newKey": "lng",
+              "attr": "href",
+              "replace": {
+                "pattern": [".*lng=", "\\&.*"],
+                "new": "",
+                "options": "gi"
+              }
+            },
+            {
+              "join": ["lat", "lng"],
+              "newKey": "coordinates",
+              "list": true
+            }
+          ]
+        }
+      ]
+    },
     {
       "type": "headless",
       "name": "magalu",
