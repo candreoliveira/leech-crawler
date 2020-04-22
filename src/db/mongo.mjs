@@ -76,17 +76,17 @@ const sync = (client, model) => {
 
 const lastPageImported = (model) => {
   return async (params) => {
+    const tmp = {};
+    if (params.website) tmp.website = params.website;
+    if (params.name) tmp.website = params.name;
+    if (params.type) tmp.website = params.type;
+    if (!params.limit) params.limit = 1;
+    tmp.processedAt = { $exists: true };
+    tmp.startedAt = { $exists: true };
+    tmp.PageId = null;
+
     const r = await model
-      .find(
-        {
-          name: params.name,
-          website: params.website,
-          PageId: null,
-          processedAt: { $exists: true },
-          startedAt: { $exists: true },
-        },
-        { limit: 1 }
-      )
+      .find(tmp, { limit: params.limit })
       .sort({ processedAt: -1 })
       .toArray();
 
@@ -97,19 +97,18 @@ const lastPageImported = (model) => {
 
 const findPages = (model) => {
   return async (params) => {
+    const tmp = {};
+    if (params.website) tmp.website = params.website;
+    if (params.name) tmp.website = params.name;
+    if (params.type) tmp.website = params.type;
+    if (tmp.processedAt) tmp.processedAt = params.processedAt;
+    if (tmp.startedAt) tmp.startedAt = params.startedAt;
+    if (!params.limit) params.limit = 50;
+
     const r = await model
-      .find(
-        {
-          name: params.name,
-          type: params.type,
-          website: params.website,
-          processedAt: params.processedAt,
-          startedAt: params.startedAt,
-        },
-        {
-          limit: params.limit,
-        }
-      )
+      .find(tmp, {
+        limit: params.limit,
+      })
       .toArray();
 
     if (Array.isArray(r)) {
@@ -147,32 +146,36 @@ const findOneItemByUrl = (model) => {
 
 const restartPages = (model) => {
   return async (params) => {
-    return await model.updateMany(
-      {
-        website: params.website,
-        name: params.name,
-        type: params.type,
-      },
-      {
-        $set: {
-          processedAt: params.processedAt,
-          startedAt: params.startedAt,
+    const tmp = {};
+    if (params.website) tmp.website = params.website;
+    if (params.name) tmp.website = params.name;
+    if (params.type) tmp.website = params.type;
+    if (!params.processedAt) params.processedAt = null;
+    if (!params.startedAt) params.startedAt = null;
+
+    if (params)
+      return await model.updateMany(
+        tmp,
+        {
+          $set: {
+            processedAt: params.processedAt,
+            startedAt: params.startedAt,
+          },
         },
-      },
-      { upsert: false }
-    );
+        { upsert: false }
+      );
   };
 };
 
 const countPages = (model) => {
   return async (params) => {
-    return await model.countDocuments({
-      website: params.website,
-      name: params.name,
-      type: params.type,
-      processedAt: params.processedAt,
-      startedAt: params.startedAt,
-    });
+    const tmp = {};
+    if (params.website) tmp.website = params.website;
+    if (params.name) tmp.website = params.name;
+    if (params.type) tmp.website = params.type;
+    if (tmp.processedAt) tmp.processedAt = params.processedAt;
+    if (tmp.startedAt) tmp.startedAt = params.startedAt;
+    return await model.countDocuments(tmp);
   };
 };
 
@@ -248,9 +251,9 @@ const upsertPage = (model) => {
     let filter = {};
 
     if (serial) {
-      filter["serial"] = serial;
+      filter.serial = serial;
     } else if (id) {
-      filter["_id"] = new Mongodb.ObjectID(id);
+      filter._id = new Mongodb.ObjectID(id);
     } else if (data && data.pageSerial) {
       filter["data.pageSerial"] = data.pageSerial;
     } else {
