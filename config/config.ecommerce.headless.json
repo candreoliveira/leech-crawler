@@ -41,6 +41,7 @@
         "retry": 5,
         "retryOnEmpty": 5,
         "parserOptions": {
+          "proxy": "201.91.82.155:3128",
           "headless": true,
           "devtools": false,
           "maxConnections": 1,

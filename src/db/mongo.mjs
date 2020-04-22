@@ -78,8 +78,8 @@ const lastPageImported = (model) => {
   return async (params) => {
     const tmp = {};
     if (params.website) tmp.website = params.website;
-    if (params.name) tmp.website = params.name;
-    if (params.type) tmp.website = params.type;
+    if (params.name) tmp.name = params.name;
+    if (params.type) tmp.type = params.type;
     if (!params.limit) params.limit = 1;
     tmp.processedAt = { $exists: true };
     tmp.startedAt = { $exists: true };
@@ -99,8 +99,8 @@ const findPages = (model) => {
   return async (params) => {
     const tmp = {};
     if (params.website) tmp.website = params.website;
-    if (params.name) tmp.website = params.name;
-    if (params.type) tmp.website = params.type;
+    if (params.name) tmp.name = params.name;
+    if (params.type) tmp.type = params.type;
     if (tmp.processedAt) tmp.processedAt = params.processedAt;
     if (tmp.startedAt) tmp.startedAt = params.startedAt;
     if (!params.limit) params.limit = 50;
@@ -148,8 +148,8 @@ const restartPages = (model) => {
   return async (params) => {
     const tmp = {};
     if (params.website) tmp.website = params.website;
-    if (params.name) tmp.website = params.name;
-    if (params.type) tmp.website = params.type;
+    if (params.name) tmp.name = params.name;
+    if (params.type) tmp.type = params.type;
     if (!params.processedAt) params.processedAt = null;
     if (!params.startedAt) params.startedAt = null;
 
@@ -171,8 +171,8 @@ const countPages = (model) => {
   return async (params) => {
     const tmp = {};
     if (params.website) tmp.website = params.website;
-    if (params.name) tmp.website = params.name;
-    if (params.type) tmp.website = params.type;
+    if (params.name) tmp.name = params.name;
+    if (params.type) tmp.type = params.type;
     if (tmp.processedAt) tmp.processedAt = params.processedAt;
     if (tmp.startedAt) tmp.startedAt = params.startedAt;
     return await model.countDocuments(tmp);
@@ -185,8 +185,8 @@ const metrics = (model) => {
   return async (params) => {
     const tmp = { category: "PARSER" };
     if (params.website) tmp.website = params.website;
-    if (params.name) tmp.website = params.name;
-    if (params.type) tmp.website = params.type;
+    if (params.name) tmp.name = params.name;
+    if (params.type) tmp.type = params.type;
     if (!params.limit) params.limit = 50;
 
     const aggs = [
