@@ -94,18 +94,25 @@ class Headless extends Parser {
   constructor(config, args, db) {
     super();
     this.args = args;
-    this.config = config;
+    this.config = config || {};
+    this.config.parserOptions = this.config.parserOptions || {};
     this.db = db;
   }
 
   async init() {
+    const args = [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--ignore-certificate-errors",
+    ];
+
+    if (!!this.config.parserOptions.proxy) {
+      args.push(`--proxy-server=${this.config.parserOptions.proxy}`);
+    }
+
     this.log = l(this.args.log);
     this.parser = await Crawler.launch({
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--ignore-certificate-errors",
-      ],
+      args,
       headless: true,
       devtools: false,
       obeyRobotsTxt: false,

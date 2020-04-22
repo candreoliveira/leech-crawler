@@ -24,7 +24,7 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
       status: res.statusCode,
       type: instance.config.type,
       website: instance.config.name,
-      name: parg
+      name: parg,
     },
     true
   );
@@ -33,7 +33,7 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
   let output = {
     yield: null,
     nextPages: [],
-    meta: null
+    meta: null,
   };
 
   if (error) {
@@ -42,7 +42,7 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
     reject(err);
   } else if (!$) {
     output.yield = [
-      [{ statusCode: res.statusCode, pageUrl: getUrl(domain, uri.href) }]
+      [{ statusCode: res.statusCode, pageUrl: getUrl(domain, uri.href) }],
     ];
 
     instance.log(
@@ -61,7 +61,7 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
     );
 
     // Save all nextPages on output
-    parsedPage.nextPages.forEach(pages => {
+    parsedPage.nextPages.forEach((pages) => {
       output.nextPages = output.nextPages.concat(pages);
     });
 
@@ -83,7 +83,8 @@ class Html extends Parser {
   constructor(config, args, db) {
     super();
     this.args = args;
-    this.config = config;
+    this.config = config || {};
+    this.config.parserOptions = this.config.parserOptions || {};
     this.db = db;
   }
 
@@ -97,7 +98,7 @@ class Html extends Parser {
       retries: 100,
       retryTimeout: 1000,
       timeout: 30000,
-      ...this.config.parserOptions
+      ...this.config.parserOptions,
     });
   }
 
@@ -109,7 +110,7 @@ class Html extends Parser {
     let uris;
 
     if (Array.isArray(urls)) {
-      uris = urls.map(url =>
+      uris = urls.map((url) =>
         getUrl(this.config.domain, url.url || this.config.rootUrl)
       );
     } else {
@@ -120,10 +121,11 @@ class Html extends Parser {
 
     return await Promise.all(
       uris.map(
-        uri =>
+        (uri) =>
           new Promise((resolve, reject) => {
             this.parser.queue({
               uri: uri,
+              proxy: this.config.parserOptions.proxy,
               callback: defaultCb({
                 instance: this,
                 parg,
@@ -131,8 +133,8 @@ class Html extends Parser {
                 uri: new URL.URL(uri),
                 start: new Date(),
                 resolve,
-                reject
-              })
+                reject,
+              }),
             });
           })
       )
