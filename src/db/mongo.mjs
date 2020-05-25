@@ -181,6 +181,23 @@ const countPages = (model) => {
 
 const countItems = countPages;
 
+const configErrors = (model) => {
+  return async (params) => {
+    const tmp = { category: "CONFIG" };
+    if (params.website) tmp.website = params.website;
+    if (params.name) tmp.name = params.name;
+    if (params.type) tmp.type = params.type;
+    if (!params.limit) params.limit = 50;
+
+    const r = await model.find(tmp, { limit: params.limit }).toArray();
+
+    return r.map((v) => {
+      if (v && v._id) v.id = v._id.toString();
+      return v;
+    });
+  };
+};
+
 const metrics = (model) => {
   return async (params) => {
     const tmp = { category: "PARSER" };
@@ -353,4 +370,5 @@ export {
   countPages,
   restartPages,
   metrics,
+  configErrors,
 };

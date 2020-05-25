@@ -56,6 +56,7 @@ class Database {
     this.upsertMetric = this.db.upsertMetric(this.dbcli.model.Metric);
     this.upsertErrorMetric = this.db.upsertErrorMetric(this.dbcli.model.Metric);
     this.metrics = this.db.metrics(this.dbcli.model.Metric);
+    this.configErrors = this.db.configErrors(this.dbcli.model.Metric);
   }
 }
 

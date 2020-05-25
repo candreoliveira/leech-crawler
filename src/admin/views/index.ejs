@@ -37,10 +37,9 @@
   <!-- <link href="assets/material-dashboard/assets/demo/demo.css" rel="stylesheet" /> -->
   <link href="stylesheets/material-dashboard.css" rel="stylesheet" />
 
-  <!-- <script src="assets/turbolinks/dist/turbolinks.js"></script> -->
   <script type='text/javascript'>
     window._metricstr = '<%- JSON.stringify(metrics) %>';
-    // window.Turbolinks.start();
+    window._errorstr = '<%- JSON.stringify(errors) %>';
   </script>
 </head>
 
@@ -118,7 +117,7 @@
         <div class="container-fluid">
           <% if(hasData) { %>
             <div class="row">
-              <div class="col-lg-6 col-md-6 col-sm-6">
+              <div class="col-lg-4 col-md-4 col-sm-4">
                 <div class="card card-stats">
                   <div class="card-header card-header-success card-header-icon">
                     <div class="card-icon">
@@ -137,7 +136,7 @@
                   </div>
                 </div>
               </div>
-              <div class="col-lg-6 col-md-6 col-sm-6">
+              <div class="col-lg-4 col-md-4 col-sm-4">
                 <div class="card card-stats">
                   <div class="card-header card-header-info card-header-icon">
                     <div class="card-icon">
@@ -145,7 +144,7 @@
                     </div>
                     <p class="card-category">Average Time</p>
                     <h3 class="card-title">
-                      <%= (metrics.avgTime / 1000).toString().replace(".",",") %>
+                      <%= (metrics.avgTime / 1000).toFixed(2).toString().replace(".",",") %>
                         <small>s</small>
                     </h3>
                   </div>
@@ -156,6 +155,26 @@
                   </div>
                 </div>
               </div>
+              <div class="col-lg-4 col-md-4 col-sm-4">
+                <div class="card card-stats">
+                  <div class="card-header card-header-warning card-header-icon">
+                    <div class="card-icon">
+                      <i class="material-icons">bug_report</i>
+                    </div>
+                    <p class="card-category">Errors Count</p>
+                    <h3 class="card-title">
+                      <%= (errors.length).toString() %>
+                      <small>s</small>
+                    </h3>
+                  </div>
+                  <div class="card-footer">
+                    <div class="stats">
+                      <i class="material-icons">update</i> Just Updated
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             </div>
             <div class="row">
               <div class="col-md-6">
@@ -194,22 +213,65 @@
             <div class="row">
               <div class="col-md-12">
                 <div class="card">
+                  <div class="card-header card-header-tabs card-header-warning">
+                    <div id="configErrors" class="nav-tabs-navigation">
+                      <div class="nav-tabs-wrapper">
+                        <span class="nav-tabs-title">Pages errors:</span>
+                        <ul class="nav nav-tabs" data-tabs="tabs">
+                          <li class="nav-item">
+                            <a class="nav-link active" href="#selectors" data-toggle="tab">
+                              Selectors not working
+                            </a>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="tab-content">
+                      <div class="tab-pane active" id="selectors">
+                        <table class="table">
+                          <tbody>
+                            <% errors.forEach(function(m){ %>
+                            <tr>
+                              <td>
+                                <%= moment(String(m.date)).format('DD/MM/YYYY'); %>
+                              </td>
+                              <td>
+                                <%= String(m.time/1000) + 's' %>
+                              </td>
+                              <td>
+                                <%= String(m.selector) %>
+                              </td>
+                            </tr>
+                            <% }); %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card">
                   <div class="card-header card-header-tabs card-header-primary">
                     <div id="mostTimeConsuming" class="nav-tabs-navigation">
                       <div class="nav-tabs-wrapper">
                         <span class="nav-tabs-title">Most time consuming pages per status code:</span>
                         <ul class="nav nav-tabs" data-tabs="tabs">
                           <% metrics.metrics.forEach(function(m){ %>
-                            <li class="nav-item">
-                              <% if (metrics.metrics[0].statusCode === m.statusCode) { %>
-                                <a class="nav-link active" href="#<%= 'status' + String(m.statusCode) %>" data-toggle="tab">
-                                  <% } else { %>
-                                    <a class="nav-link" href="#<%= 'status' + String(m.statusCode) %>" data-toggle="tab">
-                                      <% } %>
-                                        <%= String(m.statusCode) %>
-                                    </a>
-                            </li>
-                            <% }); %>
+                          <li class="nav-item">
+                            <% if (metrics.metrics[0].statusCode === m.statusCode) { %>
+                            <a class="nav-link active" href="#<%= 'status' + String(m.statusCode) %>" data-toggle="tab">
+                              <% } else { %>
+                              <a class="nav-link" href="#<%= 'status' + String(m.statusCode) %>" data-toggle="tab">
+                                <% } %>
+                                <%= String(m.statusCode) %>
+                              </a>
+                          </li>
+                          <% }); %>
                         </ul>
                       </div>
                     </div>
@@ -217,46 +279,45 @@
                   <div class="card-body">
                     <div class="tab-content">
                       <% metrics.metrics.forEach(function(m){ %>
-                        <% if (metrics.metrics[0].statusCode === m.statusCode) { %>
-                          <div class="tab-pane active" id="<%= 'status' + String(m.statusCode) %>">
-                            <% } else { %>
-                              <div class="tab-pane" id="<%= 'status' + String(m.statusCode) %>">
-                                <% } %>
-                                  <table class="table">
-                                    <tbody>
-                                      <% m.mostTimeConsuming.forEach(function(t){ %>
-                                        <tr>
-                                          <td>
-                                            <%= moment(String(t.date)).format('DD/MM/YYYY'); %>
-                                          </td>
-                                          <td>
-                                            <%= String(t.time/1000) + 's' %>
-                                          </td>
-                                          <td>
-                                            <%= String(t.url) %>
-                                          </td>
-                                        </tr>
-                                        <% }); %>
-                                    </tbody>
-                                  </table>
-                              </div>
+                      <% if (metrics.metrics[0].statusCode === m.statusCode) { %>
+                      <div class="tab-pane active" id="<%= 'status' + String(m.statusCode) %>">
+                        <% } else { %>
+                        <div class="tab-pane" id="<%= 'status' + String(m.statusCode) %>">
+                          <% } %>
+                          <table class="table">
+                            <tbody>
+                              <% m.mostTimeConsuming.forEach(function(t){ %>
+                              <tr>
+                                <td>
+                                  <%= moment(String(t.date)).format('DD/MM/YYYY'); %>
+                                </td>
+                                <td>
+                                  <%= String(t.time/1000) + 's' %>
+                                </td>
+                                <td>
+                                  <%= String(t.url) %>
+                                </td>
+                              </tr>
                               <% }); %>
-                          </div>
+                            </tbody>
+                          </table>
+                        </div>
+                        <% }); %>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <% } else { %>
-              <div class="card">
-                <div class="card-header card-header-primary">
-                  <h3 class="card-title">Data not found!</h3>
-                  <p class="card-category">This website there isn't data yet.</p>
-                </div>
-                <div class="card-body">
-                </div>
+          <% } else { %>
+            <div class="card">
+              <div class="card-header card-header-primary">
+                <h3 class="card-title">Data not found!</h3>
+                <p class="card-category">This website there isn't data yet.</p>
               </div>
-              <% } %>
+              <div class="card-body"></div>
+            </div>
+          <% } %>
         </div>
         <footer class="footer">
           <div class="container-fluid">
