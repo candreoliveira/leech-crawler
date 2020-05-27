@@ -51,9 +51,11 @@ const exposeFunction = ({
         domain,
         uri,
         parg,
-        instance.config.pages,
-        instance.config.name,
-        instance.log
+        instance.config,
+        instance.log,
+        instance.db.upsertErrorMetric,
+        start,
+        date
       );
     } catch (e) {
       instance.db.upsertErrorMetric({

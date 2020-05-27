@@ -171,7 +171,8 @@
             {
               "selector": "#showcase > ul:nth-child(5) a[name='linkToProduct']",
               "newKey": "url",
-              "attr": "href"
+              "attr": "href",
+              "required": false
             }
           ]
         },

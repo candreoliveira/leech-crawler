@@ -218,7 +218,19 @@ const getValueFromSelector = ($, element, selector, domain) => {
 };
 
 // $ => html content, array => pageConfig, $ => cheerio obj with html loaded
-const parseDataWithSelector = ($, domain, array, logger) => {
+const parseDataWithSelector = (
+  $,
+  parg,
+  domain,
+  href,
+  page,
+  type,
+  array,
+  logger,
+  upsertErrorMetric,
+  start,
+  date
+) => {
   let output = {};
 
   // Loop page config data
@@ -265,7 +277,20 @@ const parseDataWithSelector = ($, domain, array, logger) => {
 
         // Value is the content and cant be empty otherwise the config is not working for this page
         if (!value || (Array.isArray(value) && value.length === 0)) {
-          throw createErrorOnEmpty(element.selector, domain);
+          if (element.required === true) {
+            throw createErrorOnEmpty(element.selector, href);
+          } else {
+            upsertErrorMetric({
+              serial: sha256(getUrl(domain, href)),
+              date: date,
+              url: getUrl(domain, href),
+              time: new Date() - start,
+              type: type,
+              website: page,
+              name: parg,
+              selector: element.selector,
+            });
+          }
         }
 
         values.push(value);
@@ -279,7 +304,20 @@ const parseDataWithSelector = ($, domain, array, logger) => {
 
       // Value is the content and cant be empty otherwise the config is not working for this page
       if (!value || (Array.isArray(value) && value.length === 0)) {
-        throw createErrorOnEmpty(element.selector, domain);
+        if (element.required === true) {
+          throw createErrorOnEmpty(element.selector, href);
+        } else {
+          upsertErrorMetric({
+            serial: sha256(getUrl(domain, href)),
+            date: date,
+            url: getUrl(domain, href),
+            time: new Date() - start,
+            type: type,
+            website: page,
+            name: parg,
+            selector: element.selector,
+          });
+        }
       }
 
       niw[element.newKey] = value;
@@ -345,13 +383,32 @@ const appendData = (out, data) => {
   });
 };
 
-const parsePage = ($, domain, href, page, pageData, logger) => {
+const parsePage = (
+  $,
+  parg,
+  domain,
+  href,
+  page,
+  type,
+  pageData,
+  logger,
+  upsertErrorMetric,
+  start,
+  date
+) => {
   // Parse data
   let out = parseDataWithSelector(
     $,
+    parg,
     domain,
+    href,
+    page,
+    type,
     pageData.filter((e) => !!e.selector),
-    logger
+    logger,
+    upsertErrorMetric,
+    start,
+    date
   );
 
   // zip join list
@@ -379,9 +436,19 @@ const parsePage = ($, domain, href, page, pageData, logger) => {
   return out;
 };
 
-const parser = ($, domain, uri, parg, configPages, configName, logger) => {
+const parser = (
+  $,
+  domain,
+  uri,
+  parg,
+  config,
+  logger,
+  upsertErrorMetric,
+  start,
+  date
+) => {
   // Return an array of array of items
-  let filteredPages = configPages;
+  let filteredPages = config.pages;
 
   if (parg) {
     filteredPages = filteredPages.filter((e) => e.name === parg);
@@ -389,7 +456,19 @@ const parser = ($, domain, uri, parg, configPages, configName, logger) => {
 
   return {
     result: filteredPages.map((page) => {
-      return parsePage($, domain, uri.href, configName, page.data, logger);
+      return parsePage(
+        $,
+        parg,
+        domain,
+        uri.href,
+        config.name,
+        config.type,
+        page.data,
+        logger,
+        upsertErrorMetric,
+        start,
+        date
+      );
     }),
     nextPages: filteredPages.map((page) => {
       return getNextPages($, uri, page.nextPages);
