@@ -17,6 +17,7 @@ class Crawler {
     crawl.config.settings.lru = crawl.config.settings.lru || {};
     crawl.config.settings.retryDelay = crawl.config.settings.retryDelay || 500;
     crawl.config.settings.retry = crawl.config.settings.retry || 50;
+    crawl.config.settings.unset = crawl.config.settings.unset || 10;
     crawl.config.settings.retryOnEmpty =
       crawl.config.settings.retryOnEmpty || 5;
 
@@ -39,7 +40,7 @@ class Crawler {
   }
 
   async getNextPages(count = 0) {
-    if (count < (this.crawl.config.retry || 50)) {
+    if (count < (this.crawl.config.settings.retry || 50)) {
       try {
         return await this.db.findPages({
           name: this.name,
@@ -48,9 +49,10 @@ class Crawler {
           processedAt: null,
           startedAt: null,
           limit:
-            this.crawl.config.parserOptions &&
-            this.crawl.config.parserOptions.pages
-              ? this.crawl.config.parserOptions.pages
+            this.crawl.config.settings &&
+            this.crawl.config.settings.parserOptions &&
+            this.crawl.config.settings.parserOptions.pages
+              ? this.crawl.config.settings.parserOptions.pages
               : 10,
         });
       } catch (err) {
@@ -111,7 +113,7 @@ class Crawler {
       await sleep(this.crawl.config.settings.retryDelay || 500);
     }
 
-    if (!url && count < (this.crawl.config.retry || 50)) {
+    if (!url && count < (this.crawl.config.settings.retry || 50)) {
       this.log(
         "DEBUG",
         `[${this.crawl.config.type.toUpperCase()}] Trying ${
@@ -169,7 +171,7 @@ class Crawler {
   }
 
   async upsertObject(doc, coll, count = 0, upsert = false) {
-    if (count < (this.crawl.config.retry || 50)) {
+    if (count < (this.crawl.config.settings.retry || 50)) {
       if (!doc.serial) {
         doc = {
           ...doc,
@@ -202,7 +204,7 @@ class Crawler {
   }
 
   async upsertMany(coll, docs, count = 0, upsert = true) {
-    if (count < (this.crawl.config.retry || 50)) {
+    if (count < (this.crawl.config.settings.retry || 50)) {
       try {
         return await Promise.all(
           docs.map((doc) => {
@@ -240,7 +242,9 @@ class Crawler {
     // Should really retryOnEmpty?
     if (
       count <
-      (this.crawl.config.settings.retryOnEmpty || this.crawl.config.unset || 10)
+      (this.crawl.config.settings.retryOnEmpty ||
+        this.crawl.config.settings.unset ||
+        10)
     ) {
       const arr = setAll(array, attr, null);
       return await this.upsertMany(coll, arr, 0, false);
@@ -515,13 +519,15 @@ class Crawler {
 
   async close() {
     await sleep(5000);
-    await this.db.close();
 
     if (this.db.importer) {
       await this.db.importer.end();
     }
 
-    return await this.crawl.close();
+    await this.crawl.close();
+
+    await sleep(5000);
+    return await this.db.close();
   }
 
   async start(uri = null, count = 0) {
@@ -539,7 +545,7 @@ class Crawler {
       await sleep(this.crawl.config.settings.retryDelay || 500);
     }
 
-    if (count < (this.crawl.config.retry || 50)) {
+    if (count < (this.crawl.config.settings.retry || 50)) {
       const pageConfig = find(this.crawl.config.pages, "name", this.name);
       try {
         this.log(

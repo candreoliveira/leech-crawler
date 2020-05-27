@@ -101,8 +101,8 @@ const findPages = (model) => {
     if (params.website) tmp.website = params.website;
     if (params.name) tmp.name = params.name;
     if (params.type) tmp.type = params.type;
-    if (tmp.processedAt) tmp.processedAt = params.processedAt;
-    if (tmp.startedAt) tmp.startedAt = params.startedAt;
+    if (!tmp.processedAt) tmp.processedAt = params.processedAt;
+    if (!tmp.startedAt) tmp.startedAt = params.startedAt;
     if (!params.limit) params.limit = 50;
 
     const r = await model
@@ -173,8 +173,8 @@ const countPages = (model) => {
     if (params.website) tmp.website = params.website;
     if (params.name) tmp.name = params.name;
     if (params.type) tmp.type = params.type;
-    if (tmp.processedAt) tmp.processedAt = params.processedAt;
-    if (tmp.startedAt) tmp.startedAt = params.startedAt;
+    if (!tmp.processedAt) tmp.processedAt = params.processedAt;
+    if (!tmp.startedAt) tmp.startedAt = params.startedAt;
     return await model.countDocuments(tmp);
   };
 };
