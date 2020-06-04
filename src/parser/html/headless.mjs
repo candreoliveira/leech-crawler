@@ -97,7 +97,9 @@ class Headless extends Parser {
     super();
     this.args = args;
     this.config = config || {};
-    this.config.parserOptions = this.config.parserOptions || {};
+    this.config.parserOptions = this.config.settings
+      ? this.config.settings.parserOptions || {}
+      : {};
     this.db = db;
   }
 
