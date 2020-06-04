@@ -74,7 +74,7 @@ class Crawler {
   }
 
   async getObject(coll, url, count = 0) {
-    if (count < (this.crawl.config.retry || 50)) {
+    if (count < (this.crawl.config.settings.retry || 50)) {
       try {
         return await this.db[`findOne${coll}ByUrl`](url);
       } catch (err) {
