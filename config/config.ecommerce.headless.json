@@ -172,7 +172,7 @@
           ],
           "data": [
             {
-              "selector": ".asdasda #showcase ul[role='main'] a[name='linkToProduct']",
+              "selector": "#showcase ul[role='main'] a[name='linkToProduct']",
               "newKey": "url",
               "attr": "href",
               "required": false
