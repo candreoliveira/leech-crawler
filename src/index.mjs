@@ -16,7 +16,7 @@ dotenv.config();
 // Start vars
 let runners = 0;
 
-const run = async cfg => {
+const run = async (cfg) => {
   let crawl;
 
   switch (cfg.config.type) {
@@ -38,7 +38,7 @@ const run = async cfg => {
   }
 
   if (cfg.args.restart) {
-    await crawl.restartProccess(cfg.args.website, cfg.args.page);
+    await crawl.restartProccess(cfg.args.website, cfg.args.page, cfg.args.type);
   }
 
   if (
@@ -103,13 +103,15 @@ const start = async () => {
     });
 
     // Install dependencies before starting admin
-    spawnSync("npm", ["install"], { cwd: path.join(path.resolve(), "src", "admin") });
+    spawnSync("npm", ["install"], {
+      cwd: path.join(path.resolve(), "src", "admin"),
+    });
 
     const adm = spawn("node", programArgs);
-    adm.stdout.on('data', data => log("VERBOSE", `[ADMIN] ${data}`));
-    adm.stderr.on('data', data => log("ERROR", `[ADMIN] ${data}`));
-    adm.on('close', code => {
-      log("INFO", `[ADMIN] Process closed by ${code}.`)
+    adm.stdout.on("data", (data) => log("VERBOSE", `[ADMIN] ${data}`));
+    adm.stderr.on("data", (data) => log("ERROR", `[ADMIN] ${data}`));
+    adm.on("close", (code) => {
+      log("INFO", `[ADMIN] Process closed by ${code}.`);
       process.exit(0);
     });
   }
@@ -120,11 +122,11 @@ const start = async () => {
     let pagesArg = args.page ? args.page.slice(0) : [];
 
     // Adjust config with preprocessed file
-    websites.forEach(w => {
+    websites.forEach((w) => {
       const pages = w.pages || [];
-      pages.forEach(p => {
+      pages.forEach((p) => {
         const preprocesses = p.preprocess || [];
-        preprocesses.forEach(s => {
+        preprocesses.forEach((s) => {
           if (s.type.toLowerCase() === "file") {
             s.script = `return ${fs.readFileSync(s.path, "utf-8")}`;
           }
@@ -132,33 +134,38 @@ const start = async () => {
       });
     });
 
-    websites
-      .filter(
-        v =>
-          v.type === args.type &&
-          ((websitesArg.length > 0 && websitesArg.indexOf(v.name) > -1) ||
-            websitesArg.length === 0)
-      )
-      .forEach(w => {
-        pagesArg.forEach(p => {
-          const websitePages = w.pages.map(i => i.name);
-          if (websitePages.indexOf(p) > -1) {
-            run({
-              log: log,
-              db: database,
-              config: w,
-              args: {
-                page: p,
-                type: args.type,
-                env: args.environment,
-                website: w.name,
-                restart: args.restart,
-                log: args.log
-              }
-            });
-          }
-        });
+    const filteredWebsites = websites.filter(
+      (v) =>
+        v.type === args.type &&
+        ((websitesArg.length > 0 && websitesArg.indexOf(v.name) > -1) ||
+          websitesArg.length === 0)
+    );
+
+    filteredWebsites.forEach((w) => {
+      pagesArg.forEach((p) => {
+        const websitePages = w.pages.map((i) => i.name);
+        if (websitePages.indexOf(p) > -1) {
+          run({
+            log: log,
+            db: database,
+            config: w,
+            args: {
+              page: p,
+              type: args.type,
+              env: args.environment,
+              website: w.name,
+              restart: args.restart,
+              log: args.log,
+            },
+          });
+        }
       });
+    });
+
+    if (filteredWebsites.length === 0) {
+      log("ERROR", `No website found for this parameters, check them.`);
+      process.exit(0);
+    }
   }
 
   if (!(args.bot || args.admin)) {

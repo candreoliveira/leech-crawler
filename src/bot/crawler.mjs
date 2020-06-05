@@ -400,10 +400,11 @@ class Crawler {
     }
   }
 
-  async restartProccess(website, page) {
+  async restartProccess(website, page, type) {
     const count = await this.db.countPages({
       website,
       name: page,
+      type,
       processedAt: null,
       startedAt: null,
     });

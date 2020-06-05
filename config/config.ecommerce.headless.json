@@ -162,14 +162,14 @@
           "name": "category",
           "nextPages": [
             {
-              "selector": "#showcase > ul:nth-child(6) li:not(.disabled):not(:first-child):not(:last-child) > a:not([aria-current='page'])",
+              "selector": "#showcase ul[class]:not(:empty) li:not(.disabled):not(:first-child):not(:last-child) > a:not([aria-current='page'])",
               "method": "text",
               "param": "page"
             }
           ],
           "data": [
             {
-              "selector": "#showcase > ul:nth-child(5) a[name='linkToProduct']",
+              "selector": "#showcase ul[role='main'] a[name='linkToProduct']",
               "newKey": "url",
               "attr": "href",
               "required": false
