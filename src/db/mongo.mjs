@@ -46,8 +46,8 @@ const connect = async (config, env) => {
     await Item.createIndex({ serial: 1 }, { unique: true });
     await Item.createIndex({ name: 1 }, { background: true });
 
-    await Metric.createIndex({ serial: 1 }, { unique: true });
-    await Config.createIndex({ serial: 1 }, { unique: true });
+    await Metric.createIndex({ serial: 1, contentSerial: 1 }, { unique: true });
+    await Config.createIndex({ serial: 1, contentSerial: 1 }, { unique: true });
   } catch (e) {
     console.log(`[Mongodb] Can't create indexes ${e}.`);
   }
@@ -315,30 +315,46 @@ const upsertPage = (model) => {
 const upsertItem = upsertPage;
 
 const upsertMetric = (model, Page) => {
-  return async (doc, tryToGetPage = false, slip = 1000) => {
+  return async (
+    doc,
+    tryToGetPage = false,
+    tryToForceUpdate = false,
+    slip = 1000
+  ) => {
     await sleep(slip);
 
-    if (!doc.PageId && tryToGetPage) {
-      const p = await findOnePageByUrl(Page)(doc.url);
-      if (p) doc.PageId = p.id;
+    let tmpDoc = { ...doc };
+    if (!tmpDoc.PageId && tryToGetPage) {
+      const p = await findOnePageByUrl(Page)(tmpDoc.url);
+      if (p) tmpDoc.PageId = p.id;
     }
 
-    const { id, serial, data } = doc;
+    const { id, serial, data, contentSerial } = tmpDoc;
     let filter = {};
-    if (serial) {
-      filter.serial = serial;
-    } else if (id) {
-      filter._id = new Mongodb.ObjectID(id);
-    } else if (data && data.pageSerial) {
-      filter["data.pageSerial"] = data.pageSerial;
+
+    if (tryToForceUpdate) {
+      if (serial) {
+        filter.serial = serial;
+      } else if (id) {
+        filter._id = new Mongodb.ObjectID(id);
+      } else if (data && data.pageSerial) {
+        filter["data.pageSerial"] = data.pageSerial;
+      } else if (contentSerial) {
+        filter.contentSerial = contentSerial;
+      } else {
+        // TODO: Should update? Maybe just ignore this call.
+        // return;
+        filter = doc;
+      }
     } else {
-      filter = doc;
+      tmpDoc.contentSerial = sha256(JSON.stringify(doc));
+      filter.contentSerial = contentSerial;
     }
 
     const r = await model.findOneAndUpdate(
       filter,
       {
-        $set: { ...doc },
+        $set: tmpDoc,
       },
       { upsert: true, returnNewDocument: true }
     );

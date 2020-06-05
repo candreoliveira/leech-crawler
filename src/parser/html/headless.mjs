@@ -35,15 +35,18 @@ const exposeFunction = ({
 }) => async (html) => {
   const date = new Date();
 
-  instance.db.upsertMetric({
-    serial: sha256(getUrl(domain, uri.href)),
-    date: date,
-    url: getUrl(domain, uri.href),
-    time: new Date() - start,
-    type: instance.config.type,
-    website: instance.config.name,
-    name: parg,
-  });
+  instance.db.upsertMetric(
+    {
+      serial: sha256(getUrl(domain, uri.href)),
+      date: date,
+      url: getUrl(domain, uri.href),
+      time: new Date() - start,
+      type: instance.config.type,
+      website: instance.config.name,
+      name: parg,
+    },
+    true
+  );
 
   let output = {
     yield: null,
@@ -137,14 +140,24 @@ class Headless extends Parser {
       retryCount: 10,
       retryDelay: 1000,
       timeout: 30000,
+      onError: () => {
+        // discover how to get status code correctly
+        this.db.upsertMetric(
+          {
+            serial: sha256(getUrl(res.result.meta.domain, res.options.url)),
+            status: 500,
+          },
+          false,
+          true
+        );
+      },
       onSuccess: (res) => {
         this.db.upsertMetric(
           {
-            date: res.result.meta.date,
             serial: sha256(getUrl(res.result.meta.domain, res.options.url)),
-            url: res.result.meta.url,
             status: res.response.status,
           },
+          false,
           true
         );
       },
