@@ -163,7 +163,7 @@ const start = async () => {
     });
 
     if (filteredWebsites.length === 0) {
-      log("ERROR", `No website found for this parameters, check them.`);
+      log("ERROR", `No website found for these parameters, check them.`);
       process.exit(0);
     }
   }
