@@ -53,10 +53,16 @@ class Database {
     this.countItems = this.db.countItems(this.dbcli.model.Item);
     this.upsertItem = this.db.upsertItem(this.dbcli.model.Item);
     this.upsertPage = this.db.upsertPage(this.dbcli.model.Page);
-    this.upsertMetric = this.db.upsertMetric(this.dbcli.model.Metric);
-    this.upsertErrorMetric = this.db.upsertErrorMetric(this.dbcli.model.Metric);
     this.metrics = this.db.metrics(this.dbcli.model.Metric);
-    this.configErrors = this.db.configErrors(this.dbcli.model.Metric);
+    this.configErrors = this.db.configErrors(this.dbcli.model.Config);
+    this.upsertMetric = this.db.upsertMetric(
+      this.dbcli.model.Metric,
+      this.dbcli.model.Page
+    );
+    this.upsertConfig = this.db.upsertConfig(
+      this.dbcli.model.Config,
+      this.dbcli.model.Page
+    );
   }
 }
 

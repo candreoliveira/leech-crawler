@@ -1,4 +1,7 @@
 {
+  "admin": {
+    "port": "3002"
+  },
   "database": {
     "development": {
       "host": "127.0.0.1",
@@ -169,7 +172,7 @@
           ],
           "data": [
             {
-              "selector": "#showcase ul[role='main'] a[name='linkToProduct']",
+              "selector": ".asdasda #showcase ul[role='main'] a[name='linkToProduct']",
               "newKey": "url",
               "attr": "href",
               "required": false

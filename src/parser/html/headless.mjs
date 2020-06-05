@@ -6,6 +6,24 @@ import { default as cheerio } from "cheerio";
 import sha256 from "sha256";
 import { userAgent, getUrl } from "../helper.mjs";
 
+const saveError = async (instance, err, url, date, start, parg) => {
+  await instance.db.upsertConfig(
+    {
+      serial: sha256(url),
+      date: date,
+      url,
+      time: err.date - start,
+      type: instance.config.type,
+      website: instance.config.name,
+      name: parg,
+      selector: err.selector,
+    },
+    true
+  );
+
+  instance.log("ERROR", `[HEADLESS] ${err.message}`);
+};
+
 const exposeFunction = ({
   instance,
   parg,
@@ -46,32 +64,25 @@ const exposeFunction = ({
     let parsedPage;
 
     try {
-      parsedPage = parser(
-        $,
-        domain,
-        uri,
-        parg,
-        instance.config,
-        instance.log,
-        instance.db.upsertErrorMetric,
-        start,
-        date
-      );
+      // ($, domain, uri, parg, config, logger)
+      parsedPage = parser($, domain, uri, parg, instance.config, instance.log);
     } catch (e) {
-      instance.db.upsertErrorMetric({
-        serial: sha256(getUrl(domain, uri.href)),
-        date: date,
-        url: getUrl(domain, uri.href),
-        time: new Date() - start,
-        type: instance.config.type,
-        website: instance.config.name,
-        name: parg,
-        selector: e.selector,
-      });
-
+      saveError(instance, e, getUrl(domain, uri.href), date, start, parg);
       reject(e.message);
-      instance.log("ERROR", `[HEADLESS] ${e.message}`);
     }
+
+    // Save all errors
+    parsedPage.errors.forEach(
+      async (err) =>
+        await saveError(
+          instance,
+          err,
+          getUrl(domain, uri.href),
+          date,
+          start,
+          parg
+        )
+    );
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach((pages) => {

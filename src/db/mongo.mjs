@@ -34,6 +34,7 @@ const connect = async (config, env) => {
   const Page = db.collection("pages");
   const Item = db.collection("items");
   const Metric = db.collection("metrics");
+  const Config = db.collection("configs");
 
   try {
     await Page.createIndex({ serial: 1 }, { unique: true });
@@ -46,6 +47,7 @@ const connect = async (config, env) => {
     await Item.createIndex({ name: 1 }, { background: true });
 
     await Metric.createIndex({ serial: 1 }, { unique: true });
+    await Config.createIndex({ serial: 1 }, { unique: true });
   } catch (e) {
     console.log(`[Mongodb] Can't create indexes ${e}.`);
   }
@@ -56,6 +58,7 @@ const connect = async (config, env) => {
       Page,
       Item,
       Metric,
+      Config,
     },
   };
 };
@@ -65,9 +68,11 @@ const sync = (client, model) => {
     await model.Page.dropIndexes();
     await model.Item.dropIndexes();
     await model.Metric.dropIndexes();
+    await model.Config.dropIndexes();
     await model.Page.drop();
     await model.Item.drop();
     await model.Metric.drop();
+    await model.Config.drop();
     return await Promise.resolve(
       "[Mongodb] Mongodb collections and indexes dropped."
     );
@@ -187,7 +192,7 @@ const countItems = countPages;
 
 const configErrors = (model) => {
   return async (params) => {
-    const tmp = { category: "CONFIG" };
+    const tmp = {};
     if (params.website) tmp.website = params.website;
     if (params.name) tmp.name = params.name;
     if (params.type) tmp.type = params.type;
@@ -204,7 +209,7 @@ const configErrors = (model) => {
 
 const metrics = (model) => {
   return async (params) => {
-    const tmp = { category: "PARSER" };
+    const tmp = {};
     if (params.website) tmp.website = params.website;
     if (params.name) tmp.name = params.name;
     if (params.type) tmp.type = params.type;
@@ -309,12 +314,12 @@ const upsertPage = (model) => {
 
 const upsertItem = upsertPage;
 
-const upsertMetric = (model, category = "PARSER") => {
+const upsertMetric = (model, Page) => {
   return async (doc, tryToGetPage = false, slip = 1000) => {
     await sleep(slip);
 
     if (!doc.PageId && tryToGetPage) {
-      const p = await findOnePageByUrl(model)(doc.url);
+      const p = await findOnePageByUrl(Page)(doc.url);
       if (p) doc.PageId = p.id;
     }
 
@@ -333,10 +338,7 @@ const upsertMetric = (model, category = "PARSER") => {
     const r = await model.findOneAndUpdate(
       filter,
       {
-        $set: {
-          category,
-          ...doc,
-        },
+        $set: { ...doc },
       },
       { upsert: true, returnNewDocument: true }
     );
@@ -355,9 +357,7 @@ const upsertMetric = (model, category = "PARSER") => {
   };
 };
 
-const upsertErrorMetric = (model) => {
-  return upsertMetric(model, "CONFIG");
-};
+const upsertConfig = upsertMetric;
 
 export {
   connect,
@@ -368,7 +368,7 @@ export {
   findOneItemByUrl,
   upsertPage,
   upsertMetric,
-  upsertErrorMetric,
+  upsertConfig,
   upsertItem,
   countItems,
   countPages,

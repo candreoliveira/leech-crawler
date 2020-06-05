@@ -1,5 +1,5 @@
 import { default as htmlToText } from "html-to-text";
-import { clean, zip, getUrl } from "../helper.mjs";
+import { clean, zip, getUrl, flat } from "../helper.mjs";
 import sha256 from "sha256";
 
 const getNextPages = ($, uri, pageNextPages) => {
@@ -217,21 +217,10 @@ const getValueFromSelector = ($, element, selector, domain) => {
   return output;
 };
 
-// $ => html content, array => pageConfig, $ => cheerio obj with html loaded
-const parseDataWithSelector = (
-  $,
-  parg,
-  domain,
-  href,
-  page,
-  type,
-  array,
-  logger,
-  upsertErrorMetric,
-  start,
-  date
-) => {
+// array => pageConfig, $ => cheerio obj with html loaded
+const parseDataWithSelector = ($, domain, href, type, array, logger) => {
   let output = {};
+  const errors = [];
 
   // Loop page config data
   array.forEach((element) => {
@@ -280,23 +269,11 @@ const parseDataWithSelector = (
           if (element.required === true) {
             throw createErrorOnEmpty(element.selector, href);
           } else {
-            const url = getUrl(domain, href);
-
             logger(
               "ERROR",
-              `[${type.toUpperCase()}] Selector ${element.selector.toString()} not working on ${url}!`
+              `[${type.toUpperCase()}] Selector ${element.selector.toString()} not working on ${href}!`
             );
-
-            upsertErrorMetric({
-              serial: sha256(url),
-              date: date,
-              url: url,
-              time: new Date() - start,
-              type: type,
-              website: page,
-              name: parg,
-              selector: element.selector,
-            });
+            errors.push(createErrorOnEmpty(element.selector, href));
           }
         }
 
@@ -314,23 +291,11 @@ const parseDataWithSelector = (
         if (element.required === true) {
           throw createErrorOnEmpty(element.selector, href);
         } else {
-          const url = getUrl(domain, href);
-
           logger(
             "ERROR",
-            `[${type.toUpperCase()}] Selector ${element.selector.toString()} not working on ${url}!`
+            `[${type.toUpperCase()}] Selector ${element.selector.toString()} not working on ${href}!`
           );
-
-          upsertErrorMetric({
-            serial: sha256(url),
-            date: date,
-            url: url,
-            time: new Date() - start,
-            type: type,
-            website: page,
-            name: parg,
-            selector: element.selector,
-          });
+          errors.push(createErrorOnEmpty(element.selector, href));
         }
       }
 
@@ -364,14 +329,15 @@ const parseDataWithSelector = (
     }
   });
 
-  return output;
+  return [output, errors];
 };
 
 const createErrorOnEmpty = (selector, domain) => {
   const e = new Error();
   e.message = `Selector ${selector.toString()} not working on ${domain}!`;
   e.selector = Array.isArray(selector) ? selector : [selector];
-  e.domain = domain;
+  e.url = domain;
+  e.date = new Date();
   return e;
 };
 
@@ -397,33 +363,19 @@ const appendData = (out, data) => {
   });
 };
 
-const parsePage = (
-  $,
-  parg,
-  domain,
-  href,
-  page,
-  type,
-  pageData,
-  logger,
-  upsertErrorMetric,
-  start,
-  date
-) => {
+const parsePage = ($, domain, href, page, type, pageData, logger) => {
   // Parse data
-  let out = parseDataWithSelector(
+  // ($, domain, href, type, array, logger)
+  const parsed = parseDataWithSelector(
     $,
-    parg,
     domain,
     href,
-    page,
     type,
     pageData.filter((e) => !!e.selector),
-    logger,
-    upsertErrorMetric,
-    start,
-    date
+    logger
   );
+
+  let out = parsed[0];
 
   // zip join list
   out = parseDataWithZipJoinList(
@@ -447,20 +399,10 @@ const parsePage = (
     website: page,
   });
 
-  return out;
+  return { output: out, errors: parsed[1] };
 };
 
-const parser = (
-  $,
-  domain,
-  uri,
-  parg,
-  config,
-  logger,
-  upsertErrorMetric,
-  start,
-  date
-) => {
+const parser = ($, domain, uri, parg, config, logger) => {
   // Return an array of array of items
   let filteredPages = config.pages;
 
@@ -468,22 +410,28 @@ const parser = (
     filteredPages = filteredPages.filter((e) => e.name === parg);
   }
 
+  const output = [];
+  const errors = [];
+
+  filteredPages.forEach((page) => {
+    // ($, domain, href, page, type, pageData, logger)
+    const parsed = parsePage(
+      $,
+      domain,
+      uri.href,
+      config.name,
+      config.type,
+      page.data,
+      logger
+    );
+
+    output.push(parsed.output);
+    errors.push(parsed.errors);
+  });
+
   return {
-    result: filteredPages.map((page) => {
-      return parsePage(
-        $,
-        parg,
-        domain,
-        uri.href,
-        config.name,
-        config.type,
-        page.data,
-        logger,
-        upsertErrorMetric,
-        start,
-        date
-      );
-    }),
+    result: output,
+    errors: flat(errors),
     nextPages: filteredPages.map((page) => {
       return getNextPages($, uri, page.nextPages);
     }),

@@ -117,7 +117,7 @@ const start = async () => {
   }
 
   if (args.bot) {
-    let websites = configuration["websites"].slice(0) || [];
+    let websites = configuration.websites.slice(0) || [];
     let websitesArg = args.website ? args.website.slice(0) : [];
     let pagesArg = args.page ? args.page.slice(0) : [];
 

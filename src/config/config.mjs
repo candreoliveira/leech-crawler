@@ -8,64 +8,68 @@ import fs from "fs";
 yargs
   .option("website", {
     alias: "w",
-    describe: "Ordered array of websites to run first."
+    describe: "Ordered array of websites to run first.",
   })
   .option("type", {
     alias: "t",
-    describe: "Crawler page type to run."
+    describe: "Crawler page type to run.",
   })
   .option("page", {
     alias: "p",
-    describe: "Crawler page to run."
+    describe: "Crawler page to run.",
   })
   .option("environment", {
     alias: "e",
     describe: "Environment to run.",
-    default: "development"
+    default: "development",
   })
   .option("log", {
     alias: "l",
-    describe: "Log level."
+    describe: "Log level.",
   })
   .option("cpu", {
     alias: "c",
-    describe: "Cpu quantity to fork."
+    describe: "Cpu quantity to fork.",
   })
   .option("file", {
     alias: "f",
     describe: "File config to load.",
-    default: "config.json"
+    default: "config.json",
   })
   .option("restart", {
     alias: "r",
     describe: "Clean processedAt and startedAt.",
-    default: false
+    default: false,
   })
   .option("sync", {
     alias: "s",
     describe: "Sync database.",
-    default: false
+    default: false,
   })
   .option("admin", {
     alias: "a",
-    describe: "Launch admin panel."
+    describe: "Launch admin panel.",
   })
   .option("debug", {
     alias: "d",
     describe: "Debug admin panel.",
-    default: false
+    default: false,
   })
   .option("bot", {
     alias: "b",
-    describe: "Launch bot."
+    describe: "Launch bot.",
   })
   .demandOption(["environment"])
   .boolean("restart")
   .array("website")
   .array("page");
 
-if (process.argv.indexOf("-b") > -1 || process.argv.indexOf("--b") > -1 ||
-  process.argv.indexOf("-bot") > -1 || process.argv.indexOf("--bot") > -1) {
+if (
+  process.argv.indexOf("-b") > -1 ||
+  process.argv.indexOf("--b") > -1 ||
+  process.argv.indexOf("-bot") > -1 ||
+  process.argv.indexOf("--bot") > -1
+) {
   yargs.demandOption(["page", "type", "cpu", "website", "bot"]);
 } else {
   yargs.demandOption(["admin"]);
@@ -81,16 +85,16 @@ colors.setTheme({
   help: "cyan",
   warn: "yellow",
   debug: "blue",
-  error: "red"
+  error: "red",
 });
 
 const start = async () => {
   // Load remote config
-  const getRemoteConfig = async config => {
+  const getRemoteConfig = async (config) => {
     if (config && config.remote && config.remote.url) {
       try {
         return await r2(config.remote.url).json;
-      } catch (e) { }
+      } catch (e) {}
     }
     return null;
   };
@@ -102,7 +106,7 @@ const start = async () => {
   let configuration = remote ? remote : config;
   configuration = {
     ...config,
-    ...configuration
+    ...configuration,
   };
 
   // Start database
@@ -115,10 +119,8 @@ const start = async () => {
   return {
     database,
     configuration,
-    args: yargs.argv
-  }
-}
+    args: yargs.argv,
+  };
+};
 
-export {
-  start
-}
+export { start };

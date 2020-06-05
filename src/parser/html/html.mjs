@@ -6,14 +6,30 @@ import URL from "url";
 import sha256 from "sha256";
 import { userAgent, getUrl, getStacktrace } from "../helper.mjs";
 
+const saveError = async (instance, err, url, date, start, parg) => {
+  await instance.db.upsertConfig(
+    {
+      serial: sha256(url),
+      date: date,
+      url,
+      time: err.date - start,
+      type: instance.config.type,
+      website: instance.config.name,
+      name: parg,
+      selector: err.selector,
+    },
+    true
+  );
+
+  instance.log("ERROR", `[HEADLESS] ${err.message}`);
+};
+
 const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
   error,
   res,
   done
 ) => {
-  // Zero seconds to prevent error
   const date = new Date();
-  date.setSeconds(0);
 
   instance.db.upsertMetric(
     {
@@ -53,32 +69,17 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
     let parsedPage;
 
     try {
-      parsedPage = parser(
-        $,
-        domain,
-        uri,
-        parg,
-        instance.config,
-        instance.log,
-        instance.db.upsertErrorMetric,
-        start,
-        date
-      );
+      // ($, domain, uri, parg, config, logger)
+      parsedPage = parser($, domain, uri, parg, instance.config, instance.log);
     } catch (e) {
-      instance.db.upsertErrorMetric({
-        serial: sha256(getUrl(domain, uri.href)),
-        date: date,
-        url: getUrl(domain, uri.href),
-        time: new Date() - start,
-        type: instance.config.type,
-        website: instance.config.name,
-        name: parg,
-        selector: e.selector,
-      });
-
+      saveError(instance, e, getUrl(domain, uri.href), date, start, parg);
       reject(e.message);
-      instance.log("ERROR", `[HTML] ${e.message}`);
     }
+
+    // Save all errors
+    parsedPage.errors.forEach((err) =>
+      saveError(instance, err, getUrl(domain, uri.href), date, start, parg)
+    );
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach((pages) => {
