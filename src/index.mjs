@@ -76,100 +76,119 @@ const run = async (cfg) => {
   }
 };
 
+const spawnSubmodule = (mod, args, log) => {
+  const www = path.join(path.resolve(), "src", mod, "bin", "www.mjs");
+  const programArgs = ["--experimental-modules", www];
+
+  if (args.debug) {
+    programArgs.unshift("--inspect-brk");
+  }
+
+  Object.entries(args).forEach(([key, value]) => {
+    if (key !== "$0" && key !== "_" && key.length === 1) {
+      if (Array.isArray(value)) {
+        value.forEach((k, v) => {
+          programArgs.push(`--${key}`);
+          programArgs.push(String(v));
+        });
+      } else {
+        programArgs.push(`--${key}`);
+        programArgs.push(String(value));
+      }
+    }
+  });
+
+  // Install dependencies before starting api
+  spawnSync("npm", ["install"], {
+    cwd: path.join(path.resolve(), "src", mod),
+  });
+
+  const mode = spawn("node", programArgs);
+  mode.stdout.on("data", (data) =>
+    log("VERBOSE", `[${mod.toUpperCase()}] ${data}`)
+  );
+  mode.stderr.on("data", (data) =>
+    log("ERROR", `[${mod.toUpperCase()}] ${data}`)
+  );
+  mode.on("close", (code) => {
+    log("INFO", `[${mod.toUpperCase()}] Process closed by ${code}.`);
+    process.exit(0);
+  });
+};
+
+const startBot = (database, configuration, args, log) => {
+  let websites = configuration.websites.slice(0) || [];
+  let websitesArg = args.website ? args.website.slice(0) : [];
+  let pagesArg = args.page ? args.page.slice(0) : [];
+
+  // Adjust config with preprocessed file
+  websites.forEach((w) => {
+    const pages = w.pages || [];
+    pages.forEach((p) => {
+      const preprocesses = p.preprocess || [];
+      preprocesses.forEach((s) => {
+        if (s.type.toLowerCase() === "file") {
+          s.script = `return ${fs.readFileSync(s.path, "utf-8")}`;
+        }
+      });
+    });
+  });
+
+  const filteredWebsites = websites.filter(
+    (v) =>
+      v.type === args.type &&
+      ((websitesArg.length > 0 && websitesArg.indexOf(v.name) > -1) ||
+        websitesArg.length === 0)
+  );
+
+  filteredWebsites.forEach((w) => {
+    pagesArg.forEach((p) => {
+      const websitePages = w.pages.map((i) => i.name);
+      if (websitePages.indexOf(p) > -1) {
+        run({
+          log: log,
+          db: database,
+          config: w,
+          args: {
+            page: p,
+            type: args.type,
+            env: args.environment,
+            website: w.name,
+            restart: args.restart,
+            log: args.log,
+          },
+        });
+      }
+    });
+  });
+
+  if (filteredWebsites.length === 0) {
+    log("ERROR", `No website found for these parameters, check them.`);
+    process.exit(0);
+  }
+};
+
 const start = async () => {
   const { database, configuration, args } = await loadConfig();
   const log = l(args.log);
 
   if (args.admin) {
-    const www = path.join(path.resolve(), "src", "admin", "bin", "www.mjs");
-    const programArgs = ["--experimental-modules", www];
+    spawnSubmodule("admin", args, log);
+  }
 
-    if (args.debug) {
-      programArgs.unshift("--inspect-brk");
-    }
-
-    Object.entries(args).forEach(([key, value]) => {
-      if (key !== "$0" && key !== "_" && key.length === 1) {
-        if (Array.isArray(value)) {
-          value.forEach((k, v) => {
-            programArgs.push(`--${key}`);
-            programArgs.push(String(v));
-          });
-        } else {
-          programArgs.push(`--${key}`);
-          programArgs.push(String(value));
-        }
-      }
-    });
-
-    // Install dependencies before starting admin
-    spawnSync("npm", ["install"], {
-      cwd: path.join(path.resolve(), "src", "admin"),
-    });
-
-    const adm = spawn("node", programArgs);
-    adm.stdout.on("data", (data) => log("VERBOSE", `[ADMIN] ${data}`));
-    adm.stderr.on("data", (data) => log("ERROR", `[ADMIN] ${data}`));
-    adm.on("close", (code) => {
-      log("INFO", `[ADMIN] Process closed by ${code}.`);
-      process.exit(0);
-    });
+  if (args.microservice) {
+    spawnSubmodule("api", args, log);
   }
 
   if (args.bot) {
-    let websites = configuration.websites.slice(0) || [];
-    let websitesArg = args.website ? args.website.slice(0) : [];
-    let pagesArg = args.page ? args.page.slice(0) : [];
-
-    // Adjust config with preprocessed file
-    websites.forEach((w) => {
-      const pages = w.pages || [];
-      pages.forEach((p) => {
-        const preprocesses = p.preprocess || [];
-        preprocesses.forEach((s) => {
-          if (s.type.toLowerCase() === "file") {
-            s.script = `return ${fs.readFileSync(s.path, "utf-8")}`;
-          }
-        });
-      });
-    });
-
-    const filteredWebsites = websites.filter(
-      (v) =>
-        v.type === args.type &&
-        ((websitesArg.length > 0 && websitesArg.indexOf(v.name) > -1) ||
-          websitesArg.length === 0)
-    );
-
-    filteredWebsites.forEach((w) => {
-      pagesArg.forEach((p) => {
-        const websitePages = w.pages.map((i) => i.name);
-        if (websitePages.indexOf(p) > -1) {
-          run({
-            log: log,
-            db: database,
-            config: w,
-            args: {
-              page: p,
-              type: args.type,
-              env: args.environment,
-              website: w.name,
-              restart: args.restart,
-              log: args.log,
-            },
-          });
-        }
-      });
-    });
-
-    if (filteredWebsites.length === 0) {
-      log("ERROR", `No website found for these parameters, check them.`);
-      process.exit(0);
-    }
+    startBot(database, configuration, args, log);
   }
 
-  if (!(args.bot || args.admin)) {
-    log("ERROR", `Start the crawler with admin or bot parameters.`);
+  if (!(args.bot || args.admin || args.microservice)) {
+    log(
+      "ERROR",
+      `Start the crawler with admin or bot or microservice parameters.`
+    );
     process.exit(0);
   }
 };

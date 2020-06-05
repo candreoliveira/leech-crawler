@@ -50,6 +50,10 @@ yargs
     alias: "a",
     describe: "Launch admin panel.",
   })
+  .option("microservice", {
+    alias: "m",
+    describe: "Launch the api server.",
+  })
   .option("debug", {
     alias: "d",
     describe: "Debug admin panel.",

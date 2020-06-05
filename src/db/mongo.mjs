@@ -4,16 +4,17 @@ import sha256 from "sha256";
 
 const connect = async (config, env) => {
   let db;
+  const server = process.env.DB_SRV || config[env].srv;
+  const user = process.env.DB_USER || config[env].user;
+  const password = process.env.DB_PASS || config[env].password;
+  const auth = (user && `${user}:${password}@`) || "";
+  const host = process.env.DB_HOST || config[env].host;
+  const port = process.env.DB_PORT || config[env].port;
+  const name = process.env.DB_NAME || config[env].name;
   const client = new Mongodb.MongoClient(
-    `mongodb${process.env.DB_SRV || config[env].srv ? "+srv" : ""}://${
-      process.env.DB_USER || config[env].user
-    }:${process.env.DB_PASS || config[env].password}@${
-      process.env.DB_HOST || config[env].host
-    }${
-      process.env.DB_SRV || config[env].srv
-        ? ""
-        : ":" + (process.env.DB_PORT || config[env].port)
-    }/${process.env.DB_NAME || config[env].name}`,
+    `mongodb${server ? "+srv" : ""}://${auth}${host}${
+      server ? "" : ":" + port
+    }/${name}`,
     {
       useNewUrlParser: true,
       poolSize: 50,

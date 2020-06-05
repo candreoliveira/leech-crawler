@@ -1,5 +1,4 @@
 import { default as express } from "express";
-import { default as moment } from "moment";
 
 var router = express.Router();
 
@@ -18,7 +17,7 @@ const getMetrics = async (
   });
 };
 
-router.get("/metrics", async (req, res) => {
+router.get("/", async (req, res) => {
   const database = res.app.get("database");
   const website = req.query.website || undefined;
 

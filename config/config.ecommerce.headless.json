@@ -2,6 +2,9 @@
   "admin": {
     "port": "3002"
   },
+  "api": {
+    "port": "3001"
+  },
   "database": {
     "development": {
       "host": "127.0.0.1",
