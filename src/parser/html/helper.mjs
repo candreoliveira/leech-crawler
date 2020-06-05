@@ -238,7 +238,7 @@ const parseDataWithSelector = (
     if (typeof element !== "object")
       return logger(
         "ERROR",
-        `[${type}] Error parsing config: ${element} is not an object.`
+        `[${type.toUpperCase()}] Error parsing config: ${element} is not an object.`
       );
 
     let selector = [],
@@ -284,7 +284,7 @@ const parseDataWithSelector = (
 
             logger(
               "ERROR",
-              `[${type}] Selector ${element.selector.toString()} not working on ${url}!`
+              `[${type.toUpperCase()}] Selector ${element.selector.toString()} not working on ${url}!`
             );
 
             upsertErrorMetric({
@@ -318,7 +318,7 @@ const parseDataWithSelector = (
 
           logger(
             "ERROR",
-            `[${type}] Selector ${element.selector.toString()} not working on ${url}!`
+            `[${type.toUpperCase()}] Selector ${element.selector.toString()} not working on ${url}!`
           );
 
           upsertErrorMetric({
@@ -369,7 +369,7 @@ const parseDataWithSelector = (
 
 const createErrorOnEmpty = (type, selector, domain) => {
   const e = new Error();
-  e.message = `[${type}] Selector ${selector.toString()} not working on ${domain}!`;
+  e.message = `[${type.toUpperCase()}] Selector ${selector.toString()} not working on ${domain}!`;
   e.selector = Array.isArray(selector) ? selector : [selector];
   e.domain = domain;
   return e;

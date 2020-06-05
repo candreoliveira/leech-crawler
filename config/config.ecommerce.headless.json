@@ -169,7 +169,7 @@
           ],
           "data": [
             {
-              "selector": ".asdasd #showcase > ul:nth-child(5) a[name='linkToProduct']",
+              "selector": "#showcase > ul:nth-child(5) a[name='linkToProduct']",
               "newKey": "url",
               "attr": "href",
               "required": false
