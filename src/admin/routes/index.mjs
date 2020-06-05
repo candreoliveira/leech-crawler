@@ -1,37 +1,9 @@
 import { default as express } from "express";
 import { default as moment } from "moment";
+import { getConfigErrors } from "./configError.mjs";
+import { getMetrics } from "./metric.mjs";
 
 var router = express.Router();
-
-const getMetrics = async (
-  database,
-  website = undefined,
-  name = undefined,
-  type = undefined,
-  limit = 50
-) => {
-  return await database.metrics({
-    website,
-    name,
-    type,
-    limit,
-  });
-};
-
-const getConfigErrors = async (
-  database,
-  website = undefined,
-  name = undefined,
-  type = undefined,
-  limit = 50
-) => {
-  return await database.configErrors({
-    website,
-    name,
-    type,
-    limit,
-  });
-};
 
 router.get("/", async (req, res) => {
   const database = res.app.get("database");
@@ -53,30 +25,6 @@ router.get("/", async (req, res) => {
       hasData: !!metrics && !!configErrors,
       moment: moment,
     });
-  } catch (e) {
-    res.status(500).send(e);
-  }
-});
-
-router.get("/metrics", async (req, res) => {
-  const database = res.app.get("database");
-  const website = req.query.website || undefined;
-
-  try {
-    const metrics = await getMetrics(database, website);
-    res.status(200).json(metrics);
-  } catch (e) {
-    res.status(500).send(e);
-  }
-});
-
-router.get("/configErrors", async (req, res) => {
-  const database = res.app.get("database");
-  const website = req.query.website || undefined;
-
-  try {
-    const metrics = await getConfigErrors(database, website);
-    res.status(200).json(metrics);
   } catch (e) {
     res.status(500).send(e);
   }

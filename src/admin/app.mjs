@@ -1,5 +1,7 @@
 import { start as loadConfig } from "../config/config.mjs";
 import { router as indexRouter } from "./routes/index.mjs";
+import { router as metricRouter } from "./routes/metric.mjs";
+import { router as errorRouter } from "./routes/configError.mjs";
 import { default as createError } from "http-errors";
 import { default as express } from "express";
 import { default as path } from "path";
@@ -22,18 +24,25 @@ const start = async () => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
-  app.use(sassMiddleware({
-    src: path.join(path.resolve(), "src", "admin", "public"),
-    dest: path.join(path.resolve(), "src", "admin", "public"),
-    indentedSyntax: false, // true = .sass and false = .scss
-    sourceMap: true,
-    debug: true,
-    outputStyle: 'compressed'
-  }));
+  app.use(
+    sassMiddleware({
+      src: path.join(path.resolve(), "src", "admin", "public"),
+      dest: path.join(path.resolve(), "src", "admin", "public"),
+      indentedSyntax: false, // true = .sass and false = .scss
+      sourceMap: true,
+      debug: true,
+      outputStyle: "compressed",
+    })
+  );
   app.use(express.static(path.join(path.resolve(), "src", "admin", "public")));
-  app.use("/assets", express.static(path.join(path.resolve(), "src", "admin", "node_modules")));
+  app.use(
+    "/assets",
+    express.static(path.join(path.resolve(), "src", "admin", "node_modules"))
+  );
 
   app.use("/", indexRouter);
+  app.use("/", metricRouter);
+  app.use("/", errorRouter);
 
   // catch 404 and forward to error handler
   app.use(function (req, res, next) {
@@ -52,8 +61,6 @@ const start = async () => {
   });
 
   return app;
-}
+};
 
-export {
-  start
-}
+export { start };

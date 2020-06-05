@@ -238,7 +238,7 @@ const parseDataWithSelector = (
     if (typeof element !== "object")
       return logger(
         "ERROR",
-        `[HTML] Error parsing config: ${element} is not an object.`
+        `[${type}] Error parsing config: ${element} is not an object.`
       );
 
     let selector = [],
@@ -278,12 +278,19 @@ const parseDataWithSelector = (
         // Value is the content and cant be empty otherwise the config is not working for this page
         if (!value || (Array.isArray(value) && value.length === 0)) {
           if (element.required === true) {
-            throw createErrorOnEmpty(element.selector, href);
+            throw createErrorOnEmpty(type, element.selector, href);
           } else {
+            const url = getUrl(domain, href);
+
+            logger(
+              "ERROR",
+              `[${type}] Selector ${element.selector.toString()} not working on ${url}!`
+            );
+
             upsertErrorMetric({
-              serial: sha256(getUrl(domain, href)),
+              serial: sha256(url),
               date: date,
-              url: getUrl(domain, href),
+              url: url,
               time: new Date() - start,
               type: type,
               website: page,
@@ -305,12 +312,19 @@ const parseDataWithSelector = (
       // Value is the content and cant be empty otherwise the config is not working for this page
       if (!value || (Array.isArray(value) && value.length === 0)) {
         if (element.required === true) {
-          throw createErrorOnEmpty(element.selector, href);
+          throw createErrorOnEmpty(type, element.selector, href);
         } else {
+          const url = getUrl(domain, href);
+
+          logger(
+            "ERROR",
+            `[${type}] Selector ${element.selector.toString()} not working on ${url}!`
+          );
+
           upsertErrorMetric({
-            serial: sha256(getUrl(domain, href)),
+            serial: sha256(url),
             date: date,
-            url: getUrl(domain, href),
+            url: url,
             time: new Date() - start,
             type: type,
             website: page,
@@ -353,9 +367,9 @@ const parseDataWithSelector = (
   return output;
 };
 
-const createErrorOnEmpty = (selector, domain) => {
+const createErrorOnEmpty = (type, selector, domain) => {
   const e = new Error();
-  e.message = `Selector ${selector.toString()} not working on ${domain}!`;
+  e.message = `[${type}] Selector ${selector.toString()} not working on ${domain}!`;
   e.selector = Array.isArray(selector) ? selector : [selector];
   e.domain = domain;
   return e;

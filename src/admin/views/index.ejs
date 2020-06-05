@@ -238,7 +238,10 @@
                                 <%= moment(String(m.date)).format('DD/MM/YYYY'); %>
                               </td>
                               <td>
-                                <%= String(m.time/1000) + 's' %>
+                                <%= m.name %>
+                              </td>
+                              <td>
+                                <%= m.url %>
                               </td>
                               <td>
                                 <%= String(m.selector) %>

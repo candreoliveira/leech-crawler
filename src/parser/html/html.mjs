@@ -50,15 +50,35 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
       `[HTML] [HEADLESS] Error parsing website ${uri}: without $.`
     );
   } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
-    const parsedPage = parser(
-      $,
-      domain,
-      uri,
-      parg,
-      instance.config.pages,
-      instance.config.name,
-      instance.log
-    );
+    let parsedPage;
+
+    try {
+      parsedPage = parser(
+        $,
+        domain,
+        uri,
+        parg,
+        instance.config,
+        instance.log,
+        instance.db.upsertErrorMetric,
+        start,
+        date
+      );
+    } catch (e) {
+      instance.db.upsertErrorMetric({
+        serial: sha256(getUrl(domain, uri.href)),
+        date: date,
+        url: getUrl(domain, uri.href),
+        time: new Date() - start,
+        type: instance.config.type,
+        website: instance.config.name,
+        name: parg,
+        selector: e.selector,
+      });
+
+      reject(e.message);
+      instance.log("ERROR", `[HTML] ${e.message}`);
+    }
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach((pages) => {
