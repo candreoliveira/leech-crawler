@@ -278,7 +278,7 @@ const parseDataWithSelector = (
         // Value is the content and cant be empty otherwise the config is not working for this page
         if (!value || (Array.isArray(value) && value.length === 0)) {
           if (element.required === true) {
-            throw createErrorOnEmpty(type, element.selector, href);
+            throw createErrorOnEmpty(element.selector, href);
           } else {
             const url = getUrl(domain, href);
 
@@ -312,7 +312,7 @@ const parseDataWithSelector = (
       // Value is the content and cant be empty otherwise the config is not working for this page
       if (!value || (Array.isArray(value) && value.length === 0)) {
         if (element.required === true) {
-          throw createErrorOnEmpty(type, element.selector, href);
+          throw createErrorOnEmpty(element.selector, href);
         } else {
           const url = getUrl(domain, href);
 
@@ -367,9 +367,9 @@ const parseDataWithSelector = (
   return output;
 };
 
-const createErrorOnEmpty = (type, selector, domain) => {
+const createErrorOnEmpty = (selector, domain) => {
   const e = new Error();
-  e.message = `[${type.toUpperCase()}] Selector ${selector.toString()} not working on ${domain}!`;
+  e.message = `Selector ${selector.toString()} not working on ${domain}!`;
   e.selector = Array.isArray(selector) ? selector : [selector];
   e.domain = domain;
   return e;
