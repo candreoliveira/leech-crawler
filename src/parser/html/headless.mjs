@@ -101,7 +101,6 @@ const exposeFunction = ({
   }
 
   output.nextPages = output.nextPages.length === 0 ? null : output.nextPages;
-
   resolve(output);
   return output;
 };

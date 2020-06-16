@@ -269,10 +269,6 @@ const parseDataWithSelector = ($, domain, href, type, array, logger) => {
           if (element.required === true) {
             throw createErrorOnEmpty(element.selector, href);
           } else {
-            logger(
-              "ERROR",
-              `[${type.toUpperCase()}] Selector ${element.selector.toString()} not working on ${href}!`
-            );
             errors.push(createErrorOnEmpty(element.selector, href));
           }
         }
@@ -291,10 +287,6 @@ const parseDataWithSelector = ($, domain, href, type, array, logger) => {
         if (element.required === true) {
           throw createErrorOnEmpty(element.selector, href);
         } else {
-          logger(
-            "ERROR",
-            `[${type.toUpperCase()}] Selector ${element.selector.toString()} not working on ${href}!`
-          );
           errors.push(createErrorOnEmpty(element.selector, href));
         }
       }

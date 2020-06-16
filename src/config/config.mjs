@@ -56,7 +56,7 @@ yargs
   })
   .option("debug", {
     alias: "d",
-    describe: "Debug admin panel.",
+    describe: "Debug submodules (admin, api).",
     default: false,
   })
   .option("bot", {
@@ -75,8 +75,15 @@ if (
   process.argv.indexOf("--bot") > -1
 ) {
   yargs.demandOption(["page", "type", "cpu", "website", "bot"]);
-} else {
+} else if (
+  process.argv.indexOf("-a") > -1 ||
+  process.argv.indexOf("--a") > -1 ||
+  process.argv.indexOf("-admin") > -1 ||
+  process.argv.indexOf("--admin") > -1
+) {
   yargs.demandOption(["admin"]);
+} else {
+  yargs.demandOption(["microservice"]);
 }
 
 colors.setTheme({

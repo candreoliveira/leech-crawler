@@ -9,8 +9,8 @@ import { default as http } from "http";
 
 const start = async () => {
   const app = await startApp();
-  const p = app.get("configuration").api
-    ? app.get("configuration").api.port
+  const p = app.get("apiConfiguration")
+    ? app.get("apiConfiguration").port
     : process.env.PORT;
   let port = normalizePort(p || 3001);
 

@@ -9,6 +9,7 @@ import { default as dotenv } from "dotenv";
 import { spawn, spawnSync } from "child_process";
 import { default as path } from "path";
 import fs from "fs";
+import yargs from "yargs";
 
 // Start dotenv
 dotenv.config();
@@ -87,7 +88,7 @@ const spawnSubmodule = (mod, args, log) => {
   Object.entries(args).forEach(([key, value]) => {
     if (key !== "$0" && key !== "_" && key.length === 1) {
       if (Array.isArray(value)) {
-        value.forEach((k, v) => {
+        value.forEach((v) => {
           programArgs.push(`--${key}`);
           programArgs.push(String(v));
         });
