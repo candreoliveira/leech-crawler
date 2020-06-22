@@ -301,8 +301,12 @@ const parseDataWithSelector = ($, domain, href, type, array, logger) => {
       output[element.newKey]
     ) {
       output[element.newKey] = output[element.newKey].map((u) =>
-        getUrl(domain, u)
+        getUrl(domain, decodeURIComponent(u))
       );
+    }
+
+    if (element.uri && output[element.newKey]) {
+      output[element.newKey] = decodeURIComponent(output[element.newKey]);
     }
 
     if (element.list && output[element.newKey]) {
@@ -355,15 +359,16 @@ const appendData = (out, data) => {
   });
 };
 
-const parsePage = ($, domain, href, page, type, pageData, logger) => {
+const parsePage = ($, logger, { domain, href, website, name, type, data }) => {
   // Parse data
   // ($, domain, href, type, array, logger)
+  // [{newKey: []}, [errors]]
   const parsed = parseDataWithSelector(
     $,
     domain,
     href,
     type,
-    pageData.filter((e) => !!e.selector),
+    data.filter((e) => !!e.selector),
     logger
   );
 
@@ -372,23 +377,24 @@ const parsePage = ($, domain, href, page, type, pageData, logger) => {
   // zip join list
   out = parseDataWithZipJoinList(
     out,
-    pageData.filter((e) => !!e.join)
+    data.filter((e) => !!e.join)
   );
 
-  // zip array of selectors
+  // zip array of selectors; Transform {key:[values]} to [{key:value}]
   out = parseDataWithZip(out);
 
   // Adjust the "Join" case
   out = parseDataWithJoin(
     out,
-    pageData.filter((e) => !!e.join)
+    data.filter((e) => !!e.join)
   );
 
   // Set pageUrl and website
   out = appendData(out, {
-    pageSerial: sha256(getUrl(domain, href)),
-    pageUrl: getUrl(domain, href),
-    website: page,
+    _pageSerial: sha256(getUrl(domain, href)),
+    _pageUrl: getUrl(domain, href),
+    _pageName: name,
+    _websiteName: website,
   });
 
   return { output: out, errors: parsed[1] };
@@ -406,16 +412,15 @@ const parser = ($, domain, uri, parg, config, logger) => {
   const errors = [];
 
   filteredPages.forEach((page) => {
-    // ($, domain, href, page, type, pageData, logger)
-    const parsed = parsePage(
-      $,
+    // ($, {domain, href, website, name, type, data}, logger)
+    const parsed = parsePage($, logger, {
       domain,
-      uri.href,
-      config.name,
-      config.type,
-      page.data,
-      logger
-    );
+      href: uri.href,
+      website: config.name,
+      type: config.type,
+      data: page.data,
+      name: page.name,
+    });
 
     output.push(parsed.output);
     errors.push(parsed.errors);

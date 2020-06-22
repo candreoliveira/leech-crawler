@@ -1,5 +1,8 @@
 import { default as express } from "express";
-import { validateBody, createErrorForType } from "../utils/helper.mjs";
+import {
+  parserMiddleware,
+  parseReaderResponse,
+} from "../utils/parserHelper.mjs";
 import { getUrl } from "../../parser/helper.mjs";
 import { asyncMiddleware } from "../utils/asyncMiddleware.mjs";
 
@@ -9,37 +12,7 @@ var router = express.Router();
 // [{ website: "", type: "", pages: [{ name: "", urls: [] }]}];
 router.post(
   "/",
-  (req, res, next) => {
-    const args = res.app.get("args");
-    const websitesConfiguration = res.app.get("websitesConfiguration");
-    const pool = res.app.get("parserPool");
-    const urls = [
-      "//zoom.com.br/some/path",
-      "http://www.zoom.com.br",
-      "//www.zoom.com.br/",
-      "https://zoom.com.br/some/path",
-    ];
-
-    if (!Array.isArray(pool) || pool.length === 0) {
-      return next(createErrorForType("pool", "array"));
-    } else {
-      const e = validateBody(
-        req.body,
-        {
-          type: args.type,
-          websites: args.website,
-          pages: args.page,
-          urls,
-        },
-        websitesConfiguration
-      );
-      if (e) {
-        return next(e);
-      }
-    }
-
-    return next();
-  },
+  parserMiddleware,
   asyncMiddleware(async (req, res) => {
     const pool = res.app.get("parserPool");
     const websites = res.app.get("websitesConfiguration");
@@ -67,7 +40,8 @@ router.post(
       }
     }
 
-    res.status(200).json(await Promise.all(promises));
+    const response = await Promise.all(promises);
+    res.status(200).json(parseReaderResponse(req.body, response));
   })
 );
 
