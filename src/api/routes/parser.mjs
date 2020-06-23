@@ -9,7 +9,7 @@ import { asyncMiddleware } from "../utils/asyncMiddleware.mjs";
 var router = express.Router();
 
 // Body
-// [{ website: "", type: "", pages: [{ name: "", urls: [] }]}];
+// [{ website: "", type: "", pages: [{ name: "", url: [] }]}];
 router.post(
   "/",
   parserMiddleware,
@@ -31,7 +31,7 @@ router.post(
         )[0];
 
         if (crawl && crawl.crawler) {
-          const urls = p.urls.map((u) => {
+          const urls = p.url.map((u) => {
             return { url: getUrl(domain, u) };
           });
 

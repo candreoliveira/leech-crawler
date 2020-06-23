@@ -8,7 +8,7 @@ import { includedIn, validUrls } from "./helper.mjs";
 //     pages: [
 //       {
 //         name: "",
-//         urls: [],
+//         url: [],
 //       },
 //     ],
 //   },
@@ -54,11 +54,11 @@ const validateBody = (body, args, websites) => {
       for (let j = 0; j < w.pages.length; ++j) {
         const p = w.pages[j];
         if (
-          !Array.isArray(p.urls) ||
-          p.urls.length === 0 ||
-          !validUrls(p.urls, wconf.domain)
+          !Array.isArray(p.url) ||
+          p.url.length === 0 ||
+          !validUrls(p.url, wconf.domain)
         ) {
-          return createErrorForList(args.urls, "urls");
+          return createErrorForList(args.urls, "url");
         }
       }
     }
@@ -113,22 +113,8 @@ const parserMiddleware = (req, res, next) => {
   return next();
 };
 
-// [{ "website": "magalu", "type": "headless", "pages": [{ "name": "category", "urls": ["/notebook-e-macbook/informatica/s/in/ntmk"]}]}]
+// [{ "website": "magalu", "type": "headless", "pages": [{ "name": "category", "url": ["/notebook-e-macbook/informatica/s/in/ntmk"]}]}]
 const parseReaderResponse = (body, response) => {
-  return response;
-  const out = [];
-
-  // body.forEach((w, index) => {
-  //   const website = response[index];
-  //   out.website = w.website;
-  //   out.type = w.type;
-  //   w.pages.forEach((page, jndex) => {
-  //     page.urls.forEach((url, kndex) => {
-  //       website[kndex] = "";
-  //     });
-  //   });
-  // });
-
   // 1 - website / type
   // 2 - uris
   // 3 - pages
@@ -138,30 +124,50 @@ const parseReaderResponse = (body, response) => {
   //   type: "",
   //   pages: [{
   //     url: "",
-  //     name: "",
+  //     page: "",
   //     data: [{}]
   //   }]
   // }]
 
-  (response || []).forEach((website, index) => {
+  return (response || []).map((website, index) => {
     const oweb = {};
     const bwebsite = body[index];
+    const pageNames = [];
+
     oweb.website = bwebsite.website;
     oweb.type = bwebsite.type;
     oweb.pages = [];
 
-    (website || []).forEach((url) => {
+    (website || []).forEach((parserResponse) => {
+      let shouldMerge = false;
       const opage = {};
-      (url.yield || []).forEach((page) => {
-        (page || []).forEach((selector) => {
-          out.website = selector[0] ? selector[0].website : "";
-          out.type = "";
-        });
-      });
-    });
-  });
+      (parserResponse.yield || []).forEach((page) => {
+        if (Array.isArray(page)) {
+          opage.page = page[0]._pageName;
+          opage.url = page[0]._pageUrl;
+          opage.data = page;
 
-  return out;
+          if (pageNames.indexOf(opage.page) > -1) shouldMerge = true;
+          pageNames.push(page[0]._pageName);
+        } else if (page && page._pageName) {
+          opage.page = page._pageName;
+          opage.url = page._pageUrl;
+          opage.data = [page];
+
+          if (pageNames.indexOf(opage.page) > -1) shouldMerge = true;
+          pageNames.push(page._pageName);
+        }
+      });
+
+      if (shouldMerge) {
+      } else {
+      }
+
+      oweb.pages.push(opage);
+    });
+
+    return oweb;
+  });
 };
 
 export { parserMiddleware, parseReaderResponse };
