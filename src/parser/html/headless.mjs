@@ -139,11 +139,12 @@ class Headless extends Parser {
       retryCount: 10,
       retryDelay: 1000,
       timeout: 30000,
-      onError: () => {
+      onError: (res) => {
+        const domain = this.config.domain;
         // discover how to get status code correctly
         this.db.upsertMetric(
           {
-            serial: sha256(getUrl(res.result.meta.domain, res.options.url)),
+            serial: sha256(getUrl(domain, res.options.url)),
             status: 500,
           },
           false,
