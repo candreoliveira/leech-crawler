@@ -104,7 +104,7 @@ const spawnSubmodule = (mod, args, log) => {
     cwd: path.join(path.resolve(), "src", mod),
   });
 
-  const mode = spawn("node", programArgs);
+  const mode = spawn("node", programArgs, { env: process.env });
   mode.stdout.on("data", (data) =>
     log("VERBOSE", `[${mod.toUpperCase()}] ${data}`)
   );
