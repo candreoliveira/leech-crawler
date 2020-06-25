@@ -58,7 +58,15 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
     reject(err);
   } else if (!$) {
     output.yield = [
-      [{ statusCode: res.statusCode, pageUrl: getUrl(domain, uri.href) }],
+      [
+        {
+          _statusCode: res.statusCode,
+          _pageSerial: sha256(getUrl(domain, uri.href)),
+          _pageUrl: getUrl(domain, uri.href),
+          _pageName: parg,
+          _websiteName: instance.config.name,
+        },
+      ],
     ];
 
     instance.log(

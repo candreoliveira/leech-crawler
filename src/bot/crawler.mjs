@@ -638,13 +638,13 @@ class Crawler {
                   url: getUrl(this.crawl.config.domain, obj.url, true),
                 })),
                 "url",
-                getUrl(this.crawl.config.domain, items[0].pageUrl, true)
+                getUrl(this.crawl.config.domain, items[0]._pageUrl, true)
               );
 
               if ((currentPage && !currentPage.id) || !currentPage) {
                 try {
                   currentPage = await this.getPage(
-                    items[0].pageUrl || currentPage.url
+                    items[0]._pageUrl || currentPage.url
                   );
                 } catch (err) {
                   this.log(
