@@ -15,11 +15,11 @@ const connect = (config, env) => {
         max: 50,
         min: 0,
         acquire: 30000,
-        idle: 10000
+        idle: 10000,
       },
       keepAlive: true,
       operatorsAliases: false,
-      logging: false
+      logging: false,
     }
   );
 
@@ -28,43 +28,43 @@ const connect = (config, env) => {
     {
       serial: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       url: {
         type: Sequelize.STRING(5000),
-        allowNull: false
+        allowNull: false,
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       type: {
         type: Sequelize.ENUM,
         allowNull: false,
-        values: ["rss", "html", "headless"]
+        values: ["rss", "html", "headless"],
       },
       website: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       processedAt: {
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
       },
       startedAt: {
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     },
     {
       schema: "public",
       indexes: [
         {
           unique: true,
-          fields: ["serial"]
+          fields: ["serial"],
         },
         {
-          fields: ["name", "type", "website", "processedAt", "startedAt"]
-        }
-      ]
+          fields: ["name", "type", "website", "processedAt", "startedAt"],
+        },
+      ],
     }
   );
 
@@ -73,48 +73,48 @@ const connect = (config, env) => {
     {
       serial: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       url: {
         type: Sequelize.STRING(5000),
-        allowNull: false
+        allowNull: false,
       },
       date: {
         type: Sequelize.DATE,
-        allowNull: false
+        allowNull: false,
       },
       time: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       status: {
         type: Sequelize.STRING,
-        allowNull: true
+        allowNull: true,
       },
       type: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       website: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false
-      }
+        allowNull: false,
+      },
     },
     {
       schema: "public",
       indexes: [
         {
-          fields: ["serial"]
+          fields: ["serial"],
         },
         {
           fields: ["date", "serial"],
-          unique: true
-        }
-      ]
+          unique: true,
+        },
+      ],
     }
   );
 
@@ -123,44 +123,44 @@ const connect = (config, env) => {
     {
       data: {
         type: Sequelize.JSONB,
-        allowNull: false
+        allowNull: false,
       },
       serial: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       name: {
         type: Sequelize.STRING,
-        allowNull: false
-      }
+        allowNull: false,
+      },
     },
     {
       schema: "public",
       indexes: [
         {
           unique: true,
-          fields: ["serial"]
+          fields: ["serial"],
         },
         {
-          fields: ["name"]
+          fields: ["name"],
         },
         {
-          fields: [sequelize.literal("(\"data\"->>'serial')")]
-        }
-      ]
+          fields: [sequelize.literal("(\"data\"->>'serial')")],
+        },
+      ],
     }
   );
 
   const PageItems = Page.hasMany(Item, {
-    onDelete: "CASCADE"
+    onDelete: "CASCADE",
   });
 
   const PagePages = Page.hasMany(Page, {
-    onDelete: "CASCADE"
+    onDelete: "CASCADE",
   });
 
   const PageMetrics = Page.hasMany(Metric, {
-    onDelete: "CASCADE"
+    onDelete: "CASCADE",
   });
 
   return Promise.resolve({
@@ -171,128 +171,128 @@ const connect = (config, env) => {
       Metric,
       PageItems,
       PagePages,
-      PageMetrics
-    }
+      PageMetrics,
+    },
   });
 };
 
 // Try to create database if force is false;
 // If force is true, drop if exists before.
-const sync = model => {
-  return async params => {
+const sync = (model) => {
+  return async (params) => {
     return await model.sync(params);
   };
 };
 
 const findPages = (model, op = Sequelize.Op) => {
-  return async params => {
+  return async (params) => {
     const r = await model.findAll({
       where: {
         name: params.name,
         type: params.type,
         website: params.website,
         processedAt: {
-          [op.eq]: params.processedAt
+          [op.eq]: params.processedAt,
         },
         startedAt: {
-          [op.eq]: params.startedAt
-        }
+          [op.eq]: params.startedAt,
+        },
       },
-      limit: params.limit
+      limit: params.limit,
     });
-    return r.map(i => i.dataValues);
+    return r.map((i) => i.dataValues);
   };
 };
 
-const findOnePageByUrl = model => {
-  return async url => {
+const findOnePageByUrl = (model) => {
+  return async (url) => {
     const r = await model.findOne({
       where: {
-        serial: sha256(url)
-      }
+        serial: sha256(url),
+      },
     });
     return r && r.dataValues ? r.dataValues : r;
   };
 };
 
-const findOneItemByUrl = model => {
-  return async url => {
+const findOneItemByUrl = (model) => {
+  return async (url) => {
     const r = await model.findOne({
       where: {
-        "data.pageSerial": sha256(url)
-      }
+        "data._pageSerial": sha256(url),
+      },
     });
     return r && r.dataValues ? r.dataValues : r;
   };
 };
 
 const restartPages = (model, op = Sequelize.Op) => {
-  return async params => {
+  return async (params) => {
     return await model.update(
       {
         processedAt: params.processedAt,
-        startedAt: params.startedAt
+        startedAt: params.startedAt,
       },
       {
         where: {
           website: {
-            [op.eq]: params.website
+            [op.eq]: params.website,
           },
           name: {
-            [op.eq]: params.name
-          }
-        }
+            [op.eq]: params.name,
+          },
+        },
       }
     );
   };
 };
 
 const countPages = (model, op = Sequelize.Op) => {
-  return async params => {
+  return async (params) => {
     return await model.count({
       where: {
         website: {
-          [op.eq]: params.website
+          [op.eq]: params.website,
         },
         name: {
-          [op.eq]: params.name
+          [op.eq]: params.name,
         },
         processedAt: {
-          [op.eq]: params.processedAt
+          [op.eq]: params.processedAt,
         },
         startedAt: {
-          [op.eq]: params.startedAt
-        }
-      }
+          [op.eq]: params.startedAt,
+        },
+      },
     });
   };
 };
 
 const countItems = (model, op = Sequelize.Op) => {
-  return async params => {
+  return async (params) => {
     return await model.count({
       where: {
         website: {
-          [op.eq]: params.website
+          [op.eq]: params.website,
         },
         name: {
-          [op.eq]: params.name
+          [op.eq]: params.name,
         },
         processedAt: {
-          [op.eq]: params.processedAt
+          [op.eq]: params.processedAt,
         },
         startedAt: {
-          [op.eq]: params.startedAt
-        }
-      }
+          [op.eq]: params.startedAt,
+        },
+      },
     });
   };
 };
 
-const upsertItem = model => {
-  return async doc => {
+const upsertItem = (model) => {
+  return async (doc) => {
     const r = await model.upsert(doc, {
-      returning: true
+      returning: true,
     });
     return r[0].dataValues;
   };
@@ -300,7 +300,7 @@ const upsertItem = model => {
 
 const upsertPage = upsertItem;
 
-const upsertMetric = model => {
+const upsertMetric = (model) => {
   return async (doc, tryToGetPage = false, slip = 1000) => {
     await sleep(slip);
 
@@ -310,13 +310,13 @@ const upsertMetric = model => {
     }
 
     const r = await model.upsert(doc, {
-      returning: true
+      returning: true,
     });
     return r[0].dataValues;
   };
 };
 
-const metrics = () => {}
+const metrics = () => {};
 
 export {
   connect,
@@ -330,5 +330,5 @@ export {
   countItems,
   countPages,
   restartPages,
-  metrics
+  metrics,
 };

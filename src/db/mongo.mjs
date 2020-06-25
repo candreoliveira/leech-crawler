@@ -144,7 +144,7 @@ const findOnePageByUrl = (model) => {
 const findOneItemByUrl = (model) => {
   return async (url) => {
     const r = await model.findOne({
-      "data.pageSerial": sha256(url),
+      "data._pageSerial": sha256(url),
     });
 
     if (r && r._id) r.id = r._id.toString();
@@ -281,8 +281,8 @@ const upsertPage = (model) => {
       filter.serial = serial;
     } else if (id) {
       filter._id = new Mongodb.ObjectID(id);
-    } else if (data && data.pageSerial) {
-      filter["data.pageSerial"] = data.pageSerial;
+    } else if (data && data._pageSerial) {
+      filter["data._pageSerial"] = data._pageSerial;
     } else {
       filter = doc;
     }
@@ -338,8 +338,8 @@ const upsertMetric = (model, Page) => {
         filter.serial = serial;
       } else if (id) {
         filter._id = new Mongodb.ObjectID(id);
-      } else if (data && data.pageSerial) {
-        filter["data.pageSerial"] = data.pageSerial;
+      } else if (data && data._pageSerial) {
+        filter["data._pageSerial"] = data._pageSerial;
       } else if (contentSerial) {
         filter.contentSerial = contentSerial;
       } else {
