@@ -394,7 +394,8 @@ const parsePage = ($, logger, { domain, href, website, name, type, data }) => {
     _pageSerial: sha256(getUrl(domain, href)),
     _pageUrl: getUrl(domain, href),
     _pageName: name,
-    _websiteName: website,
+    _pageWebsite: website,
+    _pageProcessedAt: new Date(),
   });
 
   return { output: out, errors: parsed[1] };

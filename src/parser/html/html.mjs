@@ -64,15 +64,13 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
           _pageSerial: sha256(getUrl(domain, uri.href)),
           _pageUrl: getUrl(domain, uri.href),
           _pageName: parg,
-          _websiteName: instance.config.name,
+          _pageWebsite: instance.config.name,
+          _pageProcessedAt: new Date(),
         },
       ],
     ];
 
-    instance.log(
-      "ERROR",
-      `[HTML] [HEADLESS] Error parsing website ${uri}: without $.`
-    );
+    instance.log("ERROR", `[HTML] Error parsing website ${uri}: without $.`);
   } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
     let parsedPage;
 

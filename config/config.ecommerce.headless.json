@@ -144,7 +144,7 @@
         "lru": {
           "max": 1000
         },
-        "retryDelay": 500,
+        "retryDelay": 5000,
         "retry": 5,
         "retryOnEmpty": 5,
         "parserOptions": {
@@ -198,12 +198,24 @@
               "method": "text"
             },
             {
-              "selector": "#crawlerScriptResult .zipcode .table td:nth-child(1)",
+              "selector": ".interaction-client__rating-info [itemprop=ratingValue]",
+              "newKey": "rating",
+              "method": "text",
+              "number": true,
+              "required": false
+            },
+            {
+              "selector": "#crawlerScriptResult .zipcode .table tr",
+              "newKey": "zipcode",
+              "attr": "id"
+            },
+            {
+              "selector": "#crawlerScriptResult .zipcode .table tr td:nth-child(1)",
               "newKey": "delivery",
               "method": "text"
             },
             {
-              "selector": "#crawlerScriptResult .zipcode .table td:nth-child(2)",
+              "selector": "#crawlerScriptResult .zipcode .table tr td:nth-child(2)",
               "newKey": "time",
               "method": "text",
               "replace": {
@@ -213,12 +225,17 @@
               }
             },
             {
-              "selector": "#crawlerScriptResult .zipcode .table td:nth-child(3)",
+              "selector": "#crawlerScriptResult .zipcode .table tr td:nth-child(3)",
               "newKey": "shipping",
               "method": "text"
             },
             {
-              "join": ["delivery", "time", "shipping"],
+              "selector": "#crawlerScriptResult .zipcode .table tr td:nth-child(4)",
+              "newKey": "address",
+              "method": "text"
+            },
+            {
+              "join": ["zipcode", "delivery", "time", "shipping", "address"],
               "newKey": "freight",
               "list": true
             }

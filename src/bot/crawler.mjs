@@ -294,18 +294,20 @@ class Crawler {
     }
   }
 
-  async insertItems(currentPage, items, unset) {
+  async insertItems(currentPage, items, startedAt, unset) {
     try {
       const insertedItems = await this.upsertMany(
         "Item",
         items.map((v) => ({
-          data: v,
+          data: { ...v, _pageStartedAt: startedAt },
           name: this.name,
           PageId: currentPage.id,
         }))
       );
 
-      currentPage.processedAt = new Date();
+      currentPage.processedAt = items.slice(-1)[0]
+        ? items.slice(-1)[0]._pageProcessedAt
+        : new Date();
       await this.upsertObject(currentPage, "Page", 0, true);
 
       this.log(
@@ -315,19 +317,12 @@ class Crawler {
         } item(s) for ${currentPage.url}.`
       );
     } catch (err) {
-      this.log(
-        "WARN",
-        `[${this.crawl.config.type.toUpperCase()}] Error on recovering saving items error ${getStacktrace(
-          err
-        )}, unsetting ${getPrettyJson(currentPage)}.`
-      );
+      const msg = `[${this.crawl.config.type.toUpperCase()}] Error on recovering saving items error ${getStacktrace(
+        err
+      )}`;
 
-      unset(
-        [currentPage],
-        `[${this.crawl.config.type.toUpperCase()}] Error on recovering saving items error ${getStacktrace(
-          err
-        )}.`
-      );
+      this.log("WARN", `${msg}, unsetting ${getPrettyJson(currentPage)}.`);
+      unset([currentPage], `${msg}.`);
     }
   }
 
@@ -581,13 +576,9 @@ class Crawler {
     }
 
     // Save all pages as started while processing
+    const startedAt = new Date();
     try {
-      pages = await this.setAllAttribute(
-        pages,
-        "startedAt",
-        new Date(),
-        "Page"
-      );
+      pages = await this.setAllAttribute(pages, "startedAt", startedAt, "Page");
     } catch (err) {
       this.log(
         "WARN",
@@ -671,7 +662,7 @@ class Crawler {
               await this.insertDependencies(currentPage, items, unset);
 
               // Insert items
-              await this.insertItems(currentPage, items, unset);
+              await this.insertItems(currentPage, items, startedAt, unset);
 
               // Insert pages
               await this.insertPages(currentPage, result.nextPages, unset);
@@ -687,7 +678,7 @@ class Crawler {
               await this.insertDependencies(pages[index], items, unset);
 
               // Insert items to mark as processed
-              await this.insertItems(pages[index], items, unset);
+              await this.insertItems(pages[index], items, startedAt, unset);
             }
           });
         } else {

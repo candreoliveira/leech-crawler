@@ -30,6 +30,7 @@ yargs
   .option("cpu", {
     alias: "c",
     describe: "Cpu quantity to fork.",
+    default: 1,
   })
   .option("file", {
     alias: "f",
@@ -64,9 +65,10 @@ yargs
     describe: "Launch bot.",
   })
   .demandOption(["environment"])
-  .boolean("restart")
-  .array("website")
-  .array("page");
+  .boolean(["restart", "sync", "admin", "microservice", "debug", "bot"])
+  .string(["file", "log", "environment", "type"])
+  .array(["website", "page"])
+  .number("cpu");
 
 if (
   process.argv.indexOf("-b") > -1 ||

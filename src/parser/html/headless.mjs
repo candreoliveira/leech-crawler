@@ -40,7 +40,7 @@ const exposeFunction = ({
       serial: sha256(getUrl(domain, uri.href)),
       date: date,
       url: getUrl(domain, uri.href),
-      time: new Date() - start,
+      time: date - start,
       type: instance.config.type,
       website: instance.config.name,
       name: parg,
@@ -56,13 +56,27 @@ const exposeFunction = ({
       url: getUrl(domain, uri.href),
     },
   };
-  const $ = cheerio.load(html);
 
-  if (!$) {
-    const err = `[HEADLESS] Error parsing website: without $.`;
-    instance.log("ERROR", err);
+  const $ = cheerio.load(html || "");
 
-    reject(err);
+  if (!html) {
+    output.yield = [
+      [
+        {
+          _statusCode: 204,
+          _pageSerial: sha256(getUrl(domain, uri.href)),
+          _pageUrl: getUrl(domain, uri.href),
+          _pageName: parg,
+          _pageWebsite: instance.config.name,
+          _pageProcessedAt: new Date(),
+        },
+      ],
+    ];
+
+    instance.log(
+      "ERROR",
+      `[HEADLESS] Error parsing website ${uri}: without html.`
+    );
   } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
     let parsedPage;
 
@@ -141,7 +155,7 @@ class Headless extends Parser {
       timeout: 30000,
       onError: (res) => {
         const domain = this.config.domain;
-        // discover how to get status code correctly
+        // TODO: discover how to get status code correctly
         this.db.upsertMetric(
           {
             serial: sha256(getUrl(domain, res.options.url)),
@@ -154,7 +168,7 @@ class Headless extends Parser {
       onSuccess: (res) => {
         this.db.upsertMetric(
           {
-            serial: sha256(getUrl(res.result.meta.domain, res.options.url)),
+            serial: sha256(res.result.meta.url),
             status: res.response.status,
           },
           false,
