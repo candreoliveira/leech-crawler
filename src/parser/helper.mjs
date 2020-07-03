@@ -1,50 +1,15 @@
 import { default as normalizeUrl } from "normalize-url";
 
+const reversePriority = (priority, max = 10) => {
+  return Math.abs(max - priority);
+};
+
 const zip = (arr, ...arrs) => {
   return arr.map((val, i) => arrs.reduce((a, cur) => [...a, cur[i]], [val]));
 };
 
 const randomize = (length) => {
   return Math.floor(Math.random() * length);
-};
-
-const userAgent = (type, website) => {
-  const list = {
-    default: [
-      "APIs-Google (+https://developers.google.com/webmasters/APIs-Google.html)",
-      "Googlebot-Image/1.0",
-      "Googlebot-News",
-      "Googlebot-Video/1.0",
-      "Mediapartners-Google/2.1",
-      "AdsBot-Google (+http://www.google.com/adsbot.html)",
-      "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-      "Googlebot/2.1 (+http://www.google.com/bot.html)",
-      "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
-      "Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)",
-      "Mozilla/5.0 (compatible; YandexAccessibilityBot/3.0; +http://yandex.com/bots)",
-      "Mozilla/5.0 (compatible; YandexDirectDyn/1.0; +http://yandex.com/bots",
-      "Mozilla/5.0 (compatible; YandexBlogs/0.99; robot; +http://yandex.com/bots)",
-      "Mozilla/5.0 (compatible; YandexWebmaster/2.0; +http://yandex.com/bots)",
-      "Mozilla/5.0 (compatible; YandexNews/4.0; +http://yandex.com/bots)",
-    ],
-    pontofrio: [
-      "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1664.3 Safari/537.36",
-    ],
-    vitacost: [
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.81 Safari/537.36",
-    ],
-    americanas: [
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.81 Safari/537.36",
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
-    ],
-  };
-
-  const l = list[website || "default"] || list.default;
-  return type === "rotate" ? l[randomize(l.length)] : l;
 };
 
 const getUrl = (domain, uri, removeTrailingSlash = false, stripWWW = false) => {
@@ -113,6 +78,45 @@ const setAll = (array, attr, value) => {
   });
 };
 
+const userAgent = (type, website) => {
+  const list = {
+    default: [
+      "APIs-Google (+https://developers.google.com/webmasters/APIs-Google.html)",
+      "Googlebot-Image/1.0",
+      "Googlebot-News",
+      "Googlebot-Video/1.0",
+      "Mediapartners-Google/2.1",
+      "AdsBot-Google (+http://www.google.com/adsbot.html)",
+      "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+      "Googlebot/2.1 (+http://www.google.com/bot.html)",
+      "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+      "Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)",
+      "Mozilla/5.0 (compatible; YandexAccessibilityBot/3.0; +http://yandex.com/bots)",
+      "Mozilla/5.0 (compatible; YandexDirectDyn/1.0; +http://yandex.com/bots",
+      "Mozilla/5.0 (compatible; YandexBlogs/0.99; robot; +http://yandex.com/bots)",
+      "Mozilla/5.0 (compatible; YandexWebmaster/2.0; +http://yandex.com/bots)",
+      "Mozilla/5.0 (compatible; YandexNews/4.0; +http://yandex.com/bots)",
+    ],
+    pontofrio: [
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.113 Safari/537.36",
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.81 Safari/537.36",
+    ],
+    vitacost: [
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.81 Safari/537.36",
+    ],
+    americanas: [
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36",
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.81 Safari/537.36",
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
+    ],
+  };
+
+  const l = list[website || "default"] || list.default;
+  return type === "rotate" ? l[randomize(l.length)] : l;
+};
+
 export {
   getPrettyJson,
   getStacktrace,
@@ -126,4 +130,5 @@ export {
   sleep,
   clean,
   diff,
+  reversePriority,
 };

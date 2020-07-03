@@ -101,6 +101,8 @@ const exposeFunction = ({
         )
     );
 
+    if (parsedPage.errors.length > 0) console.log(html);
+
     // Save all nextPages on output
     parsedPage.nextPages.forEach((pages) => {
       output.nextPages = output.nextPages.concat(pages);
@@ -142,7 +144,8 @@ class Headless extends Parser {
     }
 
     this.log = l(this.args.log);
-    this.parser = await Crawler.launch({
+
+    const launchOpts = {
       args,
       headless: true,
       devtools: false,
@@ -176,7 +179,28 @@ class Headless extends Parser {
         );
       },
       ...this.config.parserOptions,
-    });
+    };
+
+    // ShouldCreate a custom crawl?
+    if (
+      this.config.parserOptions.deleteCookie &&
+      Array.isArray(this.config.parserOptions.deleteCookie)
+    ) {
+      launchOpts.customCrawl = async (page, crawl) => {
+        if (
+          this.config.parserOptions.deleteCookie &&
+          Array.isArray(this.config.parserOptions.deleteCookie)
+        ) {
+          page.deleteCookie(...this.config.parserOptions.deleteCookie);
+        }
+
+        const result = await crawl();
+        result.content = await page.content();
+        return result;
+      };
+    }
+
+    this.parser = await Crawler.launch(launchOpts);
   }
 
   async close() {
@@ -184,7 +208,7 @@ class Headless extends Parser {
     await this.parser.close();
   }
 
-  async reader(parg, urls) {
+  async reader(parg, urls, pageConfig) {
     if (!urls) return;
 
     let uris;
@@ -200,6 +224,9 @@ class Headless extends Parser {
     this.log("VERBOSE", `[HEADLESS] Parsing website(s) ${uris}...`);
 
     // TODO: Reprocess only error page
+    // Create a custom crawl
+    // Set redis cache
+    // Save screenshot on error
     return await Promise.all(
       uris.map(
         (uri) =>
@@ -207,6 +234,8 @@ class Headless extends Parser {
             this.parser.queue({
               url: uri,
               userAgent: userAgent("rotate", this.args.website),
+              maxDepth: this.config.parserOptions.maxDepth || 1,
+              priority: pageConfig.priority || 1,
               evaluatePage: async (config, parg) => {
                 const promises = [];
                 config.pages.forEach((page) => {

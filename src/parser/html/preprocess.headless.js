@@ -201,11 +201,17 @@
 
   return start(
     ["04208-002", "21721-240", "69922-000"],
-    "input.input__zipcode",
-    "button.input__zipcode-button",
-    "table.freight-product__table",
-    ".freight-product__freight-text > :not(.js-loading)",
+    "#lCep input",
+    "#btnCalculoFrete",
+    "#endereco_entrega .shippingOptions",
+    "#ctl00_Conteudo_ctl25_lblErro",
     "crawlerScriptResult",
     "Não disponível"
   );
 })();
+
+// Array de ceps
+// "input.input__zipcode", // Freight input
+// "button.input__zipcode-button", // Freight submit
+// "table.freight-product__table", // Freight result selector
+// ".freight-product__freight-text > :not(.js-loading)", // Freight error selector

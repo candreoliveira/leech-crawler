@@ -289,6 +289,114 @@
           ]
         }
       ]
+    },
+    {
+      "type": "headless",
+      "name": "pontofrio",
+      "domain": "https://www.pontofrio.com.br",
+      "settings": {
+        "lru": {
+          "max": 1000
+        },
+        "restartDelay": 100,
+        "retryDelay": 500,
+        "retry": 5,
+        "retryOnEmpty": 5,
+        "parserOptions": {
+          "headless": false,
+          "devtools": true,
+          "retryDelay": 500,
+          "maxConnections": 1,
+          "pages": 1,
+          "headers": {
+            "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+            "Pragma": "no-cache",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"
+          },
+          "executablePath": "/usr/bin/google-chrome-stable",
+          "deleteCookie": [
+            {
+              "name": "ak_bmsc",
+              "domain": ".pontofrio.com.br"
+            }
+          ]
+        }
+      },
+      "pages": [
+        {
+          "name": "item",
+          "nextPages": null,
+          "preprocess": [
+            {
+              "type": "file",
+              "path": "/home/carlosandre/Projects/crawler/src/parser/html/preprocess.headless.js"
+            }
+          ],
+          "data": [
+            {
+              "selector": ".produtoNome h1",
+              "newKey": "name",
+              "method": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "html",
+      "name": "pontofrio",
+      "domain": "https://www.pontofrio.com.br",
+      "settings": {
+        "lru": {
+          "max": 1000
+        },
+        "retryDelay": 1000,
+        "restartDelay": 15000,
+        "retry": 5,
+        "retryOnEmpty": 5,
+        "parserOptions": {
+          "headless": true,
+          "devtools": false,
+          "retryDelay": 1000,
+          "maxConnections": 1,
+          "pages": 1,
+          "maxDepth": 5,
+          "headers": {
+            "Connection": "keep-alive",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept": "*/*",
+            "Accept-Encoding": "identity"
+          }
+        }
+      },
+      "dependency": {
+        "category": {
+          "hasMany": "item",
+          "through": "url",
+          "type": "headless"
+        }
+      },
+      "pages": [
+        {
+          "rootUrl": "/Informatica/Notebook/?Filtro=C56_C57&nid=111227",
+          "name": "category",
+          "nextPages": [
+            {
+              "selector": "#ctl00_Conteudo_ctl06_divBuscaResultadoInferior .ListaPaginas li:not(.first):not(.back):not(.atual):not(.next):not(.last) a",
+              "attr": "href"
+            }
+          ],
+          "data": [
+            {
+              "selector": "#ctl00_Conteudo_ctl06_DivAdicionaListaCasamento .vitrineProdutos .hproduct .link.url",
+              "newKey": "url",
+              "attr": "href",
+              "required": false
+            }
+          ]
+        }
+      ]
     }
   ]
 }

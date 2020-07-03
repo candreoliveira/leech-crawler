@@ -16,6 +16,8 @@ class Crawler {
     if (!crawl.config.settings) crawl.config.settings = {};
     crawl.config.settings.lru = crawl.config.settings.lru || {};
     crawl.config.settings.retryDelay = crawl.config.settings.retryDelay || 500;
+    crawl.config.settings.restartDelay =
+      crawl.config.settings.restartDelay || 500;
     crawl.config.settings.retry = crawl.config.settings.retry || 50;
     crawl.config.settings.unset = crawl.config.settings.unset || 10;
     crawl.config.settings.retryOnEmpty =
@@ -233,9 +235,10 @@ class Crawler {
   async unsetAllAttribute(array, attr, coll) {
     let count = 0;
     array.forEach((e) => {
+      const enc = sha256(e);
       // Inc count for the key e
-      count = (this.lru.get(e) || count) + 1;
-      this.lru.set(e, count);
+      count = (this.lru.get(enc) || count) + 1;
+      this.lru.set(enc, count);
     });
 
     // Should really unset?
@@ -527,6 +530,8 @@ class Crawler {
   }
 
   async start(uri = null, count = 0) {
+    let pages, pagesResult, pageConfig;
+
     const unset = async (pages, msg) => {
       try {
         await this.unsetAllAttribute(pages, "startedAt", "Page");
@@ -535,14 +540,12 @@ class Crawler {
       }
     };
 
-    let pages, pagesResult;
-
     if (count > 0) {
       await sleep(this.crawl.config.settings.retryDelay || 500);
     }
 
     if (count < (this.crawl.config.settings.retry || 50)) {
-      const pageConfig = find(this.crawl.config.pages, "name", this.name);
+      pageConfig = find(this.crawl.config.pages, "name", this.name);
       try {
         this.log(
           "DEBUG",
@@ -599,7 +602,7 @@ class Crawler {
 
     // Start the processing of page
     try {
-      pagesResult = await this.crawl.reader(this.name, pages);
+      pagesResult = await this.crawl.reader(this.name, pages, pageConfig);
     } catch (err) {
       this.log(
         "WARN",
@@ -679,6 +682,8 @@ class Crawler {
 
               // Insert items to mark as processed
               await this.insertItems(pages[index], items, startedAt, unset);
+
+              await sleep(this.crawl.config.settings.retryDelay || 500);
             }
           });
         } else {
@@ -688,6 +693,8 @@ class Crawler {
               this.crawl.config.name
             } #${count} ${getPrettyJson(pages)}.`
           );
+
+          await sleep(this.crawl.config.settings.retryDelay || 500);
         }
       });
     } else {
@@ -697,6 +704,8 @@ class Crawler {
           this.crawl.config.name
         } #${count} ${getPrettyJson(pages)}.`
       );
+
+      await sleep(this.crawl.config.settings.retryDelay || 500);
     }
 
     this.log(
@@ -705,6 +714,7 @@ class Crawler {
     );
 
     // Restart all processing
+    await sleep(this.crawl.config.settings.restartDelay || 0);
     return await this.start(null);
   }
 }
