@@ -4,7 +4,7 @@ import { parser } from "./helper.mjs";
 import { default as Crawler } from "headless-chrome-crawler";
 import { default as cheerio } from "cheerio";
 import sha256 from "sha256";
-import { userAgent, getUrl } from "../helper.mjs";
+import { userAgent, getUrl, reversePriority } from "../helper.mjs";
 
 const saveError = async (instance, err, url, date, start, parg) => {
   await instance.db.upsertConfig(
@@ -33,6 +33,7 @@ const exposeFunction = ({
   resolve,
   reject,
 }) => async (html) => {
+  debugger;
   const date = new Date();
 
   instance.db.upsertMetric(
@@ -100,8 +101,6 @@ const exposeFunction = ({
           parg
         )
     );
-
-    if (parsedPage.errors.length > 0) console.log(html);
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach((pages) => {
@@ -181,24 +180,69 @@ class Headless extends Parser {
       ...this.config.parserOptions,
     };
 
-    // ShouldCreate a custom crawl?
-    if (
-      this.config.parserOptions.deleteCookie &&
-      Array.isArray(this.config.parserOptions.deleteCookie)
-    ) {
-      launchOpts.customCrawl = async (page, crawl) => {
+    launchOpts.customCrawl = async (page, crawl) => {
+      const delCookie = async (page, config) => {
         if (
-          this.config.parserOptions.deleteCookie &&
-          Array.isArray(this.config.parserOptions.deleteCookie)
+          config.parserOptions.deleteCookie &&
+          Array.isArray(config.parserOptions.deleteCookie)
         ) {
-          page.deleteCookie(...this.config.parserOptions.deleteCookie);
+          await page.deleteCookie(...config.parserOptions.deleteCookie);
         }
-
-        const result = await crawl();
-        result.content = await page.content();
-        return result;
       };
-    }
+
+      // await page.setRequestInterception(true);
+      // page.on("request", async (request) => {
+      //   await delCookie(page, this.config);
+      //   request.continue();
+      // });
+
+      await delCookie(page, this.config);
+      let result = await crawl(true, false);
+      await delCookie(page, this.config);
+
+      for (let i = 0; i < this.config.pages.length; i++) {
+        const pg = this.config.pages[i];
+        const isPargEqName =
+          this.args.page &&
+          pg.name === this.args.page &&
+          pg.preprocess &&
+          Array.isArray(pg.preprocess);
+
+        const hasNotParg =
+          !this.args.page && pg.preprocess && Array.isArray(pg.preprocess);
+
+        if (isPargEqName || hasNotParg) {
+          for (let j = 0; j < pg.preprocess.length; j++) {
+            const pre = pg.preprocess[j];
+            if (pre.type === "function" || pre.type === "inline") {
+              const argValues = pre.args.reduce(
+                (acc, curr, index) => {
+                  acc.args.push(`arg${index}`);
+                  acc.values.push(curr);
+                  return acc;
+                },
+                { args: [], values: [] }
+              );
+
+              const fn = new Function(
+                ...argValues.args,
+                pre.script || pre.function
+              );
+
+              // fn(...argValues.values);
+              await page.evaluate(fn, ...argValues.values);
+              await delCookie(page, this.config);
+            }
+          }
+        }
+      }
+
+      result = await crawl(false, true);
+      result.content = await page.content();
+
+      debugger;
+      return result;
+    };
 
     this.parser = await Crawler.launch(launchOpts);
   }
@@ -235,32 +279,8 @@ class Headless extends Parser {
               url: uri,
               userAgent: userAgent("rotate", this.args.website),
               maxDepth: this.config.parserOptions.maxDepth || 1,
-              priority: pageConfig.priority || 1,
+              priority: reversePriority(pageConfig.priority || 1),
               evaluatePage: async (config, parg) => {
-                const promises = [];
-                config.pages.forEach((page) => {
-                  const isPargEqName =
-                    parg &&
-                    page.name === parg &&
-                    page.preprocess &&
-                    Array.isArray(page.preprocess);
-                  const hasNotParg =
-                    !parg && page.preprocess && Array.isArray(page.preprocess);
-                  if (isPargEqName || hasNotParg) {
-                    page.preprocess.forEach((pre) => {
-                      const result = new Function(pre.script)();
-                      if (result && Array.isArray(result)) {
-                        result.forEach((r) => {
-                          promises.push(r);
-                        });
-                      } else {
-                        promises.push(result);
-                      }
-                    });
-                  }
-                });
-
-                await Promise.all(promises);
                 return await window.__execAction(
                   window.document.documentElement.outerHTML
                 );

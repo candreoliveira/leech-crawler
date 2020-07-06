@@ -128,8 +128,8 @@ const startBot = (database, configuration, args, log) => {
     pages.forEach((p) => {
       const preprocesses = p.preprocess || [];
       preprocesses.forEach((s) => {
-        if (s.type.toLowerCase() === "file") {
-          s.script = `return ${fs.readFileSync(s.path, "utf-8")}`;
+        if (s.type.toLowerCase() === "function") {
+          s.script = `${fs.readFileSync(s.path, "utf-8")}`;
         }
       });
     });

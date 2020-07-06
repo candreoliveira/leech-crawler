@@ -166,6 +166,7 @@
         {
           "rootUrl": "/notebook-e-macbook/informatica/s/in/ntmk",
           "name": "category",
+          "priority": 1,
           "nextPages": [
             {
               "selector": "#showcase ul[class]:not(:empty) li:not(.disabled):not(:first-child):not(:last-child) > a:not([aria-current='page'])",
@@ -184,11 +185,21 @@
         },
         {
           "name": "item",
+          "priority": 5,
           "nextPages": null,
           "preprocess": [
             {
-              "type": "file",
-              "path": "/home/carlosandre/Projects/crawler/src/parser/html/preprocess.headless.js"
+              "type": "function",
+              "path": "/home/carlosandre/Projects/crawler/src/parser/html/preprocess.headless.js",
+              "args": [
+                ["24220031", "24240330"],
+                "input.input__zipcode",
+                "button.input__zipcode-button",
+                "table.freight-product__table",
+                ".freight-product__freight-text > :not(.js-loading)",
+                "crawlerScriptResult",
+                "Não disponível"
+              ]
             }
           ],
           "data": [
@@ -303,8 +314,8 @@
         "retry": 5,
         "retryOnEmpty": 5,
         "parserOptions": {
-          "headless": false,
-          "devtools": true,
+          "headless": true,
+          "devtools": false,
           "retryDelay": 500,
           "maxConnections": 1,
           "pages": 1,
@@ -319,6 +330,10 @@
             {
               "name": "ak_bmsc",
               "domain": ".pontofrio.com.br"
+            },
+            {
+              "name": "ak_geo",
+              "domain": ".pontofrio.com.br"
             }
           ]
         }
@@ -329,8 +344,18 @@
           "nextPages": null,
           "preprocess": [
             {
-              "type": "file",
-              "path": "/home/carlosandre/Projects/crawler/src/parser/html/preprocess.headless.js"
+              "type": "function",
+              "path": "/home/carlosandre/Projects/crawler/src/parser/html/preprocess.headless.js",
+              "args": [
+                ["24220031", "24240330"],
+                "#lCep input",
+                "#btnCalculoFrete",
+                "[data-id=endereco_entrega] .shippingOptions tbody",
+                "#ctl00_Conteudo_ctl25_lblErro",
+                "crawlerScriptResult",
+                "Não disponível",
+                ["ak_bmsc", "ak_geo"]
+              ]
             }
           ],
           "data": [
@@ -338,6 +363,36 @@
               "selector": ".produtoNome h1",
               "newKey": "name",
               "method": "text"
+            },
+            {
+              "selector": "#crawlerScriptResult .zipcode .table tr",
+              "newKey": "zipcode",
+              "attr": "id"
+            },
+            {
+              "selector": "#crawlerScriptResult .zipcode .table tr td:nth-child(1)",
+              "newKey": "delivery",
+              "method": "text"
+            },
+            {
+              "selector": "#crawlerScriptResult .zipcode .table tr td:nth-child(2)",
+              "newKey": "time",
+              "method": "text",
+              "replace": {
+                "pattern": "(<[^>]*>?)|(\n)",
+                "new": " ",
+                "options": "gm"
+              }
+            },
+            {
+              "selector": "#crawlerScriptResult .zipcode .table tr td:nth-child(3)",
+              "newKey": "shipping",
+              "method": "text"
+            },
+            {
+              "join": ["zipcode", "delivery", "time", "shipping"],
+              "newKey": "freight",
+              "list": true
             }
           ]
         }

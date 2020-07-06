@@ -4,12 +4,7 @@ import { parser } from "./helper.mjs";
 import Crawler from "crawler";
 import URL from "url";
 import sha256 from "sha256";
-import {
-  reversePriority,
-  userAgent,
-  getUrl,
-  getStacktrace,
-} from "../helper.mjs";
+import { userAgent, getUrl, getStacktrace } from "../helper.mjs";
 
 const saveError = async (instance, err, url, date, start, parg) => {
   await instance.db.upsertConfig(
@@ -160,7 +155,7 @@ class Html extends Parser {
             this.parser.queue({
               uri: uri,
               proxy: this.config.parserOptions.proxy,
-              priority: reversePriority(pageConfig.priority || 5),
+              priority: pageConfig.priority || 5,
               callback: defaultCb({
                 instance: this,
                 parg,

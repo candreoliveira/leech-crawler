@@ -1,7 +1,7 @@
 import { default as normalizeUrl } from "normalize-url";
 
 const reversePriority = (priority, max = 10) => {
-  return Math.abs(max - priority);
+  return Math.round((1 / priority) * max);
 };
 
 const zip = (arr, ...arrs) => {
