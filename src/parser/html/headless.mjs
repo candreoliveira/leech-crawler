@@ -1,7 +1,7 @@
 import { Parser } from "../parser.mjs";
 import { log as l } from "../../log/log.mjs";
 import { parser } from "./helper.mjs";
-import { default as Crawler } from "headless-chrome-crawler";
+import { default as Crawler } from "node-headless-crawler";
 import { default as cheerio } from "cheerio";
 import sha256 from "sha256";
 import { userAgent, getUrl, reversePriority } from "../helper.mjs";
