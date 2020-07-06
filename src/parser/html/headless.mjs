@@ -156,10 +156,9 @@ class Headless extends Parser {
       timeout: 30000,
       onError: (res) => {
         const domain = this.config.domain;
-        // TODO: discover how to get status code correctly
         this.db.upsertMetric(
           {
-            serial: sha256(getUrl(domain, res.options.url)),
+            serial: sha256(getUrl(domain, res.options.url || res.previousUrl)),
             status: 500,
           },
           false,
@@ -188,12 +187,6 @@ class Headless extends Parser {
           await page.deleteCookie(...config.parserOptions.deleteCookie);
         }
       };
-
-      // await page.setRequestInterception(true);
-      // page.on("request", async (request) => {
-      //   await delCookie(page, this.config);
-      //   request.continue();
-      // });
 
       await delCookie(page, this.config);
       let result = await crawl(true, false);
@@ -266,7 +259,6 @@ class Headless extends Parser {
     this.log("VERBOSE", `[HEADLESS] Parsing website(s) ${uris}...`);
 
     // TODO: Reprocess only error page
-    // Create a custom crawl
     // Set redis cache
     // Save screenshot on error
     return await Promise.all(
