@@ -421,19 +421,23 @@ class Crawler {
   }
 
   async import() {
-    this.log(
-      "DEBUG",
-      `[${this.crawl.config.type.toUpperCase()}] Starting importer.`
-    );
-
     const time = 60 * 60 * 24 * 1000;
     const urlKey =
       this.db.config &&
       this.db.config.importer &&
       this.db.config.importer.mapping &&
-      this.db.config.importer.mapping.url
-        ? this.db.config.importer.mapping.url
+      this.db.config.importer.mapping.url &&
+      this.db.config.importer.mapping.url.name
+        ? this.db.config.importer.mapping.url.name
         : "url";
+    const uri =
+      this.db.config &&
+      this.db.config.importer &&
+      this.db.config.importer.mapping &&
+      this.db.config.importer.mapping.url &&
+      this.db.config.importer.mapping.url.uri
+        ? this.db.config.importer.mapping.url.uri
+        : false;
     const defaultName =
       this.db.config &&
       this.db.config.importer &&
@@ -442,20 +446,42 @@ class Crawler {
       this.db.config.importer.mapping.defaults.name
         ? this.db.config.importer.mapping.defaults.name
         : "importer";
-
-    const processRow = async (row) => {
+    const processRow = async (config, row) => {
       this.log(
         "DEBUG",
         `[${this.crawl.config.type.toUpperCase()}] Importer processing row.`
       );
 
+      const transform =
+        config &&
+        config.importer &&
+        config.importer.mapping &&
+        config.importer.mapping.url &&
+        config.importer.mapping.url.transform &&
+        config.importer.mapping.url.transform !== ""
+          ? new Function("value", config.importer.mapping.url.transform)
+          : (x) => {
+              return x;
+            };
+
+      let metadata = { ...row };
+      delete metadata.url;
+
+      let url = row[urlKey];
+      if (uri) {
+        url = decodeURIComponent(url);
+      }
+
+      url = transform(url);
+
       return await this.upsertObject(
         {
-          url: getUrl(this.crawl.config.domain, row[urlKey]),
+          url: getUrl(this.crawl.config.domain, url),
           name: defaultName,
           type: this.type,
           website: this.website,
           importer: true,
+          metadata,
         },
         "Page",
         0,
@@ -477,6 +503,11 @@ class Crawler {
       this.db.config.importer.query.count &&
       this.db.config.importer.block
     ) {
+      this.log(
+        "DEBUG",
+        `[${this.crawl.config.type.toUpperCase()}] Starting importer.`
+      );
+
       const count = this.db.importer.client.query(
         this.db.config.importer.query.count
       );
@@ -503,16 +534,17 @@ class Crawler {
                 );
               })
               .on("result", async (row) => {
-                await processRow(row);
+                await processRow(this.db.config, row);
               });
           }
+        })
+        .on("end", () => {
+          this.log(
+            "DEBUG",
+            `[${this.crawl.config.type.toUpperCase()}] Completing importer.`
+          );
         });
     }
-
-    this.log(
-      "DEBUG",
-      `[${this.crawl.config.type.toUpperCase()}] Completing importer.`
-    );
     return;
   }
 

@@ -27,7 +27,11 @@
         "block": "select url as url from "
       },
       "mapping": {
-        "url": "url",
+        "url": {
+          "name": "url",
+          "uri": true,
+          "transform": "return value.replace(/.*adsurl=/, '');"
+        },
         "defaults": {
           "name": "item"
         }

@@ -33,7 +33,6 @@ const exposeFunction = ({
   resolve,
   reject,
 }) => async (html) => {
-  debugger;
   const date = new Date();
 
   instance.db.upsertMetric(
@@ -240,7 +239,6 @@ class Headless extends Parser {
       result = await crawl(false, true);
       result.content = await page.content();
 
-      debugger;
       return result;
     };
 
