@@ -154,8 +154,9 @@
         "lru": {
           "max": 1000
         },
-        "retryDelay": 5000,
-        "retry": 5,
+        "restartDelay": 100,
+        "retryDelay": 500,
+        "retry": 50,
         "retryOnEmpty": 5,
         "parserOptions": {
           "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36",
@@ -251,11 +252,6 @@
               "method": "text"
             },
             {
-              "selector": "#crawlerScriptResult .zipcode .table tr td:nth-child(4)",
-              "newKey": "address",
-              "method": "text"
-            },
-            {
               "join": ["zipcode", "delivery", "time", "shipping", "address"],
               "newKey": "freight",
               "list": true
@@ -315,13 +311,20 @@
       "type": "headless",
       "name": "pontofrio",
       "domain": "https://www.pontofrio.com.br",
+      "dependency": {
+        "category": {
+          "hasMany": "item",
+          "through": "url",
+          "type": "headless"
+        }
+      },
       "settings": {
         "lru": {
           "max": 1000
         },
         "restartDelay": 100,
         "retryDelay": 500,
-        "retry": 5,
+        "retry": 50,
         "retryOnEmpty": 5,
         "parserOptions": {
           "headless": true,
@@ -349,6 +352,24 @@
         }
       },
       "pages": [
+        {
+          "rootUrl": "/Informatica/Notebook/?Filtro=C56_C57&nid=111227",
+          "name": "category",
+          "nextPages": [
+            {
+              "selector": "#ctl00_Conteudo_ctl06_divBuscaResultadoInferior .ListaPaginas li:not(.first):not(.back):not(.atual):not(.next):not(.last) a",
+              "attr": "href"
+            }
+          ],
+          "data": [
+            {
+              "selector": "#ctl00_Conteudo_ctl06_DivAdicionaListaCasamento .vitrineProdutos .hproduct .link.url",
+              "newKey": "url",
+              "attr": "href",
+              "required": false
+            }
+          ]
+        },
         {
           "name": "item",
           "nextPages": null,

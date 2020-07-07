@@ -641,7 +641,12 @@ class Crawler {
         (acc, curr, index) => {
           if (curr.status === "rejected") {
             acc.count = acc.count + 1;
-            acc.uris.push(pages[index]);
+
+            if (typeof pages[index] === "string") {
+              acc.uris.push(pages[index]);
+            } else {
+              acc.uris.push(pages[index].url);
+            }
           }
           return acc;
         },
