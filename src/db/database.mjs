@@ -42,6 +42,13 @@ class Database {
       );
     }
 
+    if (this.config.cache) {
+      this.cache = {};
+      this.cache.db = await import("./cache/redis.mjs");
+      this.cache.client = await this.cache.db.connect(this.config.cache);
+      this.cache.persist = this.config.cache.persist || false;
+    }
+
     this.dbcli = await this.db.connect(this.config, this.env);
     this.sync = this.db.sync(this.dbcli.client, this.dbcli.model);
     this.findPages = this.db.findPages(this.dbcli.model.Page);

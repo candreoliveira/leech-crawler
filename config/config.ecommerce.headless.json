@@ -6,6 +6,12 @@
     "port": "3001"
   },
   "database": {
+    "cache2": {
+      "host": "127.0.0.1",
+      "port": 6379,
+      "persist": true,
+      "engine": "redis"
+    },
     "development": {
       "host": "127.0.0.1",
       "port": 27017,

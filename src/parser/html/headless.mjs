@@ -166,17 +166,24 @@ class Headless extends Parser {
         );
       },
       onSuccess: (res) => {
-        this.db.upsertMetric(
-          {
-            serial: sha256(res.result.meta.url),
-            status: res.response.status,
-          },
-          false,
-          true
-        );
+        if (res.result) {
+          this.db.upsertMetric(
+            {
+              serial: sha256(res.result.meta.url),
+              status: res.response.status,
+            },
+            false,
+            true
+          );
+        }
       },
       ...this.config.parserOptions,
     };
+
+    if (this.db.cache && this.db.cache.client) {
+      launchOpts.cache = this.db.cache.client;
+      launchOpts.persistCache = this.db.cache.persist;
+    }
 
     launchOpts.customCrawl = async (page, crawl) => {
       const delCookie = async (page, config) => {
@@ -231,7 +238,6 @@ class Headless extends Parser {
 
       result = await crawl(false, true);
       result.content = await page.content();
-
       return result;
     };
 
@@ -258,10 +264,10 @@ class Headless extends Parser {
 
     this.log("VERBOSE", `[HEADLESS] Parsing website(s) ${uris}...`);
 
-    // TODO: Reprocess only error page
-    // Set redis cache
+    // TODO: Set redis cache
     // Save screenshot on error
-    return await Promise.all(
+    // Serialize function as string for redis use
+    return await Promise.allSettled(
       uris.map(
         (uri) =>
           new Promise((resolve, reject) => {

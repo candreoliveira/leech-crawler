@@ -634,7 +634,43 @@ class Crawler {
 
     // Start the processing of page
     try {
+      // return an array of all settled promises
       pagesResult = await this.crawl.reader(this.name, pages, pageConfig);
+
+      const rejects = pagesResult.reduce(
+        (acc, curr, index) => {
+          if (curr.status === "rejected") {
+            acc.count = acc.count + 1;
+            acc.uris.push(pages[index]);
+          }
+          return acc;
+        },
+        { count: 0, uris: [] }
+      );
+
+      if (rejects.count > 0) {
+        this.log(
+          "WARN",
+          `[${this.crawl.config.type.toUpperCase()}] Error on start reading page ${
+            this.crawl.config.name
+          } #${count} urls ${rejects.uris.toString()}.`
+        );
+
+        unset(
+          rejects.uris,
+          `[${this.crawl.config.type.toUpperCase()}] Error on start unseting start after reading page ${
+            this.crawl.config.name
+          } #${count} urls ${rejects.uris.toString()}.`
+        );
+      }
+
+      if (rejects.count === pages.length) {
+        return await this.start(null, ++count);
+      }
+
+      pagesResult = pagesResult
+        .filter((p) => p.status !== "rejected")
+        .map((p) => p.value);
     } catch (err) {
       this.log(
         "WARN",

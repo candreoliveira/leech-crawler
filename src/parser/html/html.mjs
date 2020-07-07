@@ -148,7 +148,7 @@ class Html extends Parser {
 
     this.log("VERBOSE", `[HTML] Parsing website(s) ${uris.length} ${uris}...`);
 
-    return await Promise.all(
+    return await Promise.allSettled(
       uris.map(
         (uri) =>
           new Promise((resolve, reject) => {
