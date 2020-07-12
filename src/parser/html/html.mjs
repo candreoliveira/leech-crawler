@@ -49,7 +49,6 @@ const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
   let output = {
     yield: null,
     nextPages: [],
-    meta: null,
   };
 
   if (error) {

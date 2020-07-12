@@ -1,121 +1,77 @@
+import { default as Crawler } from "node-headless-crawler";
+import { default as Cheerio } from "cheerio";
 import { Parser } from "../parser.mjs";
 import { log as l } from "../../log/log.mjs";
 import { parser } from "./helper.mjs";
-import { default as Crawler } from "node-headless-crawler";
-import { default as cheerio } from "cheerio";
 import sha256 from "sha256";
 import { userAgent, getUrl, reversePriority } from "../helper.mjs";
 
-const saveError = async (instance, err, url, date, start, parg) => {
-  await instance.db.upsertConfig(
-    {
-      serial: sha256(url),
-      date: date,
-      url,
-      time: err.date - start,
-      type: instance.config.type,
-      website: instance.config.name,
-      name: parg,
-      selector: err.selector,
-    },
-    true
-  );
+const GOLBAL_PROMISES_CONTROL = {};
 
-  instance.log("ERROR", `[HEADLESS] ${err.message}`);
-};
-
-const exposeFunction = ({
-  instance,
-  parg,
-  domain,
-  uri,
-  start,
-  resolve,
-  reject,
-}) => async (html) => {
-  const date = new Date();
-
-  instance.db.upsertMetric(
-    {
-      serial: sha256(getUrl(domain, uri.href)),
-      date: date,
-      url: getUrl(domain, uri.href),
-      time: date - start,
-      type: instance.config.type,
-      website: instance.config.name,
-      name: parg,
-    },
-    true
-  );
-
+const parseContent = (
+  url,
+  { domain, type, website, page, pages },
+  logger,
+  html
+) => {
   let output = {
     yield: null,
     nextPages: [],
-    meta: {
-      date: date,
-      url: getUrl(domain, uri.href),
-    },
+    errors: null,
   };
 
-  const $ = cheerio.load(html || "");
+  const $ = Cheerio.load(html || "");
 
   if (!html) {
     output.yield = [
       [
         {
           _statusCode: 204,
-          _pageSerial: sha256(getUrl(domain, uri.href)),
-          _pageUrl: getUrl(domain, uri.href),
-          _pageName: parg,
-          _pageWebsite: instance.config.name,
+          _pageSerial: sha256(getUrl(domain, url)),
+          _pageUrl: getUrl(domain, url),
+          _pageName: page,
+          _pageWebsite: website,
           _pageProcessedAt: new Date(),
         },
       ],
     ];
 
-    instance.log(
-      "ERROR",
-      `[HEADLESS] Error parsing website ${uri}: without html.`
-    );
-  } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
+    logger("ERROR", `[HEADLESS] Error parsing website ${url}: without html.`);
+  } else if (pages) {
+    pages = Array.isArray(pages) ? pages : [pages];
     let parsedPage;
 
     try {
-      // ($, domain, uri, parg, config, logger)
-      parsedPage = parser($, domain, uri, parg, instance.config, instance.log);
+      // ($, domain, url, page, website, type, pages, logger)
+      parsedPage = parser($, {
+        domain,
+        url,
+        page,
+        website,
+        type,
+        pages,
+        logger,
+      });
     } catch (e) {
-      saveError(instance, e, getUrl(domain, uri.href), date, start, parg);
-      reject(e.message);
+      parsedPage = { errors: [e] };
     }
 
-    // Save all errors
-    parsedPage.errors.forEach(
-      async (err) =>
-        await saveError(
-          instance,
-          err,
-          getUrl(domain, uri.href),
-          date,
-          start,
-          parg
-        )
-    );
+    output.errors = parsedPage.errors;
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach((pages) => {
       output.nextPages = output.nextPages.concat(pages);
     });
 
-    instance.log(
+    logger(
       "INFO",
-      `[HEADLESS] Completing parsing ${parsedPage.result.length} page(s) ${uri}...`
+      `[HEADLESS] Completing parsing ${parsedPage.result.length} page(s) ${url}...`
     );
 
     output.yield = parsedPage.result;
   }
 
   output.nextPages = output.nextPages.length === 0 ? null : output.nextPages;
-  resolve(output);
   return output;
 };
 
@@ -124,8 +80,9 @@ class Headless extends Parser {
     super();
     this.args = args;
     this.config = config || {};
-    this.config.parserOptions = this.config.settings
-      ? this.config.settings.parserOptions || {}
+    this.config.settings = this.config.settings ? this.config.settings : {};
+    this.config.settings.parserOptions = this.config.settings.parserOptions
+      ? this.config.settings.parserOptions
       : {};
     this.db = db;
   }
@@ -137,11 +94,103 @@ class Headless extends Parser {
       "--ignore-certificate-errors",
     ];
 
-    if (!!this.config.parserOptions.proxy) {
-      args.push(`--proxy-server=${this.config.parserOptions.proxy}`);
+    if (!!this.config.settings.parserOptions.proxy) {
+      args.push(`--proxy-server=${this.config.settings.parserOptions.proxy}`);
     }
 
     this.log = l(this.args.log);
+
+    const parseResponse = (res) => {
+      const date = new Date();
+      const url = getUrl(res.options.config.domain, res.options.url);
+      if (res.result) {
+        if (
+          res.result.errors &&
+          Array.isArray(res.result.errors) &&
+          res.result.errors.length > 0
+        ) {
+          res.result.errors.forEach((e) => {
+            this.db.upsertConfig(
+              {
+                serial: sha256(url),
+                url,
+                date,
+                time: date - res.options.startedAt,
+                type: res.options.config.type,
+                website: res.options.config.website,
+                name: res.options.config.page,
+                selector: e.selector,
+              },
+              true
+            );
+
+            this.log("ERROR", `[HEADLESS] ${e.message}`);
+          });
+        }
+      }
+
+      if (res.result || res.type) {
+        try {
+          this.db.upsertMetric(
+            {
+              serial: sha256(url),
+              url,
+              date,
+              time: date - res.options.startedAt,
+              type: res.options.config.type,
+              website: res.options.config.website,
+              name: res.options.config.page,
+              status: res.response.status,
+            },
+            true
+          );
+
+          if (GOLBAL_PROMISES_CONTROL[res.options.url]) {
+            const resolve = GOLBAL_PROMISES_CONTROL[res.options.url][0];
+            delete GOLBAL_PROMISES_CONTROL[res.options.url];
+            resolve(res.result);
+          }
+        } catch (e) {
+          if (GOLBAL_PROMISES_CONTROL[res.options.url]) {
+            const reject = GOLBAL_PROMISES_CONTROL[res.options.url][1];
+            delete GOLBAL_PROMISES_CONTROL[res.options.url];
+            reject(e);
+          }
+        }
+      }
+    };
+
+    const parserResponseError = (status) => (res) => {
+      const date = new Date();
+      const url = getUrl(res.options.config.domain, res.options.url);
+      try {
+        this.db.upsertMetric(
+          {
+            serial: sha256(url),
+            url,
+            date,
+            time: date - res.options.startedAt,
+            type: res.options.config.type,
+            website: res.options.config.website,
+            name: res.options.config.page,
+            status,
+          },
+          true
+        );
+      } catch (e) {
+        if (GOLBAL_PROMISES_CONTROL[res.options.url]) {
+          const reject = GOLBAL_PROMISES_CONTROL[res.options.url][1];
+          delete GOLBAL_PROMISES_CONTROL[res.options.url];
+          return reject(e);
+        }
+      }
+
+      if (GOLBAL_PROMISES_CONTROL[res.options.url]) {
+        const reject = GOLBAL_PROMISES_CONTROL[res.options.url][1];
+        delete GOLBAL_PROMISES_CONTROL[res.options.url];
+        return reject(res);
+      }
+    };
 
     const launchOpts = {
       args,
@@ -150,34 +199,15 @@ class Headless extends Parser {
       obeyRobotsTxt: false,
       maxConnections: 20,
       userAgent: userAgent("rotate", this.args.website),
-      jQuery: true,
       retryCount: 10,
       retryDelay: 1000,
       timeout: 30000,
-      onError: (res) => {
-        const domain = this.config.domain;
-        this.db.upsertMetric(
-          {
-            serial: sha256(getUrl(domain, res.options.url || res.previousUrl)),
-            status: 500,
-          },
-          false,
-          true
-        );
-      },
-      onSuccess: (res) => {
-        if (res.result) {
-          this.db.upsertMetric(
-            {
-              serial: sha256(res.result.meta.url),
-              status: res.response.status,
-            },
-            false,
-            true
-          );
-        }
-      },
-      ...this.config.parserOptions,
+      onError: parserResponseError(500),
+      onDisallow: parserResponseError(403),
+      onSuccess: parseResponse,
+      onSkip: parseResponse,
+      onDisallow: parseResponse,
+      ...this.config.settings.parserOptions,
     };
 
     if (this.db.cache && this.db.cache.client) {
@@ -188,10 +218,12 @@ class Headless extends Parser {
     launchOpts.customCrawl = async (page, crawl) => {
       const delCookie = async (page, config) => {
         if (
-          config.parserOptions.deleteCookie &&
-          Array.isArray(config.parserOptions.deleteCookie)
+          config.settings.parserOptions.deleteCookie &&
+          Array.isArray(config.settings.parserOptions.deleteCookie)
         ) {
-          await page.deleteCookie(...config.parserOptions.deleteCookie);
+          await page.deleteCookie(
+            ...config.settings.parserOptions.deleteCookie
+          );
         }
       };
 
@@ -238,6 +270,16 @@ class Headless extends Parser {
 
       result = await crawl(false, true);
       result.content = await page.content();
+
+      if (result.content) {
+        result.result = parseContent(
+          result.options.url,
+          result.options.config,
+          this.log,
+          result.content
+        );
+      }
+
       return result;
     };
 
@@ -247,6 +289,12 @@ class Headless extends Parser {
   async close() {
     await this.parser.onIdle();
     await this.parser.close();
+  }
+
+  async markRequested(uri) {
+    return await new Promise((resolve, reject) => {
+      GOLBAL_PROMISES_CONTROL[uri] = [resolve, reject];
+    });
   }
 
   async reader(parg, urls, pageConfig) {
@@ -264,39 +312,27 @@ class Headless extends Parser {
 
     this.log("VERBOSE", `[HEADLESS] Parsing website(s) ${uris}...`);
 
-    // TODO: Set redis cache
-    // Save screenshot on error
-    // Serialize function as string for redis use
+    // TODO: Save screenshot on error
     return await Promise.allSettled(
-      uris.map(
-        (uri) =>
-          new Promise((resolve, reject) => {
-            this.parser.queue({
-              url: uri,
-              userAgent: userAgent("rotate", this.args.website),
-              maxDepth: this.config.parserOptions.maxDepth || 1,
-              priority: reversePriority(pageConfig.priority || 1),
-              evaluatePage: async (config, parg) => {
-                return await window.__execAction(
-                  window.document.documentElement.outerHTML
-                );
-              },
-              evaluatePageArgs: [this.config, parg],
-              exposeFunctionsNames: ["__execAction"],
-              exposeFunctions: [
-                exposeFunction({
-                  instance: this,
-                  parg,
-                  domain: this.config.domain,
-                  uri: new URL(uri),
-                  start: new Date(),
-                  resolve,
-                  reject,
-                }),
-              ],
-            });
-          })
-      )
+      uris.map((uri) => {
+        const date = new Date();
+        this.parser.queue({
+          url: uri,
+          userAgent: userAgent("rotate", this.args.website),
+          maxDepth: this.config.settings.parserOptions.maxDepth || 1,
+          priority: reversePriority(pageConfig.priority || 1),
+          startedAt: date,
+          config: {
+            domain: this.config.domain,
+            type: this.config.type,
+            website: this.config.name,
+            page: parg,
+            pages: pageConfig,
+          },
+        });
+
+        return this.markRequested(uri);
+      })
     );
   }
 }

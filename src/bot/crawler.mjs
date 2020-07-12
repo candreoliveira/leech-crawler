@@ -132,7 +132,7 @@ class Crawler {
           } #${count} ${getPrettyJson(page)} pages.`
         );
       } catch (err) {
-        return this.sendError(`${getStacktrace(err)}.`);
+        return this.sendError(`Error getNextPages ${getStacktrace(err)}.`);
       }
 
       if (!page || (Array.isArray(page) && page.length === 0)) {
@@ -235,9 +235,12 @@ class Crawler {
   async unsetAllAttribute(array, attr, coll) {
     let count = 0;
     array.forEach((e) => {
-      const enc = sha256(e);
+      const enc = sha256(JSON.stringify(e));
       // Inc count for the key e
-      count = (this.lru.get(enc) || count) + 1;
+      const val = (this.lru.get(enc) || 0) + 1;
+
+      // min do array
+      count = count !== 0 && val > count ? count : val;
       this.lru.set(enc, count);
     });
 
@@ -568,7 +571,9 @@ class Crawler {
       try {
         await this.unsetAllAttribute(pages, "startedAt", "Page");
       } catch (errors) {
-        this.sendError(`${msg} ${errors}.`);
+        this.sendError(
+          `${msg} ${getPrettyJson(pages)} ${getStacktrace(errors)}.`
+        );
       }
     };
 
@@ -640,14 +645,12 @@ class Crawler {
       const rejects = pagesResult.reduce(
         (acc, curr, index) => {
           if (curr.status === "rejected") {
-            acc.count = acc.count + 1;
-
-            if (typeof pages[index] === "string") {
-              acc.uris.push(pages[index]);
-            } else {
-              acc.uris.push(pages[index].url);
-            }
+            const tmp = {};
+            tmp.count = acc.count + 1;
+            tmp.uris = acc.uris.concat(pages[index]);
+            return tmp;
           }
+
           return acc;
         },
         { count: 0, uris: [] }
@@ -658,14 +661,14 @@ class Crawler {
           "WARN",
           `[${this.crawl.config.type.toUpperCase()}] Error on start reading page ${
             this.crawl.config.name
-          } #${count} urls ${rejects.uris.toString()}.`
+          } #${count} urls ${getPrettyJson(rejects.uris)}.`
         );
 
         unset(
           rejects.uris,
           `[${this.crawl.config.type.toUpperCase()}] Error on start unseting start after reading page ${
             this.crawl.config.name
-          } #${count} urls ${rejects.uris.toString()}.`
+          } #${count} urls ${getPrettyJson(rejects.uris)}.`
         );
       }
 

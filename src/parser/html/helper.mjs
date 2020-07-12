@@ -401,12 +401,12 @@ const parsePage = ($, logger, { domain, href, website, name, type, data }) => {
   return { output: out, errors: parsed[1] };
 };
 
-const parser = ($, domain, uri, parg, config, logger) => {
+const parser = ($, { domain, url, page, website, type, pages, logger }) => {
   // Return an array of array of items
-  let filteredPages = config.pages;
+  let filteredPages = pages;
 
-  if (parg) {
-    filteredPages = filteredPages.filter((e) => e.name === parg);
+  if (page) {
+    filteredPages = filteredPages.filter((e) => e.name === page);
   }
 
   const output = [];
@@ -416,9 +416,9 @@ const parser = ($, domain, uri, parg, config, logger) => {
     // ($, {domain, href, website, name, type, data}, logger)
     const parsed = parsePage($, logger, {
       domain,
-      href: uri.href,
-      website: config.name,
-      type: config.type,
+      href: url,
+      website,
+      type: type,
       data: page.data,
       name: page.name,
     });
@@ -431,7 +431,7 @@ const parser = ($, domain, uri, parg, config, logger) => {
     result: output,
     errors: flat(errors),
     nextPages: filteredPages.map((page) => {
-      return getNextPages($, uri, page.nextPages);
+      return getNextPages($, new URL(url), page.nextPages);
     }),
   };
 };

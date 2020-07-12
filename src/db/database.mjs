@@ -25,7 +25,7 @@ class Database {
         );
     }
 
-    if (this.config.importer) {
+    if (this.config.importer && this.config.importer.engine === "mysql") {
       this.importer = {};
       this.importer.db = await import("./importer/mysql.mjs");
       this.importer.client = await this.importer.db.connect(
@@ -42,7 +42,7 @@ class Database {
       );
     }
 
-    if (this.config.cache) {
+    if (this.config.cache && this.config.cache.engine === "redis") {
       this.cache = {};
       this.cache.db = await import("./cache/redis.mjs");
       this.cache.client = await this.cache.db.connect(this.config.cache);
@@ -50,7 +50,11 @@ class Database {
     }
 
     this.dbcli = await this.db.connect(this.config, this.env);
-    this.sync = this.db.sync(this.dbcli.client, this.dbcli.model);
+    this.sync = this.db.sync(
+      this.dbcli.client,
+      this.dbcli.model,
+      this.cache && this.cache.client
+    );
     this.findPages = this.db.findPages(this.dbcli.model.Page);
     this.lastPageImported = this.db.lastPageImported(this.dbcli.model.Page);
     this.findOnePageByUrl = this.db.findOnePageByUrl(this.dbcli.model.Page);

@@ -64,7 +64,7 @@ const connect = async (config, env) => {
   };
 };
 
-const sync = (client, model) => {
+const sync = (client, model, cache) => {
   return async () => {
     await model.Page.dropIndexes();
     await model.Item.dropIndexes();
@@ -74,6 +74,11 @@ const sync = (client, model) => {
     await model.Item.drop();
     await model.Metric.drop();
     await model.Config.drop();
+
+    if (cache) {
+      await cache.clear();
+    }
+
     return await Promise.resolve(
       "[Mongodb] Mongodb collections and indexes dropped."
     );
