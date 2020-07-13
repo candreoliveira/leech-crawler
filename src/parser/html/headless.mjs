@@ -6,7 +6,7 @@ import { parser } from "./helper.mjs";
 import sha256 from "sha256";
 import { userAgent, getUrl, reversePriority } from "../helper.mjs";
 
-const GOLBAL_PROMISES_CONTROL = {};
+const PROMISES_CONTROL = {};
 
 const parseContent = (
   url,
@@ -145,16 +145,20 @@ class Headless extends Parser {
             true
           );
 
-          if (GOLBAL_PROMISES_CONTROL[res.options.url]) {
-            const resolve = GOLBAL_PROMISES_CONTROL[res.options.url][0];
-            delete GOLBAL_PROMISES_CONTROL[res.options.url];
-            resolve(res.result);
+          if (PROMISES_CONTROL[res.options.url]) {
+            const fulfill = PROMISES_CONTROL[res.options.url].resolve;
+            fulfill.forEach((r) => {
+              r(res.result);
+            });
+            delete PROMISES_CONTROL[res.options.url];
           }
         } catch (e) {
-          if (GOLBAL_PROMISES_CONTROL[res.options.url]) {
-            const reject = GOLBAL_PROMISES_CONTROL[res.options.url][1];
-            delete GOLBAL_PROMISES_CONTROL[res.options.url];
-            reject(e);
+          if (PROMISES_CONTROL[res.options.url]) {
+            const fulfill = PROMISES_CONTROL[res.options.url].reject;
+            fulfill.forEach((r) => {
+              r(e);
+            });
+            delete PROMISES_CONTROL[res.options.url];
           }
         }
       }
@@ -163,6 +167,7 @@ class Headless extends Parser {
     const parserResponseError = (status) => (res) => {
       const date = new Date();
       const url = getUrl(res.options.config.domain, res.options.url);
+      let output = res;
       try {
         this.db.upsertMetric(
           {
@@ -178,17 +183,15 @@ class Headless extends Parser {
           true
         );
       } catch (e) {
-        if (GOLBAL_PROMISES_CONTROL[res.options.url]) {
-          const reject = GOLBAL_PROMISES_CONTROL[res.options.url][1];
-          delete GOLBAL_PROMISES_CONTROL[res.options.url];
-          return reject(e);
-        }
+        output = e;
       }
 
-      if (GOLBAL_PROMISES_CONTROL[res.options.url]) {
-        const reject = GOLBAL_PROMISES_CONTROL[res.options.url][1];
-        delete GOLBAL_PROMISES_CONTROL[res.options.url];
-        return reject(res);
+      if (PROMISES_CONTROL[res.options.url]) {
+        const fulfill = PROMISES_CONTROL[res.options.url].reject;
+        fulfill.forEach((r) => {
+          r(output);
+        });
+        delete PROMISES_CONTROL[res.options.url];
       }
     };
 
@@ -292,8 +295,13 @@ class Headless extends Parser {
   }
 
   async markRequested(uri) {
-    return await new Promise((resolve, reject) => {
-      GOLBAL_PROMISES_CONTROL[uri] = [resolve, reject];
+    return new Promise((resolve, reject) => {
+      if (PROMISES_CONTROL[uri]) {
+        PROMISES_CONTROL[uri].resolve.push(resolve);
+        PROMISES_CONTROL[uri].reject.push(reject);
+      } else {
+        PROMISES_CONTROL[uri] = { resolve: [resolve], reject: [reject] };
+      }
     });
   }
 

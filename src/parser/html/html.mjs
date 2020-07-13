@@ -6,101 +6,112 @@ import URL from "url";
 import sha256 from "sha256";
 import { userAgent, getUrl, getStacktrace } from "../helper.mjs";
 
-const saveError = async (instance, err, url, date, start, parg) => {
-  await instance.db.upsertConfig(
-    {
-      serial: sha256(url),
-      date: date,
-      url,
-      time: err.date - start,
-      type: instance.config.type,
-      website: instance.config.name,
-      name: parg,
-      selector: err.selector,
-    },
-    true
-  );
-
-  instance.log("ERROR", `[HEADLESS] ${err.message}`);
-};
-
-const defaultCb = ({ instance, parg, domain, uri, start, resolve, reject }) => (
-  error,
-  res,
-  done
-) => {
-  const date = new Date();
-
-  instance.db.upsertMetric(
-    {
-      serial: sha256(getUrl(domain, uri.href)),
-      date: date,
-      url: getUrl(domain, uri.href),
-      time: new Date() - start,
-      status: res.statusCode,
-      type: instance.config.type,
-      website: instance.config.name,
-      name: parg,
-    },
-    true
-  );
-
+const parseContent = (
+  url,
+  startedAt,
+  { domain, type, website, page, pages },
+  logger,
+  upsertMetric,
+  upsertConfig,
+  resolve,
+  reject
+) => (error, res, done) => {
+  // html
   const $ = res.$;
+  const status = res.statusCode || 500;
+  let date = new Date();
+
   let output = {
     yield: null,
     nextPages: [],
+    errors: null,
   };
 
   if (error) {
-    const err = `[HTML] Error parsing website ${uri}: ${getStacktrace(error)}.`;
-    instance.log("ERROR", err);
+    const err = `[HTML] Error parsing website ${url}: ${getStacktrace(error)}.`;
+    logger("ERROR", err);
     reject(err);
   } else if (!$) {
     output.yield = [
       [
         {
-          _statusCode: res.statusCode,
-          _pageSerial: sha256(getUrl(domain, uri.href)),
-          _pageUrl: getUrl(domain, uri.href),
-          _pageName: parg,
-          _pageWebsite: instance.config.name,
-          _pageProcessedAt: new Date(),
+          _statusCode: 204,
+          _pageSerial: sha256(getUrl(domain, url)),
+          _pageUrl: getUrl(domain, url),
+          _pageName: page,
+          _pageWebsite: website,
+          _pageProcessedAt: date,
         },
       ],
     ];
 
-    instance.log("ERROR", `[HTML] Error parsing website ${uri}: without $.`);
-  } else if (instance.config.pages && Array.isArray(instance.config.pages)) {
+    logger("ERROR", `[HtML] Error parsing website ${url}: without $.`);
+  } else if (pages) {
+    pages = Array.isArray(pages) ? pages : [pages];
     let parsedPage;
 
     try {
-      // ($, domain, uri, parg, config, logger)
-      parsedPage = parser($, domain, uri, parg, instance.config, instance.log);
+      parsedPage = parser($, {
+        domain,
+        url,
+        page,
+        website,
+        type,
+        pages,
+        logger,
+      });
     } catch (e) {
-      saveError(instance, e, getUrl(domain, uri.href), date, start, parg);
-      reject(e.message);
+      parsedPage = { errors: [e] };
     }
 
-    // Save all errors
-    parsedPage.errors.forEach((err) =>
-      saveError(instance, err, getUrl(domain, uri.href), date, start, parg)
-    );
+    date = new Date();
+    output.errors = parsedPage.errors;
+    output.errors.forEach((e) => {
+      upsertConfig(
+        {
+          serial: sha256(url),
+          url,
+          date,
+          time: date - startedAt,
+          type: type,
+          website: website,
+          name: page,
+          selector: e.selector,
+        },
+        true
+      );
+
+      this.log("ERROR", `[HEADLESS] ${e.message}`);
+    });
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach((pages) => {
       output.nextPages = output.nextPages.concat(pages);
     });
 
-    instance.log(
+    logger(
       "INFO",
-      `[HTML] Completing parsing ${parsedPage.result.length} page(s) ${uri}...`
+      `[HTML] Completing parsing ${parsedPage.result.length} page(s) ${url}...`
     );
 
     output.yield = parsedPage.result;
   }
 
-  output.nextPages = output.nextPages.length === 0 ? null : output.nextPages;
+  upsertMetric(
+    {
+      serial: sha256(url),
+      url,
+      date,
+      time: date - startedAt,
+      type: type,
+      website: website,
+      name: page,
+      status: status,
+    },
+    true
+  );
 
+  output.nextPages = output.nextPages.length === 0 ? null : output.nextPages;
   done();
   resolve(output);
 };
@@ -110,8 +121,9 @@ class Html extends Parser {
     super();
     this.args = args;
     this.config = config || {};
-    this.config.parserOptions = this.config.settings
-      ? this.config.settings.parserOptions || {}
+    this.config.settings = this.config.settings ? this.config.settings : {};
+    this.config.settings.parserOptions = this.config.settings.parserOptions
+      ? this.config.settings.parserOptions
       : {};
     this.db = db;
   }
@@ -126,7 +138,7 @@ class Html extends Parser {
       retries: 100,
       retryTimeout: 1000,
       timeout: 30000,
-      ...this.config.parserOptions,
+      ...this.config.settings.parserOptions,
     });
   }
 
@@ -153,17 +165,24 @@ class Html extends Parser {
           new Promise((resolve, reject) => {
             this.parser.queue({
               uri: uri,
-              proxy: this.config.parserOptions.proxy,
+              proxy: this.config.settings.parserOptions.proxy,
               priority: pageConfig.priority || 5,
-              callback: defaultCb({
-                instance: this,
-                parg,
-                domain: this.config.domain,
-                uri: new URL.URL(uri),
-                start: new Date(),
+              callback: parseContent(
+                uri,
+                new Date(),
+                {
+                  domain: this.config.domain,
+                  type: this.config.type,
+                  website: this.config.name,
+                  page: parg,
+                  pages: pageConfig,
+                },
+                this.log,
+                this.db.upsertMetric,
+                this.db.upsertConfig,
                 resolve,
-                reject,
-              }),
+                reject
+              ),
             });
           })
       )

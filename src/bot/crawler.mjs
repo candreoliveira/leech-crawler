@@ -587,15 +587,15 @@ class Crawler {
         this.log(
           "DEBUG",
           `[${this.crawl.config.type.toUpperCase()}] Start crawling with uri ${
-            pageConfig.rootUrl || uri
+            uri || pageConfig.rootUrl
           } ${this.crawl.config.name} #${count}.`
         );
-        pages = await this.tryToGetPage(pageConfig.rootUrl || uri);
+        pages = await this.tryToGetPage(uri || pageConfig.rootUrl);
       } catch (err) {
         this.log(
           "WARN",
           `[${this.crawl.config.type.toUpperCase()}] Error on start trying to get page ${
-            pageConfig.rootUrl || uri
+            uri || pageConfig.rootUrl
           } ${this.crawl.config.name} #${count} ${getStacktrace(err)}.`
         );
 
