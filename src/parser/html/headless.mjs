@@ -304,13 +304,13 @@ class Headless extends Parser {
                       result.result,
                       ...(post.args || [])
                     );
-                  } else if (
-                    typeof module === "function" ||
-                    typeof module["default"] === "function"
-                  ) {
-                    const fn =
-                      typeof module === "function" ? module : module["default"];
-                    await fn(result.result, ...(post.args || []));
+                  } else if (typeof module === "function") {
+                    await module(result.result, ...(post.args || []));
+                  } else if (typeof module["default"] === "function") {
+                    await module["default"](
+                      result.result,
+                      ...(post.args || [])
+                    );
                   }
                 } catch (e) {
                   this.log("ERROR", `[HEADLESS] Postprocess error ${e}.`);

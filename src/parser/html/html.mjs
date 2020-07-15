@@ -113,13 +113,10 @@ const parseContent = (
                 typeof module[post.init] === "function"
               ) {
                 await module[post.init](result.result, ...(post.args || []));
-              } else if (
-                typeof module === "function" ||
-                typeof module["default"] === "function"
-              ) {
-                const fn =
-                  typeof module === "function" ? module : module["default"];
-                await fn(result.result, ...(post.args || []));
+              } else if (typeof module === "function") {
+                await module(result.result, ...(post.args || []));
+              } else if (typeof module["default"] === "function") {
+                await module["default"](result.result, ...(post.args || []));
               }
             } catch (e) {
               logger("ERROR", `[HTML] Postprocess error ${e}.`);
