@@ -15,7 +15,7 @@ const parseContent = (
   upsertConfig,
   resolve,
   reject
-) => (error, res, done) => {
+) => async (error, res, done) => {
   // html
   const $ = res.$;
   const status = res.statusCode || 500;
@@ -23,7 +23,7 @@ const parseContent = (
 
   let output = {
     yield: null,
-    nextPages: [],
+    nextPages: null,
     errors: null,
   };
 
@@ -81,12 +81,14 @@ const parseContent = (
         true
       );
 
-      this.log("ERROR", `[HEADLESS] ${e.message}`);
+      logger("ERROR", `[HEADLESS] ${e.message}`);
     });
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach((pages) => {
-      output.nextPages = output.nextPages.concat(pages);
+      output.nextPages = output.nextPages
+        ? output.nextPages.concat(pages)
+        : [pages];
     });
 
     logger(
@@ -95,6 +97,37 @@ const parseContent = (
     );
 
     output.yield = parsedPage.result;
+
+    for (let i = 0; i < pages.length; i++) {
+      const pg = pages[i];
+      if (pg.postprocess && Array.isArray(pg.postprocess)) {
+        for (let j = 0; j < pg.postprocess.length; j++) {
+          const post = pg.postprocess[j];
+          if (post.type === "module" && post.path) {
+            const module = await import(post.path);
+
+            try {
+              if (
+                post.init &&
+                post.init !== "default" &&
+                typeof module[post.init] === "function"
+              ) {
+                await module[post.init](result.result, ...(post.args || []));
+              } else if (
+                typeof module === "function" ||
+                typeof module["default"] === "function"
+              ) {
+                const fn =
+                  typeof module === "function" ? module : module["default"];
+                await fn(result.result, ...(post.args || []));
+              }
+            } catch (e) {
+              logger("ERROR", `[HTML] Postprocess error ${e}.`);
+            }
+          }
+        }
+      }
+    }
   }
 
   upsertMetric(
@@ -111,7 +144,6 @@ const parseContent = (
     true
   );
 
-  output.nextPages = output.nextPages.length === 0 ? null : output.nextPages;
   done();
   resolve(output);
 };

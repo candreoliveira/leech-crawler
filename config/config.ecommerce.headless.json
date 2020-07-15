@@ -221,13 +221,6 @@
               "method": "text"
             },
             {
-              "selector": ".interaction-client__rating-info [itemprop=ratingValue]",
-              "newKey": "rating",
-              "method": "text",
-              "number": true,
-              "required": false
-            },
-            {
               "selector": "#crawlerScriptResult .zipcode .table tr",
               "newKey": "zipcode",
               "attr": "id"
@@ -388,6 +381,14 @@
                 "Não disponível",
                 ["ak_bmsc", "ak_geo"]
               ]
+            }
+          ],
+          "postprocess": [
+            {
+              "type": "module",
+              "path": "/home/carlosandre/Projects/crawler/src/parser/html/postprocess.js",
+              "args": [["teste1", "teste2"], "teste3"],
+              "init": "default"
             }
           ],
           "data": [

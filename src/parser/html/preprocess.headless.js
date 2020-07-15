@@ -1,19 +1,5 @@
 const calulateFreight = (zipcode, input, submit, action = "click") => {
   // // --- REMOVE SKU ELEMENT SELECT
-  // const skuElement = window.document.querySelector("#variation-label");
-
-  // if (skuElement) skuElement.remove();
-  // const zipcodeChangeElement = window.document.querySelector(
-  //   ".js-freight-zipcode-change"
-  // );
-
-  // if (zipcodeChangeElement) zipcodeChangeElement.click();
-  // // --- REMOVE FREIGHT CONTENT ELEMENT
-  // const zipcodeContentElement = window.document.querySelector(
-  //   ".freight-product__table"
-  // );
-
-  // if (zipcodeContentElement) zipcodeContentElement.remove();
   input.value = zipcode;
 
   const descriptor = Object.getOwnPropertyDescriptor(input, "value");

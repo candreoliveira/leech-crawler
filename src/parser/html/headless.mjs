@@ -16,7 +16,7 @@ const parseContent = (
 ) => {
   let output = {
     yield: null,
-    nextPages: [],
+    nextPages: null,
     errors: null,
   };
 
@@ -60,7 +60,9 @@ const parseContent = (
 
     // Save all nextPages on output
     parsedPage.nextPages.forEach((pages) => {
-      output.nextPages = output.nextPages.concat(pages);
+      output.nextPages = output.nextPages
+        ? output.nextPages.concat(pages)
+        : [pages];
     });
 
     logger(
@@ -71,7 +73,6 @@ const parseContent = (
     output.yield = parsedPage.result;
   }
 
-  output.nextPages = output.nextPages.length === 0 ? null : output.nextPages;
   return output;
 };
 
@@ -242,10 +243,7 @@ class Headless extends Parser {
           pg.preprocess &&
           Array.isArray(pg.preprocess);
 
-        const hasNotParg =
-          !this.args.page && pg.preprocess && Array.isArray(pg.preprocess);
-
-        if (isPargEqName || hasNotParg) {
+        if (isPargEqName) {
           for (let j = 0; j < pg.preprocess.length; j++) {
             const pre = pg.preprocess[j];
             if (pre.type === "function" || pre.type === "inline") {
@@ -281,6 +279,46 @@ class Headless extends Parser {
           this.log,
           result.content
         );
+
+        for (let i = 0; i < this.config.pages.length; i++) {
+          const pg = this.config.pages[i];
+          const isPargEqName =
+            this.args.page &&
+            pg.name === this.args.page &&
+            pg.postprocess &&
+            Array.isArray(pg.postprocess);
+
+          if (isPargEqName) {
+            for (let j = 0; j < pg.postprocess.length; j++) {
+              const post = pg.postprocess[j];
+              if (post.type === "module" && post.path) {
+                const module = await import(post.path);
+
+                try {
+                  if (
+                    post.init &&
+                    post.init !== "default" &&
+                    typeof module[post.init] === "function"
+                  ) {
+                    await module[post.init](
+                      result.result,
+                      ...(post.args || [])
+                    );
+                  } else if (
+                    typeof module === "function" ||
+                    typeof module["default"] === "function"
+                  ) {
+                    const fn =
+                      typeof module === "function" ? module : module["default"];
+                    await fn(result.result, ...(post.args || []));
+                  }
+                } catch (e) {
+                  this.log("ERROR", `[HEADLESS] Postprocess error ${e}.`);
+                }
+              }
+            }
+          }
+        }
       }
 
       return result;

@@ -558,6 +558,10 @@ class Crawler {
       await this.db.importer.end();
     }
 
+    if (this.db.cache) {
+      await this.db.cache.client.close();
+    }
+
     await this.crawl.close();
 
     await sleep(5000);
