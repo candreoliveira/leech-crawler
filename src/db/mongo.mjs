@@ -11,10 +11,20 @@ const connect = async (config, env) => {
   const host = process.env.DB_HOST || config[env].host;
   const port = process.env.DB_PORT || config[env].port;
   const name = process.env.DB_NAME || config[env].name;
+  const replicaSet = process.env.REPLICA_SET || config[env].replicaSet;
+  const readPreference =
+    process.env.READ_PREFERENCE || config[env].readPreference;
   const client = new Mongodb.MongoClient(
     `mongodb${server ? "+srv" : ""}://${auth}${host}${
       server ? "" : ":" + port
-    }/${name}`,
+    }/${name}${
+      replicaSet
+        ? "?replicaSet=" +
+          replicaSet +
+          "&readPreference=" +
+          (readPreference || "nearest")
+        : ""
+    }`,
     {
       useNewUrlParser: true,
       poolSize: 50,
