@@ -4,7 +4,12 @@ import { Parser } from "../parser.mjs";
 import { log as l } from "../../log/log.mjs";
 import { parser } from "./helper.mjs";
 import sha256 from "sha256";
-import { userAgent, getUrl, reversePriority } from "../helper.mjs";
+import {
+  userAgent,
+  getUrl,
+  reversePriority,
+  getPrettyJson,
+} from "../helper.mjs";
 
 const PROMISES_CONTROL = {};
 
@@ -302,13 +307,19 @@ class Headless extends Parser {
                   ) {
                     await module[post.init](
                       result.result,
+                      result.options.config.metadata,
                       ...(post.args || [])
                     );
                   } else if (typeof module === "function") {
-                    await module(result.result, ...(post.args || []));
+                    await module(
+                      result.result,
+                      result.options.config.metadata,
+                      ...(post.args || [])
+                    );
                   } else if (typeof module["default"] === "function") {
                     await module["default"](
                       result.result,
+                      result.options.config.metadata,
                       ...(post.args || [])
                     );
                   }
@@ -343,27 +354,34 @@ class Headless extends Parser {
     });
   }
 
-  async reader(parg, urls, pageConfig) {
-    if (!urls) return;
+  async reader(parg, pages, pageConfig) {
+    if (!pages) return;
 
-    let uris;
-
-    if (Array.isArray(urls)) {
-      uris = urls.map((url) =>
-        getUrl(this.config.domain, url.url || this.config.rootUrl)
-      );
+    if (Array.isArray(pages)) {
+      pages = pages.map((page) => ({
+        ...page,
+        url: getUrl(this.config.domain, page.url || this.config.rootUrl),
+      }));
     } else {
-      uris = [getUrl(this.config.domain, urls.url || this.config.rootUrl)];
+      pages = [
+        {
+          ...pages,
+          url: getUrl(this.config.domain, pages.url || this.config.rootUrl),
+        },
+      ];
     }
 
-    this.log("VERBOSE", `[HEADLESS] Parsing website(s) ${uris}...`);
+    this.log(
+      "VERBOSE",
+      `[HEADLESS] Parsing website(s) ${getPrettyJson(pages)}...`
+    );
 
     // TODO: Save screenshot on error
     return await Promise.allSettled(
-      uris.map((uri) => {
+      pages.map((page) => {
         const date = new Date();
         this.parser.queue({
-          url: uri,
+          url: page.url,
           userAgent: userAgent("rotate", this.args.website),
           maxDepth: this.config.settings.parserOptions.maxDepth || 1,
           priority: reversePriority(pageConfig.priority || 1),
@@ -374,10 +392,11 @@ class Headless extends Parser {
             website: this.config.name,
             page: parg,
             pages: pageConfig,
+            metadata: page.metadata,
           },
         });
 
-        return this.markRequested(uri);
+        return this.markRequested(page.url);
       })
     );
   }

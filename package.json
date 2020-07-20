@@ -30,7 +30,6 @@
     "pg-hstore": "^2.3.3",
     "r2": "^2.0.1",
     "redis": "^3.0.2",
-    "request": "^2.88.2",
     "rss-parser": "^3.8.0",
     "sequelize": "^4.44.4",
     "sequelize-cli": "^4.1.1",

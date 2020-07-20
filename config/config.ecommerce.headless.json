@@ -21,23 +21,23 @@
       "password": "crawl",
       "engine": "mongo"
     },
-    "importer2": {
+    "importer": {
       "host": "127.0.0.1",
       "port": 27017,
-      "name": "crawler",
+      "name": "test",
       "user": "crawl",
       "password": "crawl",
       "engine": "mysql",
       "block": 100,
       "query": {
-        "count": "select count(*) as count from ",
-        "block": "select url as url from "
+        "count": "select count(*) as count from temp",
+        "block": "select url as url, id as offerid from temp"
       },
       "mapping": {
         "url": {
           "name": "url",
           "uri": true,
-          "transform": "return value.replace(/.*adsurl=/, '');"
+          "transform": "return value.replace(/.*url=/, '');"
         },
         "defaults": {
           "name": "item"

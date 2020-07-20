@@ -449,10 +449,10 @@ class Crawler {
       this.db.config.importer.mapping.defaults.name
         ? this.db.config.importer.mapping.defaults.name
         : "importer";
-    const processRow = async (config, row) => {
+    const processRow = async (config, row, count = 0) => {
       this.log(
         "DEBUG",
-        `[${this.crawl.config.type.toUpperCase()}] Importer processing row.`
+        `[${this.crawl.config.type.toUpperCase()}] Importer processing row #${count}.`
       );
 
       const transform =
@@ -527,6 +527,8 @@ class Crawler {
           for (let i = 0; i < r.count; i += this.db.config.importer.block) {
             const q = `${this.db.config.importer.query.block} limit ${this.db.config.importer.block} offset ${i}`;
             const query = this.db.importer.client.query(q);
+            let count = 0;
+
             query
               .on("error", (err) => {
                 this.log(
@@ -537,13 +539,13 @@ class Crawler {
                 );
               })
               .on("result", async (row) => {
-                await processRow(this.db.config, row);
+                await processRow(this.db.config, row, count++);
               });
           }
         })
         .on("end", () => {
           this.log(
-            "DEBUG",
+            "VERBOSE",
             `[${this.crawl.config.type.toUpperCase()}] Completing importer.`
           );
         });
