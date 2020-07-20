@@ -31,7 +31,7 @@
     "r2": "^2.0.1",
     "redis": "^3.0.2",
     "rss-parser": "^3.8.0",
-    "sequelize": "^4.44.4",
+    "sequelize": "^5.15.1",
     "sequelize-cli": "^4.1.1",
     "sha256": "^0.2.0",
     "yargs": "^15.4.1"
